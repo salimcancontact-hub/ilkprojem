@@ -112,6 +112,17 @@ func attack() -> void:
 			body.call("take_damage", attack_damage, push.normalized() * 8.0)
 
 
+func head_position() -> Vector3:
+	return global_position + Vector3(0, 1.5, 0)
+
+
+## Diyaloglarda karakteri konuştuğu kişiye çevirir.
+func face_point(point: Vector3) -> void:
+	var dir := point - global_position
+	if Vector2(dir.x, dir.z).length_squared() > 0.001:
+		_visual.rotation.y = atan2(-dir.x, -dir.z)
+
+
 func take_damage(amount: int, knockback: Vector3 = Vector3.ZERO) -> void:
 	if is_dead or _invuln_timer > 0.0:
 		return

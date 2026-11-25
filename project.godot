@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.3", "Mobile")
 [autoload]
 
 Game="*res://scripts/game.gd"
+Story="*res://scripts/story.gd"
 
 [display]
 

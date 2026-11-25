@@ -16,7 +16,15 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
+func reset() -> void:
+	_touch_index = -1
+	_knob = Vector2.ZERO
+	_set_value(Vector2.ZERO)
+
+
 func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed and _touch_index == -1 and get_global_rect().has_point(touch.position):

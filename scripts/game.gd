@@ -14,6 +14,7 @@ func _ready() -> void:
 	_add_key_action("move_right", [KEY_D, KEY_RIGHT])
 	_add_key_action("jump", [KEY_SPACE])
 	_add_key_action("attack", [KEY_J, KEY_F])
+	_add_key_action("interact", [KEY_E])
 
 
 func reset(total_gems: int) -> void:
