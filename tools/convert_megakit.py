@@ -1,8 +1,9 @@
-"""Quaternius Modular Sci-Fi MegaKit (USD) -> glTF dönüştürücü.
+"""Quaternius USD paketleri (MegaKit, Downtown City, Zombie Apocalypse...) -> glTF dönüştürücü.
 
 Blender'ın Python modülüyle (bpy) çalışır:
     python -m pip install bpy
-    python tools/convert_megakit.py -- <MegaKit klasörü> <çıktı klasörü>
+    python tools/convert_megakit.py -- <paket klasörü> <çıktı klasörü> [parça1,parça2,...]
+  Parça listesi verilirse yalnızca o parçalar dönüştürülür.
 
 - Kategori soneki olan kopyalar (…Walls, …Props, …Platforms…) atlanır; ana sürüm alınır.
 - Yapısal parçaların nesne adına "-col" eklenir; Godot bunlar için otomatik çarpışma üretir.
@@ -12,8 +13,10 @@ import bpy, os, sys, json
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SRC, DST = args[0], args[1]
-SUFFIXES = ("Walls", "Props", "Platforms", "Columns", "Decals", "Aliens")
-NO_COLLISION = ("S_Decal", "S_PropCable", "S_PropLight", "S_PropVent", "SK_Alien", "SK_PropFan",
+ONLY = set(args[2].split(",")) if len(args) > 2 and args[2] else None
+SUFFIXES = ("Walls", "Props", "Platforms", "Columns", "Decals", "Aliens", "Buildings", "Environment",
+            "Characters", "Vehicles", "Roads", "Floors", "Details", "Weapons")
+NO_COLLISION = ("S_Decal", "S_Blood", "S_TrashBag", "S_PropManhole", "S_PropDrain", "S_PropCable", "S_PropLight", "S_PropVent", "SK_Alien", "SK_PropFan",
                 "S_TopCablesStraightHanging", "S_PropPipeHolder", "S_PropClamp")
 # Bunların çarpışması seviye kurucuda basit şekillerle eklenir (eşik ve basamaklara takılmamak için).
 NO_COLLISION_EXACT = {"S_DoorFrameSquare", "S_DoorFrameSquareTall", "S_DoorFrame_A", "S_PlatformStairs4Wide",
@@ -24,7 +27,10 @@ report = {}
 files = sorted(f for f in os.listdir(SRC) if f.endswith(".usda"))
 for f in files:
     name = f[:-5]
-    if name.endswith(SUFFIXES):
+    if ONLY is not None:
+        if name not in ONLY:
+            continue
+    elif name.endswith(SUFFIXES):
         continue
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.wm.usd_import(filepath=os.path.join(SRC, f), import_cameras=False, import_lights=False)

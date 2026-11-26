@@ -14,6 +14,10 @@ var _attack_btn: TouchScreenButton
 var _jump_btn: TouchScreenButton
 var _talk_btn: TouchScreenButton
 var _talk_available: bool = false
+var _talk_label: Label
+var _objective: Label
+var _combat: bool = true
+var _gameplay_visible: bool = true
 var _overlay: ColorRect
 var _message: Label
 
@@ -47,6 +51,11 @@ func _ready() -> void:
 	_jump_btn = _make_button("ZIPLA", "jump", 110, Color(0.3, 0.6, 0.95, 0.55))
 	_talk_btn = _make_button("KONUŞ", "interact", 110, Color(0.3, 0.8, 0.5, 0.6))
 	_talk_btn.visible = false
+	_talk_label = _talk_btn.get_child(0)
+
+	_objective = _make_label(24)
+	_objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_objective.add_theme_color_override("font_color", Color(1.0, 0.86, 0.55))
 
 	_overlay = ColorRect.new()
 	_overlay.color = Color(0, 0, 0, 0.6)
@@ -90,16 +99,34 @@ func set_enemies(count: int) -> void:
 
 
 ## Yakında konuşulabilecek biri varsa KONUŞ düğmesini göster.
-func set_talk_available(available: bool) -> void:
+func set_talk_available(available: bool, label: String = "KONUŞ") -> void:
 	_talk_available = available
-	_talk_btn.visible = available and _jump_btn.visible
+	_talk_label.text = label
+	_talk_btn.visible = available and _gameplay_visible
+
+
+## Dövüşsüz sahnelerde can barı, SALDIR ve sayaçlar gizlenir.
+func set_combat_enabled(enabled: bool) -> void:
+	_combat = enabled
+	set_gameplay_visible(_gameplay_visible)
+
+
+## Ekranın üstünde görev yazısı ("" = gizle).
+func set_objective(text: String) -> void:
+	_objective.text = text
+	_objective.visible = not text.is_empty() and _gameplay_visible
+	_layout()
 
 
 ## Diyalog sırasında oyun arayüzünü gizler.
 func set_gameplay_visible(visible_now: bool) -> void:
-	for node: CanvasItem in [_health_bar, _gem_label, _enemy_label, joystick, _attack_btn, _jump_btn]:
+	_gameplay_visible = visible_now
+	for node: CanvasItem in [joystick, _jump_btn]:
 		node.visible = visible_now
+	for node: CanvasItem in [_health_bar, _gem_label, _enemy_label, _attack_btn]:
+		node.visible = visible_now and _combat
 	_talk_btn.visible = visible_now and _talk_available
+	_objective.visible = visible_now and not _objective.text.is_empty()
 	joystick.reset()
 
 
@@ -120,6 +147,8 @@ func _layout() -> void:
 	_attack_btn.position = Vector2(vp.x - 150 - 50, vp.y - 150 - 50)
 	_jump_btn.position = Vector2(vp.x - 110 - 230, vp.y - 110 - 40)
 	_talk_btn.position = Vector2(vp.x - 110 - 70, vp.y - 110 - 260)
+	_objective.size = Vector2(vp.x * 0.6, 0)
+	_objective.position = Vector2(vp.x * 0.2, 22)
 
 
 func _make_label(font_size: int) -> Label:

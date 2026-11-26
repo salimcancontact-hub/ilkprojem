@@ -14,8 +14,12 @@ signal died
 @export var camera_sensitivity: float = 0.006
 ## Kameranın başlangıçta baktığı yön (derece).
 @export var camera_yaw_deg: float = 0.0
+## Dövüşsüz sahnelerde false.
+@export var can_attack: bool = true
 
 var health: int = 0
+## false iken hareket ve animasyon güncellemesi durur (ara sahneler için).
+var input_enabled: bool = true
 var is_dead: bool = false
 ## Sanal joystick'ten gelen girdi (-1..1).
 var move_input: Vector2 = Vector2.ZERO
@@ -25,6 +29,9 @@ var _attack_timer: float = 0.0
 var _invuln_timer: float = 0.0
 
 @onready var _visual: Node3D = $Visual
+## Boş bırakılırsa sahnedeki DenizModel kullanılır (önsözde Evren modeli verilir).
+@export var model_scene: PackedScene
+
 @onready var model: CharacterModel = $Visual/DenizModel
 @onready var _attack_area: Area3D = $Visual/AttackArea
 @onready var _camera_pivot: Node3D = $CameraPivot
@@ -32,6 +39,15 @@ var _invuln_timer: float = 0.0
 
 
 func _ready() -> void:
+	if model_scene:
+		var custom: CharacterModel = model_scene.instantiate()
+		var parent := model.get_parent()
+		var index := model.get_index()
+		parent.remove_child(model)
+		model.queue_free()
+		parent.add_child(custom)
+		parent.move_child(custom, index)
+		model = custom
 	_gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	health = max_health
 	_camera_pivot.rotation.x = deg_to_rad(-15.0)
@@ -49,9 +65,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= _gravity * delta
 
 	# Joystick veya klavye, hangisi güçlüyse onu kullan.
-	var input_vec: Vector2 = move_input
+	var input_vec: Vector2 = move_input if input_enabled else Vector2.ZERO
 	var kb: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	if kb.length() > input_vec.length():
+	if input_enabled and kb.length() > input_vec.length():
 		input_vec = kb
 
 	# Hareketi kameranın baktığı yöne göre hesapla.
@@ -73,9 +89,9 @@ func _physics_process(delta: float) -> void:
 		var target_angle: float = atan2(-direction.x, -direction.z)
 		_visual.rotation.y = lerp_angle(_visual.rotation.y, target_angle, 12.0 * delta)
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if input_enabled and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
-	if Input.is_action_just_pressed("attack"):
+	if input_enabled and can_attack and Input.is_action_just_pressed("attack"):
 		attack()
 
 	move_and_slide()
@@ -95,6 +111,8 @@ var _action_lock: float = 0.0
 
 func _update_animation(input_strength: float) -> void:
 	_action_lock = maxf(_action_lock - get_physics_process_delta_time(), 0.0)
+	if not input_enabled:
+		return
 	if _action_lock > 0.0:
 		return
 	var horizontal := Vector2(velocity.x, velocity.z).length()

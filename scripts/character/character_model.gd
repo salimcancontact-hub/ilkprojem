@@ -77,6 +77,17 @@ func play_once(anim_name: String, then: String = "Idle", blend: float = 0.15) ->
 		play(then, blend)
 
 
+## Animasyonun son karesinde donar (ör. yerde yatan bir karakter).
+func hold_last_frame(anim_name: String) -> void:
+	var full := resolve(anim_name)
+	if full.is_empty():
+		return
+	_current = full
+	animation_player.play(full, 0.0)
+	animation_player.seek(animation_player.get_animation(full).length - 0.02, true)
+	animation_player.pause()
+
+
 func resolve(anim_name: String) -> String:
 	for lib_name in ANIM_SOURCES:
 		var full: String = "%s/%s" % [lib_name, anim_name]

@@ -8,6 +8,14 @@ signal player_nearby(npc: Npc, is_near: bool)
 @export_file("*.dlg") var dialog_path: String = ""
 @export var start_node: String = "baslangic"
 @export var model_scene: PackedScene
+## Etkileşim düğmesinde yazan metin.
+@export var prompt: String = "KONUŞ"
+## Kameranın baktığı yükseklik (yerdeki bir nesne için küçük değer).
+@export var focus_height: float = 1.55
+## Karakterin boştayken oynattığı animasyon.
+@export var idle_animation: String = "Idle"
+## false ise oyuncu yaklaşsa da etkileşim düğmesi çıkmaz.
+@export var interactable: bool = true
 
 var model: CharacterModel
 
@@ -18,6 +26,7 @@ func _ready() -> void:
 	add_to_group("npcs")
 	if model_scene:
 		model = model_scene.instantiate()
+		model.start_animation = idle_animation
 		_visual.add_child(model)
 	$TalkArea.body_entered.connect(func(b: Node3D) -> void:
 		if b is Player: player_nearby.emit(self, true))
@@ -26,7 +35,22 @@ func _ready() -> void:
 
 
 func head_position() -> Vector3:
-	return global_position + Vector3(0, 1.55, 0)
+	return global_position + Vector3(0, focus_height, 0)
+
+
+func is_player_near() -> bool:
+	for b in $TalkArea.get_overlapping_bodies():
+		if b is Player:
+			return true
+	return false
+
+
+## Hikâye ilerledikçe etkileşimi açıp kapatmak için.
+func set_interactable(value: bool) -> void:
+	interactable = value
+	var level := get_tree().current_scene
+	if level is GameLevel:
+		(level as GameLevel).refresh_interactions()
 
 
 func face_point(point: Vector3) -> void:

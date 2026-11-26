@@ -1,0 +1,88 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/apocalypse/S_Barrel.gltf" id="1_barrel"]
+[ext_resource type="Script" path="res://scripts/props/flicker_light.gd" id="2_flicker"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_fire"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="Mesh_fire"]
+material = SubResource("Mat_fire")
+size = Vector2(0.45, 0.45)
+
+[sub_resource type="Curve" id="Curve_scale"]
+_data = [Vector2(0, 0.6), 0.0, 0.0, 0, 0, Vector2(0.3, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Grad_fire"]
+offsets = PackedFloat32Array(0, 0.25, 0.6, 1)
+colors = PackedColorArray(1, 0.95, 0.6, 1, 1, 0.6, 0.15, 0.9, 0.8, 0.2, 0.05, 0.6, 0.15, 0.08, 0.05, 0)
+
+[sub_resource type="Gradient" id="Grad_smoke"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(0.2, 0.18, 0.16, 0, 0.2, 0.18, 0.16, 0.35, 0.15, 0.14, 0.13, 0)
+
+[sub_resource type="Curve" id="Curve_smoke"]
+_data = [Vector2(0, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 1.8), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="Mat_smoke"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[node name="FireBarrel" type="Node3D"]
+
+[node name="Barrel" parent="." instance=ExtResource("1_barrel")]
+
+[node name="Fire" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+amount = 28
+lifetime = 0.9
+mesh = SubResource("Mesh_fire")
+emission_shape = 1
+emission_sphere_radius = 0.22
+direction = Vector3(0, 1, 0)
+spread = 12.0
+gravity = Vector3(0, 1.6, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.8
+scale_amount_curve = SubResource("Curve_scale")
+color_ramp = SubResource("Grad_fire")
+
+[node name="Smoke" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+amount = 14
+lifetime = 3.0
+mesh = SubResource("Mesh_fire")
+material_override = SubResource("Mat_smoke")
+emission_shape = 1
+emission_sphere_radius = 0.2
+direction = Vector3(0.2, 1, 0)
+spread = 18.0
+gravity = Vector3(0.3, 0.8, 0)
+initial_velocity_min = 0.4
+initial_velocity_max = 0.9
+scale_amount_min = 1.5
+scale_amount_max = 2.5
+scale_amount_curve = SubResource("Curve_smoke")
+color_ramp = SubResource("Grad_smoke")
+
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 2.2
+omni_range = 7.0
+script = ExtResource("2_flicker")
+base_energy = 2.2

@@ -1,0 +1,13 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/character_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/Superhero_Female.glb" id="2"]
+[ext_resource type="Texture2D" path="res://assets/characters/textures/kalabalik_k3_body.png" id="3"]
+[ext_resource type="PackedScene" path="res://assets/characters/Hair_BuzzedFemale.glb" id="4"]
+
+[node name="C3Model" type="Node3D"]
+script = ExtResource("1")
+base_scene = ExtResource("2")
+body_texture = ExtResource("3")
+hair_scene = ExtResource("4")
+hair_color = Color(0.3, 0.18, 0.1, 1)

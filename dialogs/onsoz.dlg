@@ -1,0 +1,224 @@
+# EMANET — Önsöz: "Seçim Gecesi"
+# Dünya, 2526. Seçim Merkezi'nin önü.
+# Oyuncu bu bölümde adı henüz bilinmeyen biridir (EVREN, ekranda "???").
+
+# ---------------------------------------------------------------- Açılış
+=== giris
+@olay siyah
+@olay baslik Dünya, 2526 | Seçim Gecesi
+> "Kuraklığın on birinci yılı. Nehirler artık yalnızca haritalarda akıyor."
+> "Komite bu gece son listeyi açıklıyor. Beş yüz isim. Sekiz milyar insan."
+> "Herkes aynı soruyu soruyor: Neden onlar? Neden ben değil?"
+> — Selim Arslan'ın günlüğünden
+@olay aydinlat 3
+@olay gorev Seçim Merkezi'ne git.
+-> SON
+
+# ---------------------------------------------------------------- Deniz Arman
+=== arman
+@if arman_konustu -> arman_tekrar
+~ arman_konustu = true
+> Kalabalığın kenarında, elinde mavi mavi parlayan bir kart tutan bir adam gülümsüyor. Bu gece burada gülümseyen tek kişi o.
+ARMAN: Hey! Sen de mi listedesin?
+@sure 8 -> arman_sessiz
+* Hayır. Ama bakmadan gidemedim. -> arman_durust
+  ~ durustluk += 1
+* Belki. Daha bakmadım. -> arman_yalan
+  ~ yalan_sayisi += 1
+* O kart gerçek mi? -> arman_kart
+* [Sessiz kal] -> arman_sessiz
+
+=== arman_durust
+ARMAN: Dürüstsün. Bu gece burada pek kimse dürüst değil.
+-> arman_tanisma
+
+=== arman_yalan
+ARMAN: Bakma bence. Umut, cevaptan daha uzun yaşıyor.
+-> arman_tanisma
+
+=== arman_kart
+ARMAN: Gerçek mi? Yirmi yıl kaynak yaptım dostum. Köprüler, su boruları, tuzdan arındırma tesisleri...
+ARMAN: Biri bir yerde "Bu adam işe yarar" demiş demek ki.
+@olay anim ARMAN Yes
+-> arman_tanisma
+
+=== arman_sessiz
+> Adam omuz silkiyor ama kartını göstermekten vazgeçmiyor.
+-> arman_tanisma
+
+=== arman_tanisma
+ARMAN: Deniz. Deniz Arman. Kaynakçı. Ve yarın sabah...
+ARMAN: ...yıldızlara gidiyorum.
+ARMAN: Senin adın ne?
+@sure 8 -> isim_sessiz
+* Bunun bir önemi yok. -> isim_onemsiz
+* [Yalan söyle] Can. -> isim_yalan
+  ~ yalan_sayisi += 1
+* [Sessiz kal] -> isim_sessiz
+
+=== isim_onemsiz
+ARMAN: Herkesin adı önemli. Komite öyle düşünmese bile.
+-> arman_su
+
+=== isim_yalan
+ARMAN: Can! Güzel isim. Bu gece herkese lazım olan şey.
+-> arman_su
+
+=== isim_sessiz
+ARMAN: Peki, gizemli yabancı. Sorun değil.
+-> arman_su
+
+=== arman_su
+> Deniz çantasından yarısı dolu bir su şişesi çıkarıyor.
+ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
+* Şişeyi al. -> su_al
+  ~ arman_su = 1
+* Sende kalsın. Yolun uzun. -> su_reddet
+  ~ arman_su = 2
+  ! Deniz Arman bunu hatırlayacak.
+
+=== su_al
+> Su ılık ve metal tadında. Yine de son iki günün en güzel şeyi.
+ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
+-> arman_son
+
+=== su_reddet
+ARMAN: Ha! Gururlu adam. Hoşuma gitti.
+ARMAN: Yukarıda seni anlatacağım. "Bana su vermeye çalışan adama ben su verdim" diyeceğim.
+-> arman_son
+
+=== arman_son
+ARMAN: Kapıdaki muhafızlara bir şans ver. Belki listede bir hata vardır, kim bilir.
+~ gorev_muhafiz = true
+@olay gorev Kapıdaki muhafızla konuş.
+-> SON
+
+=== arman_tekrar
+ARMAN: Hadi, muhafıza sor. Kaybedecek neyin var?
+-> SON
+
+# ---------------------------------------------------------------- Muhafız
+=== muhafiz
+@if not gorev_muhafiz -> muhafiz_uzak
+@if muhafiz_konustu -> muhafiz_tekrar
+~ muhafiz_konustu = true
+> Kapının önünde, yüzü projektörlerin ışığında kaybolmuş bir Komite muhafızı.
+MUHAFIZ: Kimlik kartı.
+@sure 7 -> muhafiz_sessiz
+* Kartım yok. Ama adım listede olabilir. -> muhafiz_isim
+* Lütfen. Sadece bir bakın. -> muhafiz_yalvar
+* Kim karar veriyor? Neye göre seçiyorsunuz? -> muhafiz_soru
+  ~ komiteyi_sorguladi = true
+* [Sessiz kal] -> muhafiz_sessiz
+
+=== muhafiz_isim
+MUHAFIZ: Kart yoksa isim yok. İsim yoksa liste yok.
+-> muhafiz_red
+
+=== muhafiz_yalvar
+MUHAFIZ: Bu gece bunu söyleyen dokuz bininci kişisin.
+-> muhafiz_red
+
+=== muhafiz_soru
+MUHAFIZ: Komite karar verir. Ben kapıyı tutarım.
+MUHAFIZ: Sen de kapının dışında kalırsın.
+-> muhafiz_red
+
+=== muhafiz_sessiz
+MUHAFIZ: Konuşmuyorsan çekil.
+-> muhafiz_red
+
+=== muhafiz_red
+MUHAFIZ: Kordonun arkasına geç. Şimdi.
+> Arkadan bir bağırış yükseliyor. Sonra bir tane daha.
+> "Listeler sahte! Kendilerini seçtiler!"
+> Kalabalık bir dalga gibi barikatlara yükleniyor.
+@olay isyan
+-> SON
+
+=== muhafiz_uzak
+MUHAFIZ: Kordonun arkasında kal.
+-> SON
+
+=== muhafiz_tekrar
+MUHAFIZ: Geri çekil dedim!
+-> SON
+
+# ---------------------------------------------------------------- Kalabalık
+=== yasli
+> Yaşlı bir adam, Komite'nin holografik tabelasına bakıyor.
+YASLI: Kızımın adı listede. Mühendis. Tabii ki listede.
+YASLI: Benimki değil. Tabii ki değil.
+YASLI: Gitmeden önce ona "git" diyebildim. Bir babanın verebileceği son şey bu.
+-> SON
+
+=== kadin
+KADIN: Su kartları da bitti. Dağıtım merkezini üç gün önce kapattılar.
+KADIN: Gemiye su yetiyor ama bize yetmiyor. Hesabı iyi yapmışlar.
+-> SON
+
+# ---------------------------------------------------------------- İsyan ve karanlık
+=== karanlik
+> Bir patlama. Beyaz bir ışık.
+> Sonra hiçbir şey.
+-> SON
+
+=== uyanis
+> Kulaklarında bir çınlama. Ağzında toz ve kan tadı.
+> Sokak bomboş. Sirenler uzaklaşıyor.
+@olay gorev ...
+-> SON
+
+# ---------------------------------------------------------------- Kart
+=== kart
+> Deniz Arman yerde yatıyor. Gözleri açık, yıldızlara bakıyor.
+> Kartı, parmaklarının birkaç santim ötesinde, hâlâ mavi mavi parlıyor.
+@if arman_su == 1 -> kart_su
+@if arman_su == 2 -> kart_su_red
+-> kart_secim
+
+=== kart_su
+> Cebindeki şişenin ağırlığını hissediyorsun. Onun verdiği su.
+-> kart_secim
+
+=== kart_su_red
+> "Yukarıda seni anlatacağım" demişti.
+-> kart_secim
+
+=== kart_secim
+> Kartın üzerinde onun yüzü, onun adı: DENİZ ARMAN — KAYNAK USTASI — EMANET / 412
+@sure 15 -> kart_birak
+* Kartı al. -> kart_al
+  ~ kimlik_karti_alindi = true
+  ! Bu seçim seninle kalacak.
+* Kartı bırak. -> kart_birak
+  ~ kimlik_karti_alindi = false
+  ! Bu seçim seninle kalacak.
+
+=== kart_al
+> Kart avucunda ılık.
+> "Benim yerime git" demiş miydi? Yoksa sen mi öyle duymak istiyorsun?
+@olay final
+-> SON
+
+=== kart_birak
+> Kartı onun göğsüne bırakıyorsun. Bu onun hikâyesiydi, senin değil.
+> Ama sirenler yaklaşırken bir şeyi biliyorsun: Bu gece, bir şekilde, o gemiye bineceksin.
+@olay final
+-> SON
+
+# ---------------------------------------------------------------- Kapanış
+=== kalkis
+> Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
+@if kimlik_karti_alindi -> kalkis_kart
+> Kargo bölmesinde, hiçbir kayıtta görünmeyen bir yolcu vardı.
+-> kalkis_son
+
+=== kalkis_kart
+> 412 numaralı yolcunun adı Deniz Arman'dı.
+> En azından kayıtlar öyle diyordu.
+-> kalkis_son
+
+=== kalkis_son
+@olay baslik ÖNSÖZ SONU
+-> SON

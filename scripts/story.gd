@@ -18,6 +18,12 @@ const CHARACTERS := {
 	"REYES": {"name": "Kaptan Reyes", "color": Color(0.8, 0.85, 1.0)},
 	"OKAFOR": {"name": "Dr. Okafor", "color": Color(0.95, 0.6, 0.8)},
 	"HAKEM": {"name": "HAKEM", "color": Color(0.6, 0.95, 1.0)},
+	# Önsöz
+	"EVREN": {"name": "???", "color": Color(0.75, 0.72, 0.65)},
+	"ARMAN": {"name": "Deniz Arman", "color": Color(1.0, 0.65, 0.3)},
+	"MUHAFIZ": {"name": "Komite Muhafızı", "color": Color(0.95, 0.8, 0.3)},
+	"YASLI": {"name": "Yaşlı Adam", "color": Color(0.8, 0.75, 0.7)},
+	"KADIN": {"name": "Kadın", "color": Color(0.85, 0.7, 0.8)},
 }
 
 var vars: Dictionary = {}

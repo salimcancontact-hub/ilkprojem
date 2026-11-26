@@ -34,6 +34,11 @@ var _timer_bar: ProgressBar
 var _grid: GridContainer
 var _toast: PanelContainer
 var _toast_label: Label
+var _fade: ColorRect
+var _title: Label
+var _subtitle: Label
+var _fade_tween: Tween
+var _title_tween: Tween
 
 
 func _ready() -> void:
@@ -44,7 +49,7 @@ func _ready() -> void:
 	runner.narration_shown.connect(_on_narration)
 	runner.choices_shown.connect(_on_choices)
 	runner.notification_shown.connect(show_notification)
-	runner.event_fired.connect(func(n: String, a: PackedStringArray) -> void: event_fired.emit(n, a))
+	runner.event_fired.connect(_on_runner_event)
 	runner.finished.connect(_on_finished)
 
 
@@ -64,6 +69,52 @@ func start(path: String, node_name: String = "baslangic") -> void:
 	tw.tween_property(_bottom_bar, "offset_top", -BAR_HEIGHT, 0.35)
 	dialog_started.emit()
 	runner.start(nodes, node_name)
+
+
+## Ekranı karartır (1) veya açar (0). Diyalog dışında da kullanılabilir.
+func fade_to(alpha: float, time: float = 1.0) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+	if time <= 0.0:
+		_fade.color.a = alpha
+		return
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_fade, "color:a", alpha, time)
+	await _fade_tween.finished
+
+
+## Ekranın ortasında sinematik başlık kartı.
+func show_title(text: String, subtitle: String = "", hold: float = 2.5) -> void:
+	_title.text = text
+	_subtitle.text = subtitle
+	if _title_tween:
+		_title_tween.kill()
+	_title.modulate.a = 0.0
+	_subtitle.modulate.a = 0.0
+	_title_tween = create_tween()
+	_title_tween.tween_property(_title, "modulate:a", 1.0, 0.8)
+	_title_tween.parallel().tween_property(_subtitle, "modulate:a", 1.0, 1.2).set_delay(0.4)
+	_title_tween.tween_interval(hold)
+	_title_tween.tween_property(_title, "modulate:a", 0.0, 0.8)
+	_title_tween.parallel().tween_property(_subtitle, "modulate:a", 0.0, 0.8)
+	await _title_tween.finished
+
+
+## Arayüzle ilgili olaylar burada işlenir, hepsi seviyeye de iletilir.
+##   @olay siyah | @olay kararti [sn] | @olay aydinlat [sn] | @olay baslik Metin | Alt yazı
+func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
+	var t := float(args[0]) if args.size() > 0 and args[0].is_valid_float() else 1.0
+	match event_name:
+		"siyah":
+			fade_to(1.0, 0.0)
+		"kararti":
+			fade_to(1.0, t)
+		"aydinlat":
+			fade_to(0.0, t)
+		"baslik":
+			var parts := " ".join(args).split("|")
+			show_title(parts[0].strip_edges(), parts[1].strip_edges() if parts.size() > 1 else "")
+	event_fired.emit(event_name, args)
 
 
 func show_notification(text: String) -> void:
@@ -217,6 +268,29 @@ func _set_panel_raised(raised: bool) -> void:
 
 
 func _build_ui() -> void:
+	_fade = ColorRect.new()
+	_fade.color = Color(0, 0, 0, 0)
+	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade)
+	var title_box := VBoxContainer.new()
+	title_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	title_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(title_box)
+	_title = Label.new()
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.add_theme_font_size_override("font_size", 64)
+	_title.add_theme_color_override("font_color", Color(0.95, 0.92, 0.85))
+	_title.modulate.a = 0.0
+	title_box.add_child(_title)
+	_subtitle = Label.new()
+	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle.add_theme_font_size_override("font_size", 28)
+	_subtitle.add_theme_color_override("font_color", Color(0.85, 0.6, 0.35))
+	_subtitle.modulate.a = 0.0
+	title_box.add_child(_subtitle)
+
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE

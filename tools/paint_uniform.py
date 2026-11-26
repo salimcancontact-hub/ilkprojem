@@ -16,11 +16,30 @@ CHAR_DIR = os.path.join(ROOT, "assets", "characters")
 OUT_DIR = os.path.join(CHAR_DIR, "textures")
 
 # Karakter tanımları: hangi gövde, hangi renkler.
+# İsteğe bağlı anahtarlar: legs (pantolon), collar (yaka), cuffs (manşet, None = gövde rengi),
+# skin (ten rengi çarpanı, ör. (0.7, 0.6, 0.5)).
 UNIFORMS = {
     "deniz": dict(base="Superhero_Male.glb", suit=(38, 46, 60), accent=(222, 120, 40),
                   dark=(22, 24, 28), gloves=True, belt=(55, 58, 62)),
     "ada":   dict(base="Superhero_Female.glb", suit=(40, 50, 64), accent=(60, 200, 180),
                   dark=(24, 26, 30), gloves=False, belt=(58, 62, 66)),
+    # --- Önsöz: Dünya, 2526 ---
+    "evren": dict(base="Superhero_Male.glb", suit=(74, 66, 50), legs=(42, 46, 56), collar=(56, 50, 38),
+                  cuffs=None, accent=(74, 66, 50), dark=(34, 28, 24), gloves=False, belt=(38, 32, 26)),
+    "arman": dict(base="Superhero_Male.glb", suit=(160, 88, 36), collar=(95, 95, 95), cuffs=(70, 70, 70),
+                  accent=(70, 70, 70), dark=(48, 42, 36), gloves=True, belt=(64, 52, 40), skin=(0.72, 0.6, 0.52)),
+    "muhafiz": dict(base="Superhero_Male.glb", suit=(30, 32, 37), collar=(215, 175, 40), cuffs=(215, 175, 40),
+                    accent=(215, 175, 40), dark=(16, 16, 19), gloves=True, belt=(65, 65, 68)),
+    "kalabalik_e1": dict(base="Superhero_Male.glb", suit=(100, 44, 40), legs=(62, 56, 50), cuffs=None,
+                         accent=(100, 44, 40), collar=(80, 36, 32), dark=(30, 26, 24), gloves=False, belt=(40, 34, 30), skin=(0.85, 0.76, 0.7)),
+    "kalabalik_e2": dict(base="Superhero_Male.glb", suit=(62, 76, 92), legs=(48, 42, 36), cuffs=None,
+                         accent=(62, 76, 92), collar=(50, 60, 72), dark=(28, 26, 24), gloves=False, belt=(36, 32, 28), skin=(0.58, 0.46, 0.4)),
+    "kalabalik_k1": dict(base="Superhero_Female.glb", suit=(118, 100, 74), legs=(42, 42, 48), cuffs=None,
+                         accent=(118, 100, 74), collar=(96, 80, 60), dark=(30, 26, 24), gloves=False, belt=(50, 40, 32), skin=(0.92, 0.84, 0.8)),
+    "kalabalik_k2": dict(base="Superhero_Female.glb", suit=(74, 42, 74), legs=(52, 52, 58), cuffs=None,
+                         accent=(74, 42, 74), collar=(60, 34, 60), dark=(30, 26, 24), gloves=False, belt=(40, 36, 34), skin=(0.6, 0.48, 0.42)),
+    "kalabalik_k3": dict(base="Superhero_Female.glb", suit=(48, 72, 62), legs=(64, 54, 42), cuffs=None,
+                         accent=(48, 72, 62), collar=(40, 60, 52), dark=(30, 26, 24), gloves=False, belt=(44, 38, 30), skin=(0.78, 0.66, 0.58)),
 }
 
 COMPONENT = {5120: np.int8, 5121: np.uint8, 5122: np.int16, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
@@ -101,7 +120,7 @@ def paint(name, cfg):
     region = Image.new("L", base.size, 0)  # 0 = ten (dokunma)
     draw = ImageDraw.Draw(region)
 
-    SUIT, ACCENT, DARK, BELT, COLLAR, PANEL = 1, 2, 3, 4, 5, 6
+    SUIT, ACCENT, DARK, BELT, COLLAR, PANEL, LEGS = 1, 2, 3, 4, 5, 6, 7
     for t in tris:
         c = pos[t].mean(axis=0)
         head, neck = w_head[t].mean(), w_neck[t].mean()
@@ -123,6 +142,8 @@ def paint(name, cfg):
             r = BELT
         elif pelvis > 0.55 and c[1] < waist_y:
             r = PANEL  # kalçada koyu dayanıklı panel
+        elif c[1] < waist_y:
+            r = LEGS
         else:
             r = SUIT
         pts = [(float(uv[k, 0]) * W, float(uv[k, 1]) * H) for k in t]
@@ -131,8 +152,13 @@ def paint(name, cfg):
     region = np.asarray(region)
     out = np.asarray(base, dtype=np.float32).copy()
     shade = (0.8 + 0.3 * (lum - lum.mean()))[..., None]
-    colors = {SUIT: cfg["suit"], ACCENT: cfg["accent"], DARK: cfg["dark"], BELT: cfg["belt"], COLLAR: cfg["accent"],
-              PANEL: tuple(int(v * 0.72) for v in cfg["suit"])}
+    legs = cfg.get("legs", cfg["suit"])
+    cuffs = cfg.get("cuffs", cfg["accent"]) or cfg["suit"]
+    colors = {SUIT: cfg["suit"], ACCENT: cuffs, DARK: cfg["dark"], BELT: cfg["belt"],
+              COLLAR: cfg.get("collar", cfg["accent"]), PANEL: tuple(int(v * 0.72) for v in legs), LEGS: legs}
+    if "skin" in cfg:
+        skin = region == 0
+        out[skin] = out[skin] * np.array(cfg["skin"], dtype=np.float32)[None, :]
     for r, col in colors.items():
         m = region == r
         out[m] = (np.array(col, dtype=np.float32)[None, :] * shade[m] * 1.25).clip(0, 255)

@@ -1,0 +1,240 @@
+[gd_scene load_steps=27 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/onsoz.gd" id="1_r"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_r"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_r"]
+[ext_resource type="PackedScene" path="res://scenes/npc.tscn" id="4_r"]
+[ext_resource type="PackedScene" path="res://scenes/dialog_ui.tscn" id="5_r"]
+[ext_resource type="PackedScene" path="res://scenes/levels/onsoz_sokak.tscn" id="6_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/evren_model.tscn" id="7_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/arman_model.tscn" id="8_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/muhafiz_model.tscn" id="9_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/yasli_model.tscn" id="10_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kadin_model.tscn" id="11_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c1_model.tscn" id="12_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c2_model.tscn" id="13_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c3_model.tscn" id="14_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c4_model.tscn" id="15_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c5_model.tscn" id="16_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c6_model.tscn" id="17_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c7_model.tscn" id="18_r"]
+[ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c8_model.tscn" id="19_r"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.015, 0.015, 0.03, 1)
+sky_horizon_color = Color(0.3, 0.15, 0.07, 1)
+sky_curve = 0.12
+ground_bottom_color = Color(0.02, 0.015, 0.01, 1)
+ground_horizon_color = Color(0.25, 0.12, 0.06, 1)
+sun_angle_max = 1.0
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.35, 0.32, 0.38, 1)
+ambient_light_energy = 0.35
+tonemap_mode = 3
+tonemap_exposure = 1.0
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.08
+fog_enabled = true
+fog_light_color = Color(0.3, 0.19, 0.11, 1)
+fog_density = 0.022
+fog_sky_affect = 0.7
+adjustment_enabled = true
+adjustment_contrast = 1.12
+adjustment_saturation = 0.95
+
+[sub_resource type="BoxMesh" id="CardMesh"]
+size = Vector3(0.09, 0.006, 0.056)
+
+[sub_resource type="StandardMaterial3D" id="CardMat"]
+albedo_color = Color(0.3, 0.7, 1, 1)
+emission_enabled = true
+emission = Color(0.3, 0.75, 1, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="BoxShape3D" id="AlleyShape"]
+size = Vector3(5, 3, 7)
+
+[node name="Onsoz" type="Node3D"]
+script = ExtResource("1_r")
+combat_enabled = false
+player_speaker_id = "EVREN"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-38, -150, 0)
+light_color = Color(0.55, 0.62, 0.85, 1)
+light_energy = 0.22
+shadow_enabled = true
+directional_shadow_max_distance = 40.0
+
+[node name="Level" parent="." instance=ExtResource("6_r")]
+
+[node name="Player" parent="." instance=ExtResource("2_r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -6)
+model_scene = ExtResource("7_r")
+camera_yaw_deg = 180.0
+can_attack = false
+
+[node name="Npcs" type="Node3D" parent="."]
+
+[node name="Arman" parent="Npcs" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, 2.2, -0.15, 32.0)
+npc_id = "ARMAN"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "arman"
+model_scene = ExtResource("8_r")
+idle_animation = "Idle"
+
+[node name="Muhafiz" parent="Npcs" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, 0.0, -0.15, 58.6)
+npc_id = "MUHAFIZ"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "muhafiz"
+model_scene = ExtResource("9_r")
+idle_animation = "Idle"
+
+[node name="Yasli" parent="Npcs" instance=ExtResource("4_r")]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, -5.0, -0.15, 24.0)
+npc_id = "YASLI"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "yasli"
+model_scene = ExtResource("10_r")
+idle_animation = "Idle_FoldArms"
+
+[node name="Kadin" parent="Npcs" instance=ExtResource("4_r")]
+transform = Transform3D(-0.8569, 0, -0.5155, 0, 1, 0, 0.5155, 0, -0.8569, -3.4, -0.15, 44.6)
+npc_id = "KADIN"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "kadin"
+model_scene = ExtResource("11_r")
+idle_animation = "Idle"
+
+[node name="Crowd" type="Node3D" parent="."]
+
+[node name="P1" parent="Crowd" instance=ExtResource("12_r")]
+transform = Transform3D(-0.9777, 0, -0.2098, 0, 1, 0, 0.2098, 0, -0.9777, -5.5, -0.15, 38)
+start_animation = "Idle"
+
+[node name="P2" parent="Crowd" instance=ExtResource("13_r")]
+transform = Transform3D(-0.9135, 0, -0.4068, 0, 1, 0, 0.4068, 0, -0.9135, -4.6, -0.15, 38.8)
+start_animation = "Idle_FoldArms"
+
+[node name="P3" parent="Crowd" instance=ExtResource("14_r")]
+transform = Transform3D(-0.9836, 0, 0.1801, 0, 1, 0, -0.1801, 0, -0.9836, -1.0, -0.15, 37)
+start_animation = "Idle_Talking"
+
+[node name="P4" parent="Crowd" instance=ExtResource("15_r")]
+transform = Transform3D(-0.8712, 0, -0.4909, 0, 1, 0, 0.4909, 0, -0.8712, 0.4, -0.15, 38.2)
+start_animation = "Idle_No"
+
+[node name="P5" parent="Crowd" instance=ExtResource("16_r")]
+transform = Transform3D(-0.9991, 0, 0.0430, 0, 1, 0, -0.0430, 0, -0.9991, 4.5, -0.15, 36.5)
+start_animation = "Idle_TalkingPhone"
+
+[node name="P6" parent="Crowd" instance=ExtResource("17_r")]
+transform = Transform3D(-0.9870, 0, -0.1605, 0, 1, 0, 0.1605, 0, -0.9870, 5.6, -0.15, 37.4)
+start_animation = "Idle"
+
+[node name="P7" parent="Crowd" instance=ExtResource("18_r")]
+transform = Transform3D(-0.8626, 0, -0.5059, 0, 1, 0, 0.5059, 0, -0.8626, -6.2, -0.15, 42)
+start_animation = "Idle_Torch"
+
+[node name="P8" parent="Crowd" instance=ExtResource("19_r")]
+transform = Transform3D(-1.0000, 0, 0.0089, 0, 1, 0, -0.0089, 0, -1.0000, -1.6, -0.15, 43)
+start_animation = "Idle_FoldArms"
+
+[node name="P9" parent="Crowd" instance=ExtResource("12_r")]
+transform = Transform3D(-0.8499, 0, -0.5269, 0, 1, 0, 0.5269, 0, -0.8499, 1.2, -0.15, 44.2)
+start_animation = "Idle"
+
+[node name="P10" parent="Crowd" instance=ExtResource("13_r")]
+transform = Transform3D(-0.9968, 0, -0.0795, 0, 1, 0, 0.0795, 0, -0.9968, 5.0, -0.15, 43.5)
+start_animation = "Idle_FoldArms"
+
+[node name="P11" parent="Crowd" instance=ExtResource("14_r")]
+transform = Transform3D(-0.8697, 0, -0.4936, 0, 1, 0, 0.4936, 0, -0.8697, -5.0, -0.15, 49.5)
+start_animation = "Idle_Talking"
+
+[node name="P12" parent="Crowd" instance=ExtResource("15_r")]
+transform = Transform3D(-0.8818, 0, -0.4716, 0, 1, 0, 0.4716, 0, -0.8818, -2.0, -0.15, 50.5)
+start_animation = "Idle_No"
+
+[node name="P13" parent="Crowd" instance=ExtResource("16_r")]
+transform = Transform3D(-0.9959, 0, -0.0905, 0, 1, 0, 0.0905, 0, -0.9959, 2.6, -0.15, 50)
+start_animation = "Idle_TalkingPhone"
+
+[node name="P14" parent="Crowd" instance=ExtResource("17_r")]
+transform = Transform3D(-0.9241, 0, 0.3822, 0, 1, 0, -0.3822, 0, -0.9241, 4.6, -0.15, 51.2)
+start_animation = "Idle"
+
+[node name="P15" parent="Crowd" instance=ExtResource("18_r")]
+transform = Transform3D(-0.8998, 0, -0.4363, 0, 1, 0, 0.4363, 0, -0.8998, -6.0, -0.15, 54)
+start_animation = "Idle_Torch"
+
+[node name="P16" parent="Crowd" instance=ExtResource("19_r")]
+transform = Transform3D(-0.9454, 0, -0.3260, 0, 1, 0, 0.3260, 0, -0.9454, 5.6, -0.15, 55)
+start_animation = "Idle_FoldArms"
+
+[node name="Card" parent="." instance=ExtResource("4_r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.6, -0.15, 10.5)
+collision_layer = 0
+npc_id = "KART"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "kart"
+prompt = "İNCELE"
+focus_height = 0.1
+
+[node name="CardMesh" type="MeshInstance3D" parent="Card"]
+transform = Transform3D(0.8, 0, 0.6, 0, 1, 0, -0.6, 0, 0.8, 0, 0.01, 0)
+mesh = SubResource("CardMesh")
+material_override = SubResource("CardMat")
+
+[node name="CardLight" type="OmniLight3D" parent="Card"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+light_color = Color(0.3, 0.7, 1, 1)
+light_energy = 0.8
+omni_range = 1.5
+
+[node name="AlleyTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 1, 10.5)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AlleyTrigger"]
+shape = SubResource("AlleyShape")
+
+[node name="AlarmLights" type="Node3D" parent="."]
+
+[node name="Alarm0" type="OmniLight3D" parent="AlarmLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4, 59.5)
+light_color = Color(1, 0.12, 0.08, 1)
+omni_range = 16.0
+
+[node name="Alarm1" type="OmniLight3D" parent="AlarmLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4, 59.5)
+light_color = Color(1, 0.12, 0.08, 1)
+omni_range = 16.0
+
+[node name="Alarm2" type="OmniLight3D" parent="AlarmLights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 58.5)
+light_color = Color(1, 0.12, 0.08, 1)
+omni_range = 16.0
+
+[node name="BlastLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 2.5, 10)
+light_color = Color(1, 0.6, 0.3, 1)
+omni_range = 22.0
+
+[node name="HUD" parent="." instance=ExtResource("3_r")]
+
+[node name="DialogUI" parent="." instance=ExtResource("5_r")]
