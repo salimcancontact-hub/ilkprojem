@@ -71,6 +71,31 @@ static func energy_bar() -> Node3D:
 	return root
 
 
+## Şok copu: siyah sap, mavi uç.
+static func baton() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Cop"
+	var mi := MeshInstance3D.new()
+	var c := CylinderMesh.new()
+	c.top_radius = 0.028
+	c.bottom_radius = 0.032
+	c.height = 0.6
+	mi.mesh = c
+	mi.position = Vector3(0, 0.2, 0)
+	mi.material_override = _mat(Color(0.08, 0.08, 0.09))
+	root.add_child(mi)
+	var tip := MeshInstance3D.new()
+	var s := CylinderMesh.new()
+	s.top_radius = 0.03
+	s.bottom_radius = 0.03
+	s.height = 0.08
+	tip.mesh = s
+	tip.position = Vector3(0, 0.52, 0)
+	tip.material_override = _mat(Color(0.4, 0.7, 1.0), Color(0.4, 0.75, 1.0), 4.0)
+	root.add_child(tip)
+	return root
+
+
 ## Telefon: ince, ekranı mavi parlayan.
 static func phone() -> Node3D:
 	var root := Node3D.new()

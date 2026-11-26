@@ -48,6 +48,8 @@ func _ready() -> void:
 		"arman_yerde": [Vector3(13.6, 2.6, 12.2), Vector3(16.0, 0.2, 10.4)],
 		"surukle": [Vector3(19.0, 2.8, 17.0), Vector3(19.5, 0.4, 11.8)],
 	}
+	# Muhafızın elinde şok copu
+	_guard.model.attach(Props.baton(), "hand_r", Vector3(0, 0.02, 0.03), Vector3(0, 0, 0))
 	# Deniz Arman kartını elinde tutuyor
 	_arman_card = Props.card()
 	_arman.model.attach(_arman_card, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
@@ -60,6 +62,8 @@ func _ready() -> void:
 	_blast.light_energy = 0.0
 	_dialog.fade_to(1.0, 0.0)
 	await get_tree().process_frame
+	_prewarm()
+	ResourceLoader.load_threaded_request("res://scenes/levels/emanet_hangar.tscn")
 	await play_dialog(DLG, "giris")
 	# Başlık kartı ve kararmanın açılması bitmeden aramaya geçme
 	if _dialog._title_tween and _dialog._title_tween.is_running():
@@ -107,10 +111,20 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 		"su_ic":
 			if _water:
 				await drink_sequence(_water)
+			Story.change_need("susuzluk", -40.0)
+		"cantaya_koy":
+			# Şişeyi sırttaki çantaya koyar: el omuzun arkasına gider, şişe kaybolur
+			if _water:
+				var bag := Node3D.new()
+				_player.get_node("Visual").add_child(bag)
+				bag.position = Vector3(0.22, 1.15, 0.22)
+				_player.model.reach("r", bag, 0.45)
+				await get_tree().create_timer(0.55, true, false, true).timeout
 				_player.model.detach(_water)
 				_water.queue_free()
 				_water = null
-			Story.change_need("susuzluk", -40.0)
+				_player.model.release("r", 0.4)
+				bag.queue_free()
 		"su_geri":
 			_arman.model.release("l", 0.5)
 			await get_tree().create_timer(0.6, true, false, true).timeout
@@ -119,6 +133,31 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_water.queue_free()
 				_water = null
 		# --- Kaynak kesicisi ve ölüm
+		"cop_kaldir":
+			# Muhafız copu kaldırıp sana savurur, sonra yakana yapışır
+			_guard.model.play_once("Melee_Hook", "Idle_Shield", 0.1)
+		"el_kaydi":
+			# Tuttuğun bilek elinden kayar, kalabalık onu çeker
+			_player.model.release("r", 0.25)
+			_player.model.play("Idle", 0.2)
+			var away := (_arman.global_position - _player.global_position)
+			away.y = 0
+			create_tween().tween_property(_arman, "global_position", _arman.global_position + away.normalized() * 1.4, 0.6)
+		"kac":
+			# Arkasını dönüp kalabalığın içine koşar
+			_player.model.release_all(0.2)
+			var dir := (_player.global_position - _arman.global_position)
+			dir.y = 0
+			dir = dir.normalized()
+			_player.face_point(_player.global_position + dir)
+			_player.model.play("Sprint", 0.15)
+			var tw2 := create_tween()
+			tw2.tween_property(_player, "global_position", _player.global_position + dir * 2.5, 0.9)
+			tw2.tween_callback(func() -> void: _player.model.play("Idle", 0.2))
+		"koridor":
+			_setup_corridor()
+		"el_tut":
+			_hold_hands()
 		"kart_goster":
 			_show_point = _point((_arman.global_position + _player.global_position) / 2.0 + Vector3(0, 1.25, 0))
 			_arman.model.reach("r", _show_point, 0.5)
@@ -423,6 +462,76 @@ func _point(at: Vector3) -> Node3D:
 	return n
 
 
+# --- Gölgelendirici ön ısıtma --------------------------------------------------
+
+## Mobil ekran kartları bir nesneyi ilk çizdiklerinde gölgelendiricisini derler ve oyun
+## bir anlığına donar. Ekran siyahken sahnede sonradan çıkacak her şey kameranın önünde
+## birkaç kare çizdirilir, böylece derleme oyun sırasında değil şimdi yapılır.
+func _prewarm() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var holder := Node3D.new()
+	add_child(holder)
+	holder.global_transform = cam.global_transform.translated_local(Vector3(0, 0, -2.0))
+	var items: Array[Node3D] = [Props.card(), Props.water_bottle(), Props.cutter(), Props.baton(),
+		Props.radio(), Props.energy_bar(), Props.phone()]
+	var x := -0.6
+	for it in items:
+		holder.add_child(it)
+		it.position = Vector3(x, 0, 0)
+		x += 0.2
+	var holo := HoloCall.new()
+	holo.caller_scene = load("res://scenes/characters/ada_model.tscn")
+	holder.add_child(holo)
+	holo.position = Vector3(0.6, 0, 0)
+	var fire: Node3D = load("res://scenes/props/fire_barrel.tscn").instantiate()
+	holder.add_child(fire)
+	fire.position = Vector3(0, -1.2, -1.0)
+	_shatter(holder.global_position + holder.global_basis * Vector3(0.3, 0.2, 0))
+	for k in 6:
+		await get_tree().process_frame
+	holder.queue_free()
+
+
+# --- Kapanış: gemide kargo koridoru ------------------------------------------
+
+const CORRIDOR := Vector3(0, -200, 0)  # hangar sahnesi şehrin çok altına kurulur
+var _ada_ship: CharacterModel
+
+
+func _setup_corridor() -> void:
+	var hangar: Node3D = (ResourceLoader.load_threaded_get("res://scenes/levels/emanet_hangar.tscn") as PackedScene).instantiate()
+	hangar.position = CORRIDOR
+	add_child(hangar)
+	_player.velocity = Vector3.ZERO
+	_player.global_position = CORRIDOR + Vector3(12.0, 0.05, 5.0)
+	_player.model.release_all(0.0)
+	_player.model.play("Idle", 0.0)
+	_ada_ship = load("res://scenes/characters/ada_model.tscn").instantiate()
+	_ada_ship.process_mode = Node.PROCESS_MODE_ALWAYS  # ara sahne duraklatılmış olsa da canlı
+	add_child(_ada_ship)
+	_ada_ship.global_position = CORRIDOR + Vector3(12.0, 0.0, 5.8)
+	_ada_ship.start_animation = "Idle"
+	_player.face_point(_ada_ship.global_position)
+	# Ada modeli -Z'ye bakar; oyuncuya dönük (+Z'den -Z'ye) zaten doğru
+	camera_shots["koridor"] = [CORRIDOR + Vector3(13.8, 1.6, 5.3), CORRIDOR + Vector3(12.0, 1.35, 5.4)]
+	_set_camera("koridor")
+
+
+## Ada ile oyuncunun elleri aralarındaki noktada buluşur.
+func _hold_hands() -> void:
+	if _ada_ship == null:
+		return
+	var meet := Node3D.new()
+	add_child(meet)
+	meet.global_position = CORRIDOR + Vector3(12.17, 1.02, 5.4)
+	_ada_ship.reach("r", meet, 0.8)
+	_player.model.reach("l", meet, 0.8)
+	camera_shots["el_ele"] = [CORRIDOR + Vector3(13.55, 1.45, 5.15), CORRIDOR + Vector3(12.05, 1.15, 5.4)]
+	_set_camera("el_ele")
+
+
 # --- Görüntülü arama ---------------------------------------------------------
 
 var _phone: Node3D
@@ -696,6 +805,7 @@ func _final() -> void:
 	if _phase == "final":
 		return
 	_phase = "final"
+	cinematic_hold = true
 	if _dialog.active:
 		await _dialog.dialog_finished
 	_card.set_interactable(false)

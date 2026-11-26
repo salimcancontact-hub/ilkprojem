@@ -82,7 +82,52 @@ func _exit_tree() -> void:
 		Game.gems_changed.disconnect(_on_gems_changed)
 
 
+# --- Gözetçi: akış takılırsa kendini kurtarır ve kaydeder ---------------------
+
+## Final gibi bilinçli uzun beklemelerde true yapılır.
+var cinematic_hold: bool = false
+var _stall := {"siyah": 0.0, "kilit": 0.0, "bekle": 0.0, "panelsiz": 0.0}
+
+
+func _watchdog(delta: float) -> void:
+	if cinematic_hold:
+		for k in _stall:
+			_stall[k] = 0.0
+		return
+	var d = _dialog
+	var no_dialog: bool = not d.active
+	_stall["siyah"] = _stall["siyah"] + delta if no_dialog and d._fade.color.a > 0.95 else 0.0
+	_stall["kilit"] = _stall["kilit"] + delta if no_dialog and not _player.input_enabled and not _using_item and not _player.is_dead else 0.0
+	_stall["bekle"] = _stall["bekle"] + delta if d.active and d._waiting else 0.0
+	var nothing_to_tap: bool = d.active and not d._waiting and not d._in_qte and not d._choosing and not d._panel.visible
+	_stall["panelsiz"] = _stall["panelsiz"] + delta if nothing_to_tap else 0.0
+	if _stall["siyah"] > 6.0:
+		_report_stall("siyah ekran")
+		d.fade_to(0.0, 0.8)
+	if _stall["kilit"] > 6.0:
+		_report_stall("oyuncu kilitli")
+		_player.input_enabled = true
+		_hud.set_gameplay_visible(true)
+		_player_cam.make_current()
+	if _stall["bekle"] > 12.0:
+		_report_stall("bekleme bitmedi")
+		d._waiting = false
+		d.runner.advance()
+	if _stall["panelsiz"] > 6.0:
+		_report_stall("metinsiz diyalog")
+		d.runner.advance()
+
+
+func _report_stall(kind: String) -> void:
+	for k in _stall:
+		_stall[k] = 0.0
+	var msg := "TAKILMA: %s (düğüm: %s)" % [kind, _dialog.runner.current_node]
+	push_warning(msg)
+	Game.boot_log(msg)
+
+
 func _process(delta: float) -> void:
+	_watchdog(delta)
 	if _nearby_npc and _nearby_npc.interactable and not _dialog.active and not _player.is_dead \
 			and Input.is_action_just_pressed("interact"):
 		_start_dialog(_nearby_npc)

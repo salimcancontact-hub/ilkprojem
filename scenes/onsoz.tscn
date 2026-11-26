@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/onsoz.gd" id="1_r"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_r"]
@@ -21,6 +21,14 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c8_model.tscn" id="19_r"]
 
 [ext_resource type="PackedScene" path="res://assets/megakit/S_PropComputer.gltf" id="99_pc"]
+
+[sub_resource type="QuadMesh" id="NotKagit"]
+size = Vector2(0.34, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="NotMat"]
+albedo_color = Color(0.92, 0.9, 0.82, 1)
+emission_enabled = true
+emission = Color(0.25, 0.24, 0.2, 1)
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.015, 0.015, 0.03, 1)
@@ -287,7 +295,7 @@ focus_height = 1.25
 
 [node name="SuIlani" type="Label3D" parent="Clues"]
 double_sided = false
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1, 0, 1.0000, 0, 0.0000, -8.85, 1.7, 2.0)
+transform = Transform3D(0.0000, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0000, -8.85, 1.7, 2.0)
 pixel_size = 0.006
 modulate = Color(0.95, 0.92, 0.82, 1)
 outline_modulate = Color(0, 0, 0, 0.6)
@@ -297,7 +305,7 @@ outline_size = 6
 
 [node name="Grafiti" type="Label3D" parent="Clues"]
 double_sided = false
-transform = Transform3D(0.0000, 0, 1.0000, 0, 1, 0, -1.0000, 0, 0.0000, 8.85, 2.3, 20.5)
+transform = Transform3D(0.0000, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0000, 8.85, 2.3, 20.5)
 pixel_size = 0.012
 modulate = Color(0.9, 0.12, 0.1, 1)
 outline_modulate = Color(0.2, 0, 0, 0.4)
@@ -339,6 +347,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 2.0, 57.0)
 light_color = Color(0.4, 0.85, 1, 1)
 light_energy = 1.2
 omni_range = 4.0
+
+[node name="ArabaNot" type="MeshInstance3D" parent="Clues"]
+transform = Transform3D(0.3429, 0, -0.9394, 0, 1, 0, 0.9394, 0, 0.3429, 3.752, 1.560, 10.215)
+mesh = SubResource("NotKagit")
+material_override = SubResource("NotMat")
+
+[node name="ArabaNotYazi" type="Label3D" parent="Clues"]
+transform = Transform3D(0.3429, 0, -0.9394, 0, 1, 0, 0.9394, 0, 0.3429, 3.742, 1.560, 10.219)
+pixel_size = 0.0011
+modulate = Color(0.1, 0.1, 0.2, 1)
+outline_size = 0
+text = "Annemi listeye
+yazdıramadım.
+Hepinize iyi
+yolculuklar."
+font_size = 40
+double_sided = false
 
 [node name="HUD" parent="." instance=ExtResource("3_r")]
 

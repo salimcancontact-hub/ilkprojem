@@ -67,10 +67,22 @@ Telltale tarzı gerilim anları. Başarıya ve başarısızlığa göre farklı 
 | `@olay esya_al kimlik` / `esya_ver kimlik` | Çantaya eşya ekle/çıkar (eşyalar `scripts/story.gd` → `ITEMS`) |
 | `@bekle 1.5` | Yazı gizlenir, sahnedeki aksiyon 1,5 sn kendi başına oynar |
 
-### Fiziksel eylem kuralı
+### Fiziksel eylem kuralı (zorunlu, araçla denetlenir)
 Hikâyede bir karakter fiziksel bir şey yapıyorsa (bir şey uzatıyor, alıyor, içiyor, düşüyor, sürüklüyor) bunun ekranda da karşılığı olmalı:
 önce `@olay` ile hareketi başlat, gerekirse `@bekle` ile görünmesini sağla, sonra anlatım satırını yaz.
-Yere düşen/bayılan karakterler kilitli duruşta kalır (`hold_last_frame`), konuşma bitince ayağa kalkmaz.
+Yere düşen/bayılan karakterler kilitli duruşta ya da ragdoll olarak kalır, konuşma bitince ayağa kalkmaz.
+
+**Denetim:** `python3 tools/lint_dialog.py` her anlatım (`>`) satırını tarar. Fiziksel bir fiil
+(uzatmak, tutmak, çekmek, düşmek, bastırmak, koymak…) geçiyorsa ve önünde `@olay`/`@qte`/`@bekle`
+yoksa hata verir. Ekranda gösterilmesi gerekmeyen satırlar (hatıra, sahnede zaten kalıcı olan bir durum)
+bir önceki satıra açıklamalı `#fiz: <neden>` yazılarak muaf tutulur:
+
+```
+#fiz: hatıra (geçmiş zaman)
+> Bir saat önce onu kalabalığın altından çekip çıkarmıştın.
+```
+
+Yeni bir sahne yazıldıktan sonra APK çıkarmadan önce bu araç temiz geçmelidir.
 
 ## Değişkenler ve koşullar
 

@@ -108,6 +108,7 @@ ADA: Biliyordum.
 -> SON
 
 === ipucu_araba
+#fiz: sahnede kalıcı durum (camdaki not 3B olarak duruyor)
 > Terk edilmiş bir kamyonet. Ön camına elle yazılmış bir not yapıştırılmış:
 > "Annemi listeye yazdıramadım. Hepinize iyi yolculuklar."
 ~ ipucu += 1
@@ -148,6 +149,7 @@ ADA: Biliyordum.
 === arman
 @if arman_konustu -> arman_tekrar
 ~ arman_konustu = true
+#fiz: başlangıç durumu (kart sahne açılışında elinde)
 > Kalabalığın kenarında, elinde mavi mavi parlayan bir kart tutan bir adam gülümsüyor. Bu gece burada gülümseyen tek kişi o.
 ARMAN: Hey! Sen de mi listedesin?
 @sure 8 -> arman_sessiz
@@ -175,7 +177,11 @@ ARMAN: Biri bir yerde "Bu adam işe yarar" demiş demek ki. Dört yüz on iki nu
 -> arman_tanisma
 
 === arman_sessiz
+@olay anim ARMAN Idle_No
+@olay kart_goster
+@bekle 0.8
 > Adam omuz silkiyor ama kartını göstermekten vazgeçmiyor.
+@olay kart_geri
 -> arman_tanisma
 
 === arman_tanisma
@@ -235,6 +241,8 @@ ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
 @olay su_ic
 @bekle 2.0
 > Su ılık ve metal tadında. Yine de son iki günün en güzel şeyi.
+@olay cantaya_koy
+@bekle 1.0
 > Kalanını çantana koyuyorsun. Sonra lazım olabilir.
 @olay esya_al su_sisesi
 ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
@@ -315,10 +323,11 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 
 === isyan_cop
 @olay kamera muhafiz
-@olay anim MUHAFIZ Melee_Hook
 MUHAFIZ: Geri çekil!
-> Muhafız şok copunu kaldırıp yakana yapışıyor.
+@olay cop_kaldir
+@bekle 0.7
 @olay bogusma
+> Muhafız şok copunu kaldırıp yakana yapışıyor.
 @qte vur 5 10 "İT" -> cop_kurtul | cop_vurdu
 
 === cop_kurtul
@@ -344,6 +353,7 @@ MUHAFIZ: Geri çekil!
 @olay kamera arman
 @bekle 1.2
 > Birkaç metre ötede Deniz Arman yere düşmüş. Kalabalık üzerinden geçiyor.
+@olay kart_gogus
 > Kartı göğsüne bastırmış, bırakmıyor.
 ARMAN: Yardım et!
 @sure 5 -> arman_birak
@@ -369,6 +379,8 @@ ARMAN: Sana bir can borçluyum, yabancı! Ara sokağa, hadi!
 
 === arman_kalkamadi
 ~ arman_yardim = false
+@olay el_kaydi
+@bekle 0.6
 > Elin elinden kayıyor. Kalabalık onu senden uzağa sürüklüyor.
 ARMAN: Ara sokak! Ara sokakta buluşalım!
 @olay arman_kalkti
@@ -378,6 +390,8 @@ ARMAN: Ara sokak! Ara sokakta buluşalım!
 
 === arman_birak
 ~ arman_yardim = false
+@olay kac
+@bekle 1.0
 > Arkanı dönüp koşuyorsun. Arkandan onun sesini duyuyor musun, yoksa sadece kalabalık mı?
 @olay arman_kalkti
 @olay kamera oyuncu
@@ -479,13 +493,14 @@ ARMAN: Bırak!
 @olay kesici_dus
 @bekle 0.8
 > Kesiciyi yüzünden uzaklaştırıyorsun. Alet elinden düşüp kayıyor.
+@olay arman_yerde
+@bekle 1.2
 > Deniz dengesini kaybediyor. Başını betona vurarak yere yığılıyor.
 -> karar_ani
 
 === karar_ani
-@olay arman_yerde
 @olay kamera arman_yerde
-@bekle 1.2
+@bekle 0.6
 @olay telsize_uzan
 > Deniz yerde. Sersemlemiş. Elini göğsündeki telsize uzatıyor.
 ARMAN: Muhafız! Buraya! Buraya—
@@ -552,6 +567,7 @@ ARMAN: Buraya! Bu adam bir—
 -> kart_bak
 
 === kart_yardim
+#fiz: hatıra (geçmiş zaman)
 > Bir saat önce onu kalabalığın altından çekip çıkarmıştın. "Sana bir can borçluyum" demişti.
 -> kart_bak
 
@@ -621,16 +637,27 @@ ARMAN: Buraya! Bu adam bir—
 > Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
 > 412 numaralı yolcunun adı Deniz Arman'dı. Kayıtlar öyle diyordu.
 > Tarama terminali yalnızca kart kodunu okudu. Kimse yüzüne bakmadı.
-> Ada abisini kalkıştan iki saat sonra, kargo koridorunda gördü.
+@olay koridor
+@olay aydinlat 2
+@bekle 2.2
+> Kalkıştan iki saat sonra. Kargo koridoru. Ada.
 @if ada_soz -> kalkis_soz
+@olay el_tut
+@bekle 1.4
 > Hiçbir şey sormadı. Sadece elini tuttu.
 -> kalkis_son
 
 === kalkis_soz
-> "Söz vermiştin," dedi. Sonra elini tuttu. Elleri hâlâ titriyordu.
+ADA: Söz vermiştin.
+@olay el_tut
+@bekle 1.4
+> Sonra elini tuttu. Sıkıca.
 -> kalkis_son
 
 === kalkis_son
+@bekle 1.0
+@olay kararti 2
+@bekle 2.0
 @olay baslik DEVAM EDECEK
 -> SON
 
