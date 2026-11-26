@@ -74,8 +74,13 @@ func _init(sk: Skeleton3D) -> void:
 				pb.set("joint_constraints/twist_span", 10.0)
 			_:
 				pb.joint_type = PhysicalBone3D.JOINT_TYPE_CONE
-				pb.set("joint_constraints/swing_span", 40.0 if bone_name.begins_with("spine") else 55.0)
-				pb.set("joint_constraints/twist_span", 20.0)
+				var swing := 55.0
+				if bone_name.begins_with("spine"):
+					swing = 40.0
+				elif bone_name.begins_with("upperarm"):
+					swing = 150.0  # omuz: kol başın üstüne kalkabilir (bileklerden sürüklenirken)
+				pb.set("joint_constraints/swing_span", swing)
+				pb.set("joint_constraints/twist_span", 35.0 if bone_name.begins_with("upperarm") else 20.0)
 		var shape := CollisionShape3D.new()
 		var cap := CapsuleShape3D.new()
 		cap.radius = radius
@@ -105,14 +110,18 @@ func bone(name: String) -> PhysicalBone3D:
 
 ## Bir kemiği bir hedefe doğru çeker (sürükleme için). Her fizik karesinde çağrılır.
 ## Hız, hedefe uzaklıkla orantılı ve sınırlıdır; bu yüzden kararlıdır.
-func pull(bone_name: String, target: Vector3, gain: float = 10.0, max_speed: float = 4.0) -> void:
+## at_joint: true ise gövdenin ortası değil kemiğin başı (ör. bilek eklemi) hedefe gider.
+func pull(bone_name: String, target: Vector3, gain: float = 10.0, max_speed: float = 4.0, at_joint: bool = false) -> void:
 	var pb: PhysicalBone3D = bones.get(bone_name)
 	if pb == null:
 		return
 	var state := PhysicsServer3D.body_get_direct_state(pb.get_rid())
 	if state == null:
 		return
-	var v := (target - state.transform.origin) * gain
+	var point := state.transform.origin
+	if at_joint:
+		point = (state.transform * pb.body_offset.affine_inverse()).origin
+	var v := (target - point) * gain
 	if v.length() > max_speed:
 		v = v.normalized() * max_speed
 	state.linear_velocity = v

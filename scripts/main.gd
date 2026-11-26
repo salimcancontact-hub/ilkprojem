@@ -39,6 +39,8 @@ func _ready() -> void:
 	_hud.joystick.changed.connect(func(v: Vector2) -> void: _player.move_input = v)
 	_hud.restart_requested.connect(func() -> void: get_tree().reload_current_scene())
 	_hud.set_combat_enabled(combat_enabled)
+	_hud.use_item_requested.connect(use_item)
+	Story.need_warning.connect(_on_need_warning)
 
 	_player.health_changed.connect(_hud.set_health)
 	_player.died.connect(_on_player_died)
@@ -69,7 +71,13 @@ func _ready() -> void:
 	_dialog.qte_retry.connect(_on_qte_retry)
 
 
+func _on_need_warning(text: String) -> void:
+	_dialog.show_notification(text)
+
+
 func _exit_tree() -> void:
+	if Story.need_warning.is_connected(_on_need_warning):
+		Story.need_warning.disconnect(_on_need_warning)
 	if Game.gems_changed.is_connected(_on_gems_changed):
 		Game.gems_changed.disconnect(_on_gems_changed)
 
@@ -264,6 +272,86 @@ func _on_qte_retry() -> void:
 		_struggle_npc.model.play("Push", 0.0)
 	else:
 		_player.model.play("Idle", 0.0)
+
+
+# --- Eşya kullanma ve tüketme hareketleri ----------------------------------
+
+var _using_item: bool = false
+
+
+## Çantadan eşya kullanır: hareketi oynatır, ihtiyaçlara etkisini uygular, eşyayı azaltır.
+func use_item(id: String) -> void:
+	if _using_item or _dialog.active or _player.is_dead or not Story.has_item(id):
+		return
+	var item: Dictionary = Story.ITEMS.get(id, {})
+	if not item.has("use"):
+		return
+	_using_item = true
+	_player.input_enabled = false
+	_player.velocity = Vector3.ZERO
+	match item.get("action", ""):
+		"icme":
+			var bottle := Props.water_bottle()
+			_player.model.attach(bottle, "hand_r", Vector3(0, 0.07, 0.04))
+			await drink_sequence(bottle)
+			_player.model.detach(bottle)
+			bottle.queue_free()
+		"yeme":
+			var bar := Props.energy_bar()
+			_player.model.attach(bar, "hand_r", Vector3(0, 0.06, 0.04), Vector3(0, 0, PI / 2))
+			_player.model.play_once("Consume", "Idle", 0.2)
+			await get_tree().create_timer(2.6, true, false, true).timeout
+			_player.model.detach(bar)
+			bar.queue_free()
+	var effects: Dictionary = item["use"]
+	for need_id in effects:
+		Story.change_need(need_id, effects[need_id])
+	Story.remove_item(id)
+	_dialog.show_notification("%s kullanıldı." % item["name"])
+	_player.input_enabled = true
+	_using_item = false
+
+
+## Elindeki şişeden (hand_r'ye takılı) içme: el ağza gider, dirsek yana bükülür, şişe yavaşça yatar.
+func drink_sequence(bottle: Node3D) -> void:
+	var vis: Node3D = _player.get_node("Visual")
+	var mouth := Node3D.new()
+	vis.add_child(mouth)
+	mouth.position = Vector3(0.0, 1.6, -0.1)
+	var hand_to := Node3D.new()
+	vis.add_child(hand_to)
+	hand_to.position = Vector3(0.07, 1.36, -0.2)
+	var elbow := Node3D.new()
+	vis.add_child(elbow)
+	elbow.position = Vector3(0.38, 1.2, -0.1)
+	_player.model.play("Idle", 0.2)
+	_player.model.reach("r", hand_to, 0.5, elbow)
+	var lift := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	lift.tween_property(hand_to, "position", Vector3(0.05, 1.5, -0.16), 0.6).set_delay(0.5)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(bottle):
+			var to_mouth := (mouth.global_position - bottle.global_position).normalized()
+			var tilt := to_mouth.lerp(Vector3.UP.lerp(to_mouth, 0.6) + Vector3(0, -0.6, 0), clampf((t - 0.45) * 2.0, 0.0, 1.0))
+			_aim_up(bottle, Vector3.UP.slerp(tilt.normalized(), clampf(t * 2.2, 0.0, 1.0))), 0.0, 1.0, 2.2)
+	await tw.finished
+	_player.model.release("r", 0.5)
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	for n in [mouth, hand_to, elbow]:
+		n.queue_free()
+
+
+## Nesnenin Y eksenini (ör. şişenin ağzını) verilen yöne çevirir.
+func _aim_up(node: Node3D, up: Vector3) -> void:
+	if up.length() < 0.01:
+		return
+	up = up.normalized()
+	var side := up.cross(Vector3.FORWARD)
+	if side.length() < 0.01:
+		side = up.cross(Vector3.RIGHT)
+	side = side.normalized()
+	var fwd := side.cross(up).normalized()
+	node.global_basis = Basis(side, up, fwd)
 
 
 ## Diyalog dışı ara sahne: oyuncu kontrolü durur, sinema bantları çıkar.

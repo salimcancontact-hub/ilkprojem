@@ -27,11 +27,25 @@ const CHARACTERS := {
 }
 
 ## Envanter eşyaları: kimlik -> ad ve açıklama
+## Eşyalar. "use" olanlar çantadan kullanılabilir (ihtiyaçlara etkisi), "verb" düğme yazısı, "action" oynatılacak hareket.
 const ITEMS := {
-	"su_sisesi": {"name": "Su şişesi", "desc": "Deniz Arman'ın verdiği, yarısı içilmiş plastik şişe. Su ılık ve metal tadında."},
+	"su_sisesi": {"name": "Su şişesi (yarım)", "desc": "Deniz Arman'ın verdiği plastik şişe. Su ılık ve metal tadında.",
+		"use": {"susuzluk": -35.0}, "verb": "İÇ", "action": "icme"},
+	"enerji_bari": {"name": "Enerji barı", "desc": "Ezilmiş, son kullanma tarihi üç yıl önce geçmiş. Yine de kalori.",
+		"use": {"aclik": -30.0, "yorgunluk": -8.0}, "verb": "YE", "action": "yeme"},
 	"kimlik_karti": {"name": "Kimlik kartı — Deniz Arman", "desc": "EMANET / 412. Kaynak ustası. Mavi ışığı hâlâ yanıyor. Kapıdaki terminal yalnızca bu kodu okuyor."},
 	"kesici": {"name": "Kaynak kesicisi", "desc": "Deniz Arman'ın aleti. Sapında onun parmak izleri var. Ve seninkiler."},
 }
+
+## İhtiyaçlar: 0 = iyi, 100 = dayanılmaz.
+const NEEDS := {
+	"aclik": {"name": "Açlık", "warn": "Midendeki boşluk dayanılmaz hale geliyor."},
+	"susuzluk": {"name": "Susuzluk", "warn": "Boğazın kurumuş. Su bulmalısın."},
+	"yorgunluk": {"name": "Yorgunluk", "warn": "Bacakların seni zor taşıyor."},
+}
+
+signal need_changed(need: String, value: float)
+signal need_warning(text: String)
 
 var vars: Dictionary = {}
 
@@ -69,25 +83,70 @@ func format_text(text: String) -> String:
 	return out
 
 
+## Çantadaki eşya kimlikleri (sayısı > 0 olanlar).
 func inventory() -> Array:
-	return vars.get("envanter", [])
+	var inv: Dictionary = vars.get("envanter", {})
+	var out := []
+	for id in inv:
+		if int(inv[id]) > 0:
+			out.append(id)
+	return out
+
+
+func item_count(id: String) -> int:
+	return int((vars.get("envanter", {}) as Dictionary).get(id, 0))
 
 
 func has_item(id: String) -> bool:
-	return inventory().has(id)
+	return item_count(id) > 0
 
 
-func add_item(id: String) -> void:
-	var inv: Array = inventory().duplicate()
-	if not inv.has(id):
-		inv.append(id)
+func add_item(id: String, count: int = 1) -> void:
+	var inv: Dictionary = (vars.get("envanter", {}) as Dictionary).duplicate()
+	inv[id] = int(inv.get(id, 0)) + count
 	set_var("envanter", inv)
 
 
-func remove_item(id: String) -> void:
-	var inv: Array = inventory().duplicate()
-	inv.erase(id)
+func remove_item(id: String, count: int = 1) -> void:
+	var inv: Dictionary = (vars.get("envanter", {}) as Dictionary).duplicate()
+	inv[id] = maxi(int(inv.get(id, 0)) - count, 0)
+	if inv[id] == 0:
+		inv.erase(id)
 	set_var("envanter", inv)
+
+
+# --- İhtiyaçlar ---------------------------------------------------------------
+
+func need(id: String) -> float:
+	return float(vars.get(id, 0.0))
+
+
+func change_need(id: String, delta: float) -> void:
+	var before := need(id)
+	var after := clampf(before + delta, 0.0, 100.0)
+	vars[id] = after
+	need_changed.emit(id, after)
+	if before < 80.0 and after >= 80.0:
+		need_warning.emit(NEEDS[id]["warn"])
+
+
+## Oyuncu hareket ederken her fizik karesinde çağrılır. speed: yatay hız (m/s).
+func tick_needs(delta: float, speed: float) -> void:
+	change_need("aclik", delta * 0.045)        # ~37 dakikada 0'dan 100'e
+	change_need("susuzluk", delta * 0.065)     # ~25 dakika
+	var fatigue := 0.02
+	if speed > 4.0:
+		fatigue = 0.35                          # koşmak yorar
+	elif speed < 0.3 and need("aclik") < 80.0 and need("susuzluk") < 80.0:
+		fatigue = -0.15                         # tok ve suya doymuşken dinlenince geçer
+	if need("aclik") >= 80.0 or need("susuzluk") >= 80.0:
+		fatigue += 0.1
+	change_need("yorgunluk", delta * fatigue)
+
+
+## Yorgunluğa göre hız çarpanı (1.0 .. 0.6).
+func speed_factor() -> float:
+	return 1.0 - maxf(need("yorgunluk") - 60.0, 0.0) / 100.0
 
 
 func speaker_info(speaker_id: String) -> Dictionary:

@@ -2,6 +2,8 @@ extends CanvasLayer
 ## Oyun arayüzü: can barı, kristal sayacı, joystick, düğmeler ve mesaj ekranı.
 
 signal restart_requested
+## Çantadan bir eşya kullanılmak istendi.
+signal use_item_requested(id: String)
 
 const JoystickScript := preload("res://scripts/joystick.gd")
 
@@ -21,6 +23,8 @@ var _gameplay_visible: bool = true
 var _bag_btn: Button
 var _bag_panel: PanelContainer
 var _bag_list: VBoxContainer
+var _needs_box: VBoxContainer
+var _need_bars: Dictionary = {}
 var _overlay: ColorRect
 var _message: Label
 
@@ -75,6 +79,42 @@ func _ready() -> void:
 	_bag_list = VBoxContainer.new()
 	_bag_list.add_theme_constant_override("separation", 14)
 	_bag_panel.add_child(_bag_list)
+
+	# İhtiyaç çubukları (sol üst)
+	_needs_box = VBoxContainer.new()
+	_needs_box.add_theme_constant_override("separation", 10)
+	_needs_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_needs_box)
+	var colors := {"aclik": Color(0.95, 0.65, 0.25), "susuzluk": Color(0.35, 0.7, 1.0), "yorgunluk": Color(0.75, 0.75, 0.8)}
+	for id in Story.NEEDS:
+		var row := HBoxContainer.new()
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var l := Label.new()
+		l.text = Story.NEEDS[id]["name"]
+		l.custom_minimum_size = Vector2(118, 0)
+		l.add_theme_font_size_override("font_size", 18)
+		l.add_theme_color_override("font_outline_color", Color.BLACK)
+		l.add_theme_constant_override("outline_size", 5)
+		row.add_child(l)
+		var bar := ProgressBar.new()
+		bar.custom_minimum_size = Vector2(150, 14)
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		bar.show_percentage = false
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var f := StyleBoxFlat.new()
+		f.bg_color = colors[id]
+		f.set_corner_radius_all(4)
+		var b := StyleBoxFlat.new()
+		b.bg_color = Color(0, 0, 0, 0.55)
+		b.set_corner_radius_all(4)
+		bar.add_theme_stylebox_override("fill", f)
+		bar.add_theme_stylebox_override("background", b)
+		row.add_child(bar)
+		_needs_box.add_child(row)
+		_need_bars[id] = bar
+	Story.need_changed.connect(_on_need_changed)
+	for id in _need_bars:
+		_on_need_changed(id, Story.need(id))
 
 	_objective = _make_label(24)
 	_objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -142,6 +182,20 @@ func set_objective(text: String) -> void:
 
 
 ## Diyalog sırasında oyun arayüzünü gizler.
+func _on_need_changed(id: String, value: float) -> void:
+	if _need_bars.has(id):
+		var bar: ProgressBar = _need_bars[id]
+		bar.value = value
+		# Kritik seviyede çubuk kırmızılaşır
+		var fill: StyleBoxFlat = bar.get_theme_stylebox("fill")
+		bar.modulate = Color(1.0, 0.45, 0.4) if value >= 80.0 else Color.WHITE
+
+
+func _exit_tree() -> void:
+	if Story.need_changed.is_connected(_on_need_changed):
+		Story.need_changed.disconnect(_on_need_changed)
+
+
 func _toggle_bag() -> void:
 	_bag_panel.visible = not _bag_panel.visible
 	if not _bag_panel.visible:
@@ -161,10 +215,24 @@ func _toggle_bag() -> void:
 		_bag_list.add_child(e)
 	for id in inv:
 		var item: Dictionary = Story.ITEMS.get(id, {"name": id, "desc": ""})
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
 		var n := Label.new()
-		n.text = "• " + item["name"]
+		var count := Story.item_count(id)
+		n.text = "• " + item["name"] + ("  x%d" % count if count > 1 else "")
 		n.add_theme_font_size_override("font_size", 24)
-		_bag_list.add_child(n)
+		n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(n)
+		if item.has("use"):
+			var use := Button.new()
+			use.text = item.get("verb", "KULLAN")
+			use.custom_minimum_size = Vector2(96, 48)
+			use.add_theme_font_size_override("font_size", 20)
+			use.pressed.connect(func() -> void:
+				_bag_panel.visible = false
+				use_item_requested.emit(id))
+			row.add_child(use)
+		_bag_list.add_child(row)
 		var ds := Label.new()
 		ds.text = item["desc"]
 		ds.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -178,6 +246,7 @@ func _toggle_bag() -> void:
 func set_gameplay_visible(visible_now: bool) -> void:
 	_gameplay_visible = visible_now
 	_bag_btn.visible = visible_now
+	_needs_box.visible = visible_now
 	if not visible_now:
 		_bag_panel.visible = false
 	for node: CanvasItem in [joystick, _jump_btn]:
@@ -223,6 +292,8 @@ func _layout() -> void:
 	_gem_label.position = off + Vector2(vp.x - _gem_label.get_minimum_size().x - 24, 18)
 	_enemy_label.position = off + Vector2(vp.x - _enemy_label.get_minimum_size().x - 24, 62)
 	_health_bar.position = off + Vector2(24, 24)
+	# Sol altta, joystick'in üstünde (bildirimler ve görevle çakışmaz)
+	_needs_box.position = off + Vector2(28, vp.y - joystick.size.y - 30 - _needs_box.get_combined_minimum_size().y - 12)
 	joystick.position = off + Vector2(40, vp.y - joystick.size.y - 30)
 	_attack_btn.position = off + Vector2(vp.x - 150 - 50, vp.y - 150 - 50)
 	_jump_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 40)

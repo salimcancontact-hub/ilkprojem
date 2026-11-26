@@ -188,19 +188,31 @@ func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
 	event_fired.emit(event_name, args)
 
 
-func show_notification(text: String) -> void:
-	_toast_label.text = Story.format_text(text)
-	if _toast_tween:
-		_toast_tween.kill()
-	_toast.modulate.a = 0.0
-	_toast.position.x = -20.0
-	_toast_tween = create_tween()
-	_toast_tween.set_parallel(true)
-	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.3)
-	_toast_tween.tween_property(_toast, "position:x", 24.0, 0.3)
-	_toast_tween.chain().tween_interval(2.5)
-	_toast_tween.chain().tween_property(_toast, "modulate:a", 0.0, 0.6)
+var _toast_queue: Array = []
+var _toast_busy: bool = false
 
+
+## Bildirimler sıraya girer; biri bitmeden diğeri başlamaz (üst üste binmez).
+func show_notification(text: String) -> void:
+	_toast_queue.append(Story.format_text(text))
+	if not _toast_busy:
+		_next_toast()
+
+
+func _next_toast() -> void:
+	if _toast_queue.is_empty():
+		_toast_busy = false
+		return
+	_toast_busy = true
+	_toast_label.text = _toast_queue.pop_front()
+	_toast.reset_size()
+	_toast.modulate.a = 0.0
+	_toast.position.x = 24.0
+	_toast_tween = create_tween()
+	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.25)
+	_toast_tween.tween_interval(2.2)
+	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 0.4)
+	_toast_tween.tween_callback(_next_toast)
 
 func _process(delta: float) -> void:
 	if not active:
@@ -334,10 +346,20 @@ func _on_finished() -> void:
 
 
 ## Seçenekler görünürken replik kutusu yukarı kayar.
+var _panel_tween: Tween
+
+
 func _set_panel_raised(raised: bool) -> void:
 	var bottom := BAR_HEIGHT + (230.0 if raised else 16.0)
-	_panel.offset_bottom = -bottom
-	_panel.offset_top = -bottom - 150.0
+	if _panel_tween:
+		_panel_tween.kill()
+	if not _panel.visible or _panel.offset_bottom == 0.0:
+		_panel.offset_bottom = -bottom
+		_panel.offset_top = -bottom - 150.0
+		return
+	_panel_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_panel_tween.tween_property(_panel, "offset_bottom", -bottom, 0.18)
+	_panel_tween.tween_property(_panel, "offset_top", -bottom - 150.0, 0.18)
 
 
 func _build_ui() -> void:
@@ -348,6 +370,9 @@ func _build_ui() -> void:
 	add_child(_fade)
 	var title_box := VBoxContainer.new()
 	title_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Ekranın üst bölümünde: diyalog kutusu ve seçeneklerle çakışmaz
+	title_box.anchor_top = 0.14
+	title_box.anchor_bottom = 0.42
 	title_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(title_box)

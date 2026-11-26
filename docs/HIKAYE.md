@@ -138,7 +138,21 @@ Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `
 
 ---
 
-## 9. Görünüm ve sunum
+## 9. Hayatta kalma: ihtiyaçlar ve erzak (altyapı hazır)
+
+| İhtiyaç | Artış | Azaltan |
+|---|---|---|
+| Açlık | ~37 dakikada 0 → 100 | Enerji barı, ileride erzak/yemek |
+| Susuzluk | ~25 dakikada 0 → 100 | Su şişesi, ileride su kaynakları |
+| Yorgunluk | Koşarken hızlı, dururken (tok ve suya doymuşsa) azalır | Dinlenme, ileride uyku |
+
+- 80'i geçince uyarı bildirimi çıkar. Açlık ya da susuzluk yüksekse yorgunluk daha hızlı artar.
+- Yorgunluk 60'ı geçince karakter yavaşlar (100'de %60 hız).
+- Başlangıçta karakter iki gündür aç ve susuz: açlık 68, susuzluk 74, yorgunluk 42.
+- Eşyalar çantada sayılı tutulur. Kullanılabilenlerin yanında İÇ/YE düğmesi vardır ve karakter hareketi gerçekten yapar.
+- **Gelecek:** Gemide erzak payları (değer puanına göre!), gezegen inişlerinde oksijen, aç kalmanın diyalog seçeneklerine etkisi.
+
+## 10. Görünüm ve sunum
 
 - **Çizgi roman stili:** Kalın konturlar ve basamaklı gölgeler.
 - **Diyaloglar:** Konuşana göre değişen omuz üstü çekimler.

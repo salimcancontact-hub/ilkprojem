@@ -14,6 +14,8 @@ signal died
 @export var camera_sensitivity: float = 0.006
 ## Kameranın başlangıçta baktığı yön (derece).
 @export var camera_yaw_deg: float = 0.0
+## Açlık/susuzluk/yorgunluk bu sahnede işlesin mi.
+@export var track_needs: bool = true
 ## Dövüşsüz sahnelerde false.
 @export var can_attack: bool = true
 
@@ -82,8 +84,11 @@ func _physics_process(delta: float) -> void:
 	if direction.length() > 1.0:
 		direction = direction.normalized()
 
-	velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
-	velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
+	var top_speed := speed * Story.speed_factor()
+	velocity.x = move_toward(velocity.x, direction.x * top_speed, acceleration * delta)
+	velocity.z = move_toward(velocity.z, direction.z * top_speed, acceleration * delta)
+	if input_enabled and track_needs:
+		Story.tick_needs(delta, Vector2(velocity.x, velocity.z).length())
 
 	if direction.length_squared() > 0.01:
 		var target_angle: float = atan2(-direction.x, -direction.z)

@@ -109,6 +109,9 @@ func go_ragdoll(impulse_bone: String = "", impulse := Vector3.ZERO) -> void:
 		ragdoll = Ragdoll.new(skeleton)
 	pose_locked = true
 	animation_player.pause()
+	# Beden yerinden uzaklaşınca görünmez olmasın (kaplama kutusu eski yerde kalır)
+	for mi: MeshInstance3D in skeleton.find_children("*", "MeshInstance3D", true, false):
+		mi.extra_cull_margin = 16.0
 	ragdoll.start(impulse_bone, impulse)
 
 

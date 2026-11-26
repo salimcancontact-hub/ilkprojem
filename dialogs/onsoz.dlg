@@ -17,8 +17,9 @@
 # ================================================================ Ada'nın araması
 === ada_arama
 @olay telefon
-@olay kamera evren_yakin
-> Bileğindeki ekran titriyor. Arayan: ADA.
+@olay kamera arama
+> Telefonun titriyor. Görüntülü arama: ADA.
+@bekle 0.8
 ADA: Abi? Neredesin? Arkada bağırışlar var.
 @sure 8 -> arama_sessiz
 * Merkezin önündeyim. -> arama_durust
@@ -110,6 +111,13 @@ ADA: Biliyordum.
 > Terk edilmiş bir kamyonet. Ön camına elle yazılmış bir not yapıştırılmış:
 > "Annemi listeye yazdıramadım. Hepinize iyi yolculuklar."
 ~ ipucu += 1
+@if araba_arandi -> SON
+~ araba_arandi = true
+> Kapısı açık. Torpidoda ezilmiş bir enerji barı duruyor.
+@olay anim EVREN PickUp_Table
+@bekle 1.0
+@olay esya_al enerji_bari
+! Çantadaki eşyaları ÇANTA düğmesinden kullanabilirsin.
 -> SON
 
 === ipucu_grafiti
@@ -160,8 +168,10 @@ ARMAN: Bakma bence. Umut, cevaptan daha uzun yaşıyor.
 
 === arman_kart
 ARMAN: Gerçek mi? Yirmi yıl kaynak yaptım dostum. Köprüler, su boruları, tuzdan arındırma tesisleri...
+@olay kart_goster
 ARMAN: Biri bir yerde "Bu adam işe yarar" demiş demek ki. Dört yüz on iki numara. Bak.
-@olay anim ARMAN Yes
+@bekle 1.0
+@olay kart_geri
 -> arman_tanisma
 
 === arman_sessiz
@@ -225,6 +235,7 @@ ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
 @olay su_ic
 @bekle 2.0
 > Su ılık ve metal tadında. Yine de son iki günün en güzel şeyi.
+> Kalanını çantana koyuyorsun. Sonra lazım olabilir.
 @olay esya_al su_sisesi
 ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
 -> arman_son
@@ -385,6 +396,7 @@ ARMAN: Başardık! Sana bir can borçluyum, dostum.
 -> sokak_devam
 
 === sokak_devam
+@olay kart_gogus
 > Deniz kartını göğsüne bastırıyor. Mavi ışığı parmaklarının arasından sızıyor.
 ARMAN: Sabah beşte uçuş. Beş saat. Sadece beş saat daha dayanmam lazım.
 > Gözün kartta. 412. Ada'nın gemisi.
@@ -415,13 +427,16 @@ ARMAN: Kardeşin içeride, biliyorum. Ama bu benim hayatım!
 
 === sokak_uyar
 ARMAN: Neden? Neye bakıyorsun öyle?
+@olay geri_cekil
 > Bakışını görüyor. Kartı daha sıkı tutuyor. Bir adım geri çekiliyor.
 ARMAN: Sakın. Sakın yaklaşma.
 -> bogusma
 
 === sokak_kap
-@olay anim EVREN Interact
-> Elin kendiliğinden uzanıyor.
+@olay karta_uzan
+@bekle 0.6
+@olay geri_cekil
+> Elin kendiliğinden uzanıyor. Deniz geri sıçrıyor.
 -> bogusma
 
 === sokak_sessiz
@@ -453,11 +468,13 @@ ARMAN: Geri çekil!
 
 === bogus2
 @olay bogusma
+@olay bilek_tut
 > Bileğini yakalıyorsun. Kesicinin mavi alevi yüzüne doğru yaklaşıyor.
 ARMAN: Bırak!
 @qte vur 5 14 "İT" olumcul -> bogus2_ok | bogus2_ok
 
 === bogus2_ok
+@olay bilek_birak
 @olay bogusma_bitti
 @olay kesici_dus
 @bekle 0.8
@@ -469,7 +486,8 @@ ARMAN: Bırak!
 @olay arman_yerde
 @olay kamera arman_yerde
 @bekle 1.2
-> Deniz yerde. Sersemlemiş. Elini telsizine uzatıyor.
+@olay telsize_uzan
+> Deniz yerde. Sersemlemiş. Elini göğsündeki telsize uzatıyor.
 ARMAN: Muhafız! Buraya! Buraya—
 > Caddenin ağzında el fenerleri dönüyor. Birkaç saniyen var.
 @sure 6 -> karar_zaman
@@ -483,6 +501,7 @@ ARMAN: Muhafız! Buraya! Buraya—
 === karar_yalvar
 @olay oldur_cok
 @olay kamera oldurme_yakin
+@olay cirpinma
 ARMAN: Buraya! Bu adam bir—
 > Ellerin onu susturuyor. Sanki senin değillermiş gibi.
 -> olum
@@ -491,13 +510,15 @@ ARMAN: Buraya! Bu adam bir—
 ~ arman_olum = "zaman"
 @olay oldur_cok
 @olay kamera oldurme_yakin
+@olay cirpinma
 > Düşünmüyorsun. Ellerin düşünüyor.
 -> olum
 
 === karar_bogma
 @olay oldur_cok
 @olay kamera oldurme_yakin
-@bekle 1.2
+@olay cirpinma
+@bekle 1.6
 > Avucunu ağzına bastırıyorsun. Çırpınıyor. Sonra daha az. Sonra hiç.
 -> olum
 
@@ -515,9 +536,12 @@ ARMAN: Buraya! Bu adam bir—
 @olay arman_oldu
 > ...
 > El fenerleri sokağın ağzından geçip gidiyor. Kimse içeri bakmıyor.
+@olay aydinlat 1.5
+@olay eller_titrer
+@bekle 1.2
 > Ellerin titriyor.
+@olay eller_birak
 ! Bu seçim seninle kalacak.
-@olay aydinlat 2.5
 @olay gorev Kartı al.
 -> SON
 
