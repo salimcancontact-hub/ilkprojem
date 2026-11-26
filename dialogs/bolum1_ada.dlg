@@ -1,6 +1,6 @@
 # EMANET — Bölüm 1: "İlk İniş" — Hangar
 # Kül gezegenine inişten önce, SERÇE'nin rampasında Ada ile konuşma.
-# Gemide herkes Evren'i "Deniz" olarak tanır. Ada yalnızken ona "abi" der.
+# Gemide herkes Evren'i "Deniz" olarak tanır. Ada yalnızken ona {abi/abla} der.
 
 === baslangic
 @if ada_konustu -> tekrar
@@ -24,7 +24,7 @@ ADA: Son verdiğin sözü hatırlıyor musun? Seçim gecesi? "Aptalca bir şey y
 -> yildonumu
 
 === korku
-ADA: Korku mu? Dört yıldır her sabah korkuyorum, abi.
+ADA: Korku mu? Dört yıldır her sabah korkuyorum, {abi/abla}.
 ADA: Birisi kayıtlara bakacak diye. Birisi yüzüne bakıp "Sen Deniz Arman değilsin" diyecek diye.
 ~ ada_bag += 1
 -> yildonumu
@@ -77,7 +77,7 @@ ADA: Hey... Aşağıda arkamı kollar mısın?
 * Her zaman.
   ~ ada_bag += 1
 * Sen de benimkini.
-ADA: Anlaştık, abi.
+ADA: Anlaştık, {abi/abla}.
 -> SON
 
 === tekrar

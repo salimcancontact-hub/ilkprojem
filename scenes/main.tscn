@@ -1,5 +1,6 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
+[ext_resource type="PackedScene" path="res://scenes/characters/deniz_k_model.tscn" id="90_kadin"]
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="5_hud"]
@@ -80,6 +81,7 @@ layers = 2
 [node name="Level" parent="." instance=ExtResource("8_level")]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
+model_scene_female = ExtResource("90_kadin")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, 1.0)
 camera_yaw_deg = 180.0
 can_attack = false

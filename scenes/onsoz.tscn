@@ -1,5 +1,6 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=31 format=3]
 
+[ext_resource type="PackedScene" path="res://scenes/characters/evren_k_model.tscn" id="90_kadin"]
 [ext_resource type="Script" path="res://scripts/levels/onsoz.gd" id="1_r"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_r"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_r"]
@@ -88,6 +89,7 @@ light_energy = 0.5
 [node name="Level" parent="." instance=ExtResource("6_r")]
 
 [node name="Player" parent="." instance=ExtResource("2_r")]
+model_scene_female = ExtResource("90_kadin")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -6)
 model_scene = ExtResource("7_r")
 camera_yaw_deg = 180.0

@@ -52,8 +52,10 @@ var vars: Dictionary = {}
 
 func reset() -> void:
 	var name := player_name()
+	var g: String = str(vars.get("cinsiyet", "e"))
 	vars.clear()
 	vars["oyuncu_adi"] = name
+	vars["cinsiyet"] = g
 
 
 func get_var(var_name: String, default: Variant = 0) -> Variant:
@@ -69,10 +71,21 @@ func player_name() -> String:
 	return str(vars.get("oyuncu_adi", "Evren"))
 
 
-## Metindeki {ad} gibi yer tutucuları değişken değerleriyle değiştirir.
+func is_female() -> bool:
+	return str(vars.get("cinsiyet", "e")) == "k"
+
+
+## Metindeki yer tutucuları doldurur:
+##   {ad}           -> oyuncunun adı
+##   {abi/abla}     -> erkekse ilki, kadınsa ikincisi
+##   {degisken}     -> hikâye değişkeninin değeri
 func format_text(text: String) -> String:
 	if not text.contains("{"):
 		return text
+	var gender := RegEx.new()
+	gender.compile("\\{([^{}/]+)/([^{}/]+)\\}")
+	for m in gender.search_all(text):
+		text = text.replace(m.get_string(0), m.get_string(2) if is_female() else m.get_string(1))
 	var regex := RegEx.new()
 	regex.compile("\\{([A-Za-z_][A-Za-z0-9_]*)\\}")
 	var out := text

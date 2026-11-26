@@ -13,7 +13,7 @@
 
 Dünya, 2526. Kuraklık, savaş ve açlık yüzünden gezegen bitmek üzere. Uluslararası **Seçim Komitesi**, insanlığın devamı için 500 kişilik **EMANET** keşif gemisini yolcularıyla birlikte seçiyor. Gemi güneş enerjisiyle çalışıyor ve yıldızdan yıldıza 8–10 yıllık seferlere çıkıyor.
 
-Kahraman (adını oyuncu seçer, varsayılan **Evren**) seçilmiyor. Kız kardeşi **Ada** ise seçiliyor. Seçim gecesi, kalabalıkta tanıştığı iyi kalpli kaynakçı **Deniz Arman**'ı, gemiye binebilmek için bir ara sokakta **öldürmek zorunda kalıyor**. Onun kimlik kartını alıp "Deniz Arman" adıyla gemiye biniyor. Kendini, annesine verdiği sözle avutuyor: *"Kardeşini yalnız bırakma."*
+Kahraman (adını ve cinsiyetini oyuncu seçer, varsayılan **Evren**; Ada ona kadınsa "abla", erkekse "abi" der) seçilmiyor. Kız kardeşi **Ada** ise seçiliyor. Seçim gecesi, kalabalıkta tanıştığı iyi kalpli kaynakçı **Deniz Arman**'ı, gemiye binebilmek için bir ara sokakta **öldürmek zorunda kalıyor**. Onun kimlik kartını alıp "Deniz Arman" adıyla gemiye biniyor. Kendini, annesine verdiği sözle avutuyor: *"Kardeşini yalnız bırakma."*
 
 Hikâye bir cinayetle başlıyor. Oyuncu bunu engelleyemiyor; ama nasıl olduğunu, sonrasında ne hissettiğini ve cesetle ne yaptığını seçiyor. Bu suç bütün sezon boyunca peşini bırakmıyor.
 

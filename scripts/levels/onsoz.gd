@@ -43,7 +43,7 @@ func _ready() -> void:
 		"muhafiz": [Vector3(-0.9, 1.75, 55.6), Vector3(0.2, 1.55, 58.6)],
 		"arman": [Vector3(-0.6, 3.0, 52.4), Vector3(1.8, 0.3, 55.0)],
 		"evren_yakin": [Vector3(0.7, 1.62, -4.7), Vector3(-0.05, 1.38, -6.0)],
-		"arama": [Vector3(0.75, 1.5, -4.9), Vector3(-0.12, 1.55, -5.75)],
+		"arama": [Vector3(0.9, 1.1, -4.7), Vector3(-0.05, 1.14, -5.75)],
 		"sokak_genis": [Vector3(13.2, 2.4, 6.4), Vector3(15.6, 1.1, 10.6)],
 		"arman_yerde": [Vector3(13.6, 2.6, 12.2), Vector3(16.0, 0.2, 10.4)],
 		"surukle": [Vector3(19.0, 2.8, 17.0), Vector3(19.5, 0.4, 11.8)],
@@ -496,7 +496,7 @@ func _prewarm() -> void:
 
 # --- Kapanış: gemide kargo koridoru ------------------------------------------
 
-const CORRIDOR := Vector3(0, -200, 0)  # hangar sahnesi şehrin çok altına kurulur
+const CORRIDOR := Vector3(600, 0, 600)  # hangar sahnesi şehirden çok uzağa kurulur (aşağı değil: düşme ölümü sayılır)
 var _ada_ship: CharacterModel
 
 
@@ -558,8 +558,9 @@ func _start_call() -> void:
 	_player.model.reach("r", _phone_hand, 0.5, elbow)
 	_holo = HoloCall.new()
 	_holo.caller_scene = load("res://scenes/characters/ada_model.tscn")
+	_holo.caller_name = "ADA"
 	_phone.add_child(_holo)
-	_holo.position = Vector3(0, 0.27, 0.06)
+	_holo.position = Vector3(0, 0.08, 0.02)
 	_holo.rotation = Vector3(deg_to_rad(55), 0, 0)
 	var glow := OmniLight3D.new()
 	glow.name = "PhoneGlow"

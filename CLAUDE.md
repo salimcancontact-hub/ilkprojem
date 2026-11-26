@@ -5,7 +5,7 @@ Bu dosya her oturumda okunur. Buradaki kurallar kullanıcıyla birlikte belirlen
 ## Ne yapıyoruz
 **EMANET**: Godot 4.3 ile geliştirilen, mobil (Android) için 3B, tek oyunculu, **Telltale / The Walking Dead tarzı**
 hikâye oyunu. Yıl 2526; Dünya çöküyor, 500 kişilik keşif gemisi EMANET yaşanabilir bir dünya arıyor.
-Kahraman (adını oyuncu seçer, varsayılan "Evren") gemiye binebilmek için Deniz Arman'ı öldürüp kimliğini alır.
+Kahraman (adını ve cinsiyetini oyuncu seçer, varsayılan "Evren"; metinde `{abi/abla}` gibi yer tutucular) gemiye binebilmek için Deniz Arman'ı öldürüp kimliğini alır.
 Kız kardeşi Ada gemidedir. Ayrıntılı hikâye: `docs/HIKAYE.md`.
 
 ## Değişmez tasarım kuralları

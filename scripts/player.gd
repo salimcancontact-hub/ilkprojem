@@ -33,6 +33,8 @@ var _invuln_timer: float = 0.0
 @onready var _visual: Node3D = $Visual
 ## Boş bırakılırsa sahnedeki DenizModel kullanılır (önsözde Evren modeli verilir).
 @export var model_scene: PackedScene
+## Kadın karakter seçildiyse kullanılacak model (boşsa model_scene).
+@export var model_scene_female: PackedScene
 
 @onready var model: CharacterModel = $Visual/DenizModel
 @onready var _attack_area: Area3D = $Visual/AttackArea
@@ -41,8 +43,11 @@ var _invuln_timer: float = 0.0
 
 
 func _ready() -> void:
-	if model_scene:
-		var custom: CharacterModel = model_scene.instantiate()
+	var chosen: PackedScene = model_scene
+	if Story.is_female() and model_scene_female:
+		chosen = model_scene_female
+	if chosen:
+		var custom: CharacterModel = chosen.instantiate()
 		var parent := model.get_parent()
 		var index := model.get_index()
 		parent.remove_child(model)

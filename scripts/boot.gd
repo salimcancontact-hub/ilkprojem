@@ -11,6 +11,8 @@ var _status: Label
 var _menu: VBoxContainer
 var _name_box: VBoxContainer
 var _name_edit: LineEdit
+var _gender: String = "e"
+var _gender_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -70,6 +72,20 @@ func _ready() -> void:
 	_name_edit.add_theme_font_size_override("font_size", 32)
 	_name_edit.text_submitted.connect(func(_t: String) -> void: _start())
 	_name_box.add_child(_centered(_name_edit))
+	_name_box.add_child(_label("Kimsin?", 24, Color(0.95, 0.92, 0.85)))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	var group := ButtonGroup.new()
+	for g in [["e", "ERKEK"], ["k", "KADIN"]]:
+		var b := _button(g[1], 26, Vector2(200, 76))
+		b.toggle_mode = true
+		b.button_group = group
+		b.button_pressed = g[0] == _gender
+		var code: String = g[0]
+		b.pressed.connect(func() -> void: _gender = code)
+		_gender_buttons[code] = b
+		row.add_child(b)
+	_name_box.add_child(_centered(row))
 	_name_box.add_child(_label("Bu gece bu isimle başlayacaksın. Sonra başka bir isim taşıyacaksın.", 20, Color(0.6, 0.65, 0.75)))
 	var go := _button("BAŞLA", 30, Vector2(320, 86))
 	go.pressed.connect(_start)
@@ -105,6 +121,7 @@ func _start() -> void:
 		name = DEFAULT_NAME
 	Story.vars.clear()
 	Story.set_var("oyuncu_adi", name.substr(0, 1).to_upper() + name.substr(1))
+	Story.set_var("cinsiyet", _gender)
 	_name_box.visible = false
 	_loading = GAME_SCENE
 	Game.boot_log("yükleniyor: oyun")

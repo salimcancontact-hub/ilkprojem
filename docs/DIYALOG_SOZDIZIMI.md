@@ -84,6 +84,12 @@ bir önceki satıra açıklamalı `#fiz: <neden>` yazılarak muaf tutulur:
 
 Yeni bir sahne yazıldıktan sonra APK çıkarmadan önce bu araç temiz geçmelidir.
 
+## Metin yer tutucuları
+
+- `{ad}` → oyuncunun seçtiği isim.
+- `{erkek/kadın}` → cinsiyete göre: erkekse ilki, kadınsa ikincisi. Örn. `ADA: {Abi/Abla}?`, `Gururlu {adam/kadın}.`
+- `{degisken}` → hikâye değişkeninin değeri.
+
 ## Değişkenler ve koşullar
 
 - Değişken adları İngiliz harfleri, rakam ve `_` içerir (`ada_guven`, `kofi_yasiyor`).

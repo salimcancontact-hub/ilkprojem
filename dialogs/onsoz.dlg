@@ -1,6 +1,6 @@
 # EMANET — "Seçim Gecesi" (oyunun başlangıcı)
 # Dünya, 2526. Seçim Merkezi'nin önü.
-# Oyuncunun adı {ad} ile yazılır (oyun başında seçilir). Ada ona "abi" der.
+# Oyuncunun adı {ad} ile yazılır (oyun başında seçilir). Ada ona "abi" (kadınsa "abla") der: {abi/abla}.
 # Bu gecenin sonunda oyuncu, gemiye binebilmek için Deniz Arman'ı öldürmek zorunda kalır.
 
 # ================================================================ Açılış
@@ -20,7 +20,7 @@
 @olay kamera arama
 > Telefonun titriyor. Görüntülü arama: ADA.
 @bekle 0.8
-ADA: Abi? Neredesin? Arkada bağırışlar var.
+ADA: {Abi/Abla}? Neredesin? Arkada bağırışlar var.
 @sure 8 -> arama_sessiz
 * Merkezin önündeyim. -> arama_durust
   ~ ada_bag += 1
@@ -31,7 +31,7 @@ ADA: Abi? Neredesin? Arkada bağırışlar var.
 * [Sessiz kal] -> arama_sessiz
 
 === arama_durust
-ADA: Abi... Lütfen. Seni içeri almazlar. Eve git.
+ADA: {Abi/Abla}... Lütfen. Seni içeri almazlar. Eve git.
 -> arama_anne
 
 === arama_yalan
@@ -45,7 +45,7 @@ ADA: Sabah beşte kalkıyoruz. Dönüş yok.
 -> arama_anne
 
 === arama_sessiz
-ADA: Abi? Orada mısın?
+ADA: {Abi/Abla}? Orada mısın?
 ADA: ...Oradasın. Nefesini duyuyorum.
 -> arama_anne
 
@@ -85,7 +85,7 @@ ADA: ...Tamam. Seni seviyorum, aptal.
 -> arama_bitti
 
 === soz_verme
-ADA: Abi—
+ADA: {Abi/Abla}—
 > Bağlantı kesiliyor.
 ! Ada bunu hatırlayacak.
 -> arama_bitti
@@ -250,7 +250,7 @@ ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
 
 === su_reddet
 @olay su_geri
-ARMAN: Ha! Gururlu adam. Hoşuma gitti.
+ARMAN: Ha! Gururlu {adam/kadın}. Hoşuma gitti.
 -> arman_son
 
 === arman_son
@@ -402,7 +402,7 @@ ARMAN: Ara sokak! Ara sokakta buluşalım!
 === ara_sokak
 > Ara sokak. Sirenler ana caddede yankılanıyor.
 @if arman_yardim -> sokak_dost
-ARMAN: Sen... Kapıdaki adamsın.
+ARMAN: Sen... Kapıdaki {adam/kadın}sın.
 -> sokak_devam
 
 === sokak_dost
@@ -517,7 +517,7 @@ ARMAN: Muhafız! Buraya! Buraya—
 @olay oldur_cok
 @olay kamera oldurme_yakin
 @olay cirpinma
-ARMAN: Buraya! Bu adam bir—
+ARMAN: Buraya! Bu {adam/kadın} bir—
 > Ellerin onu susturuyor. Sanki senin değillermiş gibi.
 -> olum
 
