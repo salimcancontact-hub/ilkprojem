@@ -20,6 +20,12 @@ EMANET gemisinin hangarında Deniz'i yönet: Ada ile konuş, HAKEM'in güvenlik 
 2. Godot'da **Import** ile bu klasördeki `project.godot` dosyasını açın.
 3. F5 ile oyunu başlatın.
 
+## Android APK üretme
+1. Godot 4.3 Android dışa aktarma şablonlarını kurun (Editor → Manage Export Templates).
+2. Editor Settings → Export → Android: Android SDK ve Java yolu ile debug keystore'u ayarlayın.
+3. Project → Export → **Android** ön ayarı → Export Project (çıktı: `build/emanet.apk`).
+   Komut satırı: `godot --headless --path . --export-debug "Android" build/emanet.apk`
+
 ## Hikâye ve diyaloglar
 - Hikâye belgesi: [`docs/HIKAYE.md`](docs/HIKAYE.md)
 - Diyalog yazma rehberi: [`docs/DIYALOG_SOZDIZIMI.md`](docs/DIYALOG_SOZDIZIMI.md)
