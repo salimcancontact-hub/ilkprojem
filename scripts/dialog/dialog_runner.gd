@@ -15,6 +15,8 @@ signal finished
 var active: bool = false
 ## Son girilen düğüm (hata ayıklama ve takılma raporu için)
 var current_node: String = ""
+## "SON" dışındaki en son düğüm (diyalog bittikten sonra hangi daldan çıkıldığını bilmek için)
+var last_node: String = ""
 
 var _nodes: Dictionary = {}
 var _stack: Array = []  # her eleman: {"steps": Array, "index": int}
@@ -129,6 +131,8 @@ func choose_timeout() -> void:
 
 func _goto(node_name: String) -> void:
 	current_node = node_name
+	if node_name != "SON" and node_name != "":
+		last_node = node_name
 	_stack.clear()
 	if node_name == DialogParser.END:
 		return

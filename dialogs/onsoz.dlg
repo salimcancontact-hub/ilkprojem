@@ -102,18 +102,21 @@ ADA: Biliyordum.
 
 # ================================================================ İpuçları (incelenebilir noktalar)
 === ipucu_su
+@olay kamera yakin_ilan
 > Duvarda soluk bir bildiri: "SU DAĞITIMI SÜRESİZ ERTELENDİ — Komite Tedarik Ofisi."
 > Altına biri kalemle eklemiş: "Gemiye kırk bin ton su yüklendi."
 ~ ipucu += 1
 -> SON
 
 === ipucu_araba
+@olay kamera yakin_not
 #fiz: sahnede kalıcı durum (camdaki not 3B olarak duruyor)
 > Terk edilmiş bir kamyonet. Ön camına elle yazılmış bir not yapıştırılmış:
 > "Annemi listeye yazdıramadım. Hepinize iyi yolculuklar."
 ~ ipucu += 1
 @if araba_arandi -> SON
 ~ araba_arandi = true
+@olay kamera otomatik
 > Kapısı açık. Torpidoda ezilmiş bir enerji barı duruyor.
 @olay anim EVREN PickUp_Table
 @bekle 1.0
@@ -122,12 +125,14 @@ ADA: Biliyordum.
 -> SON
 
 === ipucu_grafiti
+@olay kamera yakin_grafiti
 > Kırmızı sprey boyayla, kocaman harflerle: "KOMİTE KİMİ SEÇTİ? KENDİNİ."
 > Boya hâlâ ıslak.
 ~ ipucu += 1
 -> SON
 
 === ipucu_liste
+@olay kamera yakin_liste
 > Holografik liste yavaşça akıyor. Beş yüz isim.
 > 088 — KAYA, ADA — GENÇ DAHİLER PROGRAMI
 > Adının yanında küçük bir not: "Aile kabulü yoktur."
@@ -137,6 +142,7 @@ ADA: Biliyordum.
 -> SON
 
 === ipucu_terminal
+@olay kamera yakin_terminal
 > Yolcu tarama terminali. Ekranda bir bakım uyarısı yanıp sönüyor:
 > "Biyometrik tarama devre dışı. Geçici olarak yalnızca kart kodu doğrulaması yapılmaktadır."
 > Yani kapıdan geçmek için yüz değil, yalnızca kart gerekiyor.
@@ -634,31 +640,12 @@ ARMAN: Buraya! Bu {adam/kadın} bir—
 
 # ================================================================ Kapanış
 === kalkis
-> Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
-> 412 numaralı yolcunun adı Deniz Arman'dı. Kayıtlar öyle diyordu.
-> Tarama terminali yalnızca kart kodunu okudu. Kimse yüzüne bakmadı.
-@olay koridor
-@olay aydinlat 2
-@bekle 2.2
-> Kalkıştan iki saat sonra. Kargo koridoru. Ada.
-@if ada_soz -> kalkis_soz
-@olay el_tut
-@bekle 1.4
-> Hiçbir şey sormadı. Sadece elini tuttu.
--> kalkis_son
-
-=== kalkis_soz
-ADA: Söz vermiştin.
-@olay el_tut
-@bekle 1.4
-> Sonra elini tuttu. Sıkıca.
--> kalkis_son
-
-=== kalkis_son
-@bekle 1.0
-@olay kararti 2
-@bekle 2.0
-@olay baslik DEVAM EDECEK
+#fiz: geçmiş zaman, ekran kararmış
+> Gece bitti. Sabaha kadar bir duvar dibinde oturup ellerine baktın.
+> Şafakta uzay asansörü, seçilmişleri gökyüzüne taşımaya başladı.
+#fiz: varsayım (ekran kararmış)
+> Kuyrukta kimse kimsenin yüzüne bakmadı. Bakan olsaydı, ellerinin titrediğini görürdü.
+@bekle 1.5
 -> SON
 
 # ================================================================ Kalabalık

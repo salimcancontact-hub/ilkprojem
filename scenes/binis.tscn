@@ -1,0 +1,56 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/binis.gd" id="1_b"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_b"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_b"]
+[ext_resource type="PackedScene" path="res://scenes/dialog_ui.tscn" id="4_b"]
+[ext_resource type="PackedScene" path="res://scenes/characters/evren_model.tscn" id="5_b"]
+[ext_resource type="PackedScene" path="res://scenes/characters/evren_k_model.tscn" id="6_b"]
+[ext_resource type="Shader" path="res://shaders/stars.gdshader" id="7_b"]
+
+[sub_resource type="ShaderMaterial" id="StarsMat"]
+shader = ExtResource("7_b")
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("StarsMat")
+radiance_size = 0
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.66, 0.74, 1)
+ambient_light_energy = 0.5
+reflected_light_source = 1
+tonemap_mode = 3
+tonemap_exposure = 0.95
+glow_enabled = true
+glow_intensity = 0.6
+glow_bloom = 0.05
+adjustment_enabled = true
+adjustment_contrast = 1.08
+adjustment_saturation = 1.0
+
+[node name="Binis" type="Node3D"]
+script = ExtResource("1_b")
+combat_enabled = false
+player_speaker_id = "EVREN"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Gunes" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-35, -70, 0)
+light_color = Color(1, 0.95, 0.88, 1)
+light_energy = 0.55
+
+[node name="Player" parent="." instance=ExtResource("2_b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.1, 3)
+model_scene = ExtResource("5_b")
+model_scene_female = ExtResource("6_b")
+camera_yaw_deg = 180.0
+can_attack = false
+
+[node name="HUD" parent="." instance=ExtResource("3_b")]
+
+[node name="DialogUI" parent="." instance=ExtResource("4_b")]

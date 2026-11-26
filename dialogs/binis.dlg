@@ -1,0 +1,553 @@
+# EMANET — Bölüm 2: "Biniş"
+# Yörünge iskelesi -> biniş kapısı (kart) -> Halka Meydanı -> asansör (Selim) -> Güverte 8 -> Kamara 412
+# -> eşyalar, erzak -> anons -> kalkış koltuğu -> kalkış
+# Oyuncu kimliği EVREN (ekranda oyuncunun adı); gemide herkes ona "Deniz" diyor.
+
+# ================================================================ Açılış
+=== giris
+@olay baslik BÖLÜM 2 | Biniş
+@bekle 3.2
+> Yörünge İskelesi. Dünya'nın dört yüz kilometre üstü.
+> Gece boyunca uzay asansörüyle yukarı çıktın. Cebinde bir ölünün kartı var.
+@olay aydinlat 2
+@olay kamera iskele
+@bekle 2.6
+HAKEM: Günaydın. EMANET'e biniş başlamıştır.
+HAKEM: Lütfen kimlik kartınızı biniş kapısındaki okuyucuya okutun.
+@olay kamera oyuncu
+@olay gorev Kartını biniş kapısında okut
+-> SON
+
+# ================================================================ İskele (serbest gezinti)
+=== ipucu_dunya
+@olay kamera c_dunya
+> Camın ardında Dünya. Buradan bakınca yanık kıtalar bile güzel görünüyor.
+> Aşağıda bir yerde, bir ara sokakta, sabah olmuş olmalı.
+-> SON
+
+=== ipucu_ekran
+@olay kamera c_ekran
+> Biniş ekranı. Yeşil satırlar akıyor:
+> EMANET — Uzunluk 1,2 km. 500 yolcu. Füzyon yelkeni. Hedef: Vaat.
+> Dönüş bileti yok.
+-> SON
+
+=== yolcu
+YOLCU: İlk kez mi yukarıdasın?
+@sure 7 -> yolcu_sessiz
+* Herkes ilk kez yukarıda. -> yolcu_herkes
+* Evet. Midem hâlâ aşağıda. -> yolcu_mide
+* [Başını salla] -> yolcu_sessiz
+
+=== yolcu_herkes
+YOLCU: Doğru. Kimse dönmeyecek ki ikinci kez gelsin.
+-> yolcu_son
+
+=== yolcu_mide
+YOLCU: Benimki de. Asansörde iki kez kustum. Hidroponik mühendisiyim, düşünebiliyor musun?
+-> yolcu_son
+
+=== yolcu_sessiz
+@olay anim EVREN Yes
+@bekle 0.8
+> Başını sallıyorsun. Konuşacak gücün yok.
+-> yolcu_son
+
+=== yolcu_son
+YOLCU: Babam "bakma geriye" dedi. Ben de bakmıyorum. Camın önünden geçerken gözlerimi kapatıyorum.
+-> SON
+
+=== gorevli_erken
+GOREVLI: Kartını okuyucuya okut lütfen. Kuyruk bekliyor.
+-> SON
+
+# ================================================================ Biniş kapısı
+=== kapi
+@olay kamera c_kart
+@olay kart_cikar
+@bekle 0.9
+> Kartı cebinden çıkarıyorsun. Deniz Arman'ın fotoğrafı ışıkta bir an parlıyor.
+@olay kart_okut
+@bekle 1.2
+@olay okuyucu_kirmizi
+@bekle 0.6
+HAKEM: Kart okunamadı. Lütfen tekrar deneyin.
+@olay kart_geri
+@olay kamera otomatik
+GOREVLI: Bir saniye.
+@olay gorevli_bak
+@bekle 1.0
+> Görevli karta değil, senin yüzüne bakıyor.
+GOREVLI: Arman. Kaynakçı. Ellerin neden titriyor?
+@sure 7 -> kapi_sessiz
+* İlk kez uzaya çıkıyorum. -> kapi_korku
+* İskele buz gibi. -> kapi_soguk
+* Bu gece kimse uyumadı. -> kapi_uyku
+* [Gözlerini kaçırma] -> kapi_sessiz
+
+=== kapi_korku
+GOREVLI: Herkes öyle. Ben ilk gün kustum. Üniformanın üstüne.
+~ binis_sakin = true
+-> kapi_tekrar
+
+=== kapi_soguk
+GOREVLI: Isıtıcılar dün gece kapandı. Dünya'nın bütün enerjisi artık gemiye gidiyor.
+GOREVLI: Bizim için ısıtıcı kalmadı. Sizin için kaldı.
+-> kapi_tekrar
+
+=== kapi_uyku
+GOREVLI: Duydum. Seçim Merkezi'nde isyan çıkmış. Ölenler varmış.
+@sure 6 -> kapi_uyku_sus
+* Oradaydım. -> kapi_oradaydim
+* Ben eşyalarımı topluyordum. -> kapi_uyku_sus
+* [Sessiz kal] -> kapi_uyku_sus
+
+=== kapi_oradaydim
+GOREVLI: Seçilmiş biri o kalabalığın içinde ne arar?
+> Cevap vermiyorsun. O da üstelemiyor.
+~ gorevli_supheli = true
+-> kapi_tekrar
+
+=== kapi_uyku_sus
+GOREVLI: Neyse. Artık senin derdin değil.
+-> kapi_tekrar
+
+=== kapi_sessiz
+> Gözlerini kaçırmıyorsun. O kaçırıyor.
+GOREVLI: Herkes bir şekilde bakıyor bugün. Kimisi korkuyla, kimisi suçlulukla.
+~ gorevli_supheli = true
+-> kapi_tekrar
+
+=== kapi_tekrar
+GOREVLI: Kartı yeniden okut. Yavaşça.
+@olay kamera c_kart
+@olay kart_okut
+@bekle 1.4
+@olay okuyucu_yesil
+@bekle 0.5
+HAKEM: Deniz Arman. Kaynak ve Onarım Ekibi. Kamara 412, Güverte 8. EMANET'e hoş geldiniz.
+> Yeşil. Nefesini ancak şimdi veriyorsun.
+@olay kart_cebe
+@olay kamera otomatik
+@olay kol_ekrani_ver
+@bekle 1.0
+GOREVLI: Kol ekranın. Kamaranın anahtarı da bu. Kaybetme.
+@olay kol_ekrani_al
+@bekle 1.4
+> Kol ekranını alıp bileğine geçiriyorsun. Ekranda bir ad yanıyor: DENİZ ARMAN.
+@olay esya_al kol_ekrani
+@olay kapi_ac
+@olay kamera c_kapi
+@bekle 1.6
+GOREVLI: Asansörler meydanın sonunda. İyi yolculuklar.
+@if gorevli_supheli -> kapi_supheli
+-> kapi_son
+
+=== kapi_supheli
+GOREVLI: Bir de... Deniz. Yukarıda kimse kimseye bakmıyor. Sen de bakma.
+! Görevli yüzünü hatırlayacak.
+-> kapi_son
+
+=== kapi_son
+@olay gorev Güverte 8'e çık: Asansörler meydanın sonunda
+-> SON
+
+# ================================================================ Halka Meydanı
+=== meydan_giris
+> Halka Meydanı. Dört kat yüksekliğinde bir salon; tavanı yavaşça dönen bir gökyüzü.
+> Gerçek ağaçlar. Gerçek toprak. Dünya'da üç yıldır böyle bir yeşil görmedin.
+-> SON
+
+=== ipucu_hologram
+@olay kamera c_hologram
+> Meydanın ortasında geminin hologramı dönüyor.
+> Bir kilometrelik gövde. Dönen yaşam halkası. Kıçta füzyon çekirdeği, burunda katlanmış dev yelkenler.
+HAKEM: Yaşam halkası dakikada iki tur döner ve Dünya'daki ağırlığınızı korur.
+HAKEM: Ayaklarınızın altındaki zemin, sizin için durmadan düşmektedir.
+-> SON
+
+=== ipucu_bahce
+@olay kamera c_bahce
+> Askılı bahçe. Domates fideleri, nane, bir limon ağacı.
+> Altındaki tabelada: YEŞİL KUBBE'DEN ÖRNEKTİR. KOPARMAYINIZ.
+-> SON
+
+=== ipucu_anit
+@olay kamera c_anit
+#fiz: geçmişte yazılmış notlar, sahnede kalıcı
+> Anı duvarı. Yolcular gitmeden önce buraya Dünya'da bıraktıklarına not yazmış.
+> "Anneme: Seni yanımda götürüyorum."
+> "Kardeşime: Özür dilerim. Bilet tekti."
+> Ve en altta, aceleyle: "Bizi unutmayın."
+@sure 8 -> anit_birak
+* [Bir not yaz: "Deniz Arman için"] -> anit_deniz
+* [Bir not yaz: "Ada için"] -> anit_ada
+* [Hiçbir şey yazma] -> anit_birak
+
+=== anit_deniz
+@olay anit_yaz
+@bekle 1.4
+> Parmağınla camın üstüne yazıyorsun: "Deniz Arman için."
+> Yanından geçen biri okuyor ve sana gülümsüyor. Kendine not yazdığını sanıyor.
+~ anit_not = "deniz"
+! Bu notu biri okuyacak.
+-> SON
+
+=== anit_ada
+@olay anit_yaz
+@bekle 1.4
+> Parmağınla camın üstüne yazıyorsun: "Ada için."
+> Kardeşin bu gemide, sana birkaç güverte uzakta. Ama şimdilik bu kadarı yeter.
+~ anit_not = "ada"
+-> SON
+
+=== anit_birak
+> Yazacak bir şeyin yok. Yazacak hakkın da.
+-> SON
+
+=== kadin
+KADIN: Pencereye son kez bakıyorum. Kalkıştan sonra kepenkler iniyor, biliyor musun?
+KADIN: Altı yıl boyunca gördüğümüz son Dünya bu.
+@sure 7 -> kadin_son
+* Altı yıl sonra başka bir dünya göreceğiz. -> kadin_umut
+* Belki görmemek daha iyi. -> kadin_karanlik
+* [Sen de bak] -> kadin_bak
+
+=== kadin_umut
+KADIN: Belki. Kızım "Vaat" diyor oraya. Vaat. Ne güzel bir yalan.
+-> kadin_son
+
+=== kadin_karanlik
+KADIN: Haklısın. Ama ben yine de bakacağım. Unutmak istemiyorum.
+-> kadin_son
+
+=== kadin_bak
+@olay pencereye_yaslan
+@bekle 1.8
+> Pencerenin önündeki parmaklığa yaslanıyorsun. Mavi, kahverengi, yanık.
+@olay yaslanma_bitti
+-> kadin_son
+
+=== kadin_son
+-> SON
+
+# ================================================================ Asansör
+=== asansor
+@olay kamera c_asansor_dis
+@olay asansor_bin
+@bekle 2.0
+> Cam kapılar kapanıyor. Kabin, geminin omurgası boyunca yukarı kayıyor.
+@olay kamera asansor
+SELIM: Sekiz mi? Ben dokuz. Selim. Selim Arslan.
+SELIM: Gemi yazarıyım. Komite her şeyi yazacak birini istedi. Güzel bir unvan, değil mi?
+SELIM: Senin adın?
+@sure 8 -> asansor_ekran
+* Deniz. Deniz Arman. -> asansor_yalan
+* {ad}. -> asansor_gercek
+* [Kol ekranını göster] -> asansor_ekran
+
+=== asansor_yalan
+SELIM: Deniz. Uzayda iyi bir isim. Sonsuz bir şeyin adı.
+~ selim_tanisma = "deniz"
+-> asansor_devam
+
+=== asansor_gercek
+SELIM: {ad}? Kol ekranında başka bir ad yazıyor ama.
+@sure 7 -> asansor_gercek_sus
+* Annem bana {ad} derdi. -> asansor_anne
+* Ekran yanılıyor. -> asansor_gercek_sus
+* [Sessiz kal] -> asansor_gercek_sus
+
+=== asansor_anne
+SELIM: Ne güzel. İnsan kaç adla yaşar, değil mi? Ben de kimseye söylemem.
+~ selim_tanisma = "gercek"
+! Selim bunu hatırlayacak.
+-> asansor_devam
+
+=== asansor_gercek_sus
+SELIM: Anlıyorum. Bu gemide herkesin bir sırrı olacak. Seninki erken başlamış.
+~ selim_tanisma = "supheli"
+! Selim bunu hatırlayacak.
+-> asansor_devam
+
+=== asansor_ekran
+@olay ekran_goster
+@bekle 1.2
+> Bileğini kaldırıp kol ekranını gösteriyorsun.
+SELIM: Deniz Arman. Kaynak ustası. Bir yazara söylenecek en az şey. Neyse, zamanımız bol.
+@olay ekran_indir
+~ selim_tanisma = "ekran"
+-> asansor_devam
+
+=== asansor_devam
+SELIM: Altı yıl. Bu gemideki herkesin hikâyesini yazacağım. Seninkini de.
+@olay asansor_dur
+@bekle 1.2
+HAKEM: Güverte 8. Yaşam halkası, kuzey kanadı.
+SELIM: Senin katın. İyi yolculuklar, Deniz. Ya da her kimsen.
+@olay asansor_in
+@bekle 1.8
+@olay gorev Kamara 412'yi bul
+-> SON
+
+# ================================================================ Güverte 8
+=== ipucu_411
+@olay kamera c_411
+> 411. Kapıda bir isim: B. DEMİR — MAKİNE DAİRESİ.
+> Deniz Arman'ın kartında da aynı loncanın mührü vardı. Kapı kapalı. Şimdilik.
+-> SON
+
+=== ipucu_tabela
+@olay kamera c_tabela
+> Koridor tabelası: GÜVERTE 8 — KAMARALAR 401–440. YEMEKHANE: GÜVERTE 6. TIP MERKEZİ: GÜVERTE 3.
+> Altta küçük harflerle: "Saat 21.00'den sonra koridorlarda HAKEM sizi izler. Güvendesiniz."
+-> SON
+
+=== kamara_kapi
+@olay kamera c_kapi412
+@olay bilek_okut
+@bekle 1.0
+HAKEM: Kamara 412. Hoş geldiniz, Deniz.
+@olay kamara_kapi_ac
+@bekle 1.2
+> Kapı yana kayıyor. İçerideki ışıklar sen girerken teker teker yanıyor.
+@olay gorev Kamarana yerleş
+-> SON
+
+# ================================================================ Kamara 412
+=== kamara_giris
+@olay kamera c_kamara
+> Dört metreye altı. Bir yatak, bir masa, bir pencere.
+> Ve gelmeyecek bir adamın eşyaları.
+HAKEM: Kişisel eşyalarınız dün gece yüklendi. Kalkışa kırk dakika var.
+HAKEM: Duvardaki erzak bölmesinde size ayrılmış karşılama paketi bulunuyor.
+@olay gorev Kamarayı incele, erzak paketini al
+-> SON
+
+=== ipucu_pencere
+@olay kamera c_pencere
+> Pencerede Dünya. Buradan bakınca kimse aç değil, kimse ölmüyor.
+@if anit_not == "ada" -> pencere_ada
+-> SON
+
+=== pencere_ada
+> Ada da şu an bir pencereden bakıyor olmalı. Belki aynı yere.
+-> SON
+
+=== ipucu_yatak
+@olay kamera c_yatak
+> Yatak gerçek. Yastık gerçek. Dün gece betonda uyuyordun.
+#fiz: sahnede kalıcı durum (not yastıkta duruyor)
+> Yastığın üstünde katlanmış bir battaniye. Üstüne iğneyle bir not tutturulmuş: "Hoş geldin, usta."
+-> SON
+
+=== esya_kutu
+@olay kamera c_kutu
+@olay kutu_ac
+@bekle 1.5
+> Deniz Arman'ın eşya kutusunu açıyorsun.
+> İçinde düzgünce katlanmış iş tulumları, bir kaynak gözlüğü ve bir çerçeve.
+@olay cerceve_al
+@bekle 1.0
+> Çerçeveyi eline alıyorsun. Holografik bir fotoğraf: Deniz ve yaşlı bir kadın. Annesi. Gülüyorlar.
+@sure 8 -> cerceve_koy
+* [Çerçeveyi masaya koy] -> cerceve_koy
+* [Çerçeveyi yüzüstü kapat] -> cerceve_kapat
+* [Kutuya geri koy] -> cerceve_kutu
+
+=== cerceve_koy
+@olay kamera c_masa
+@olay cerceve_masaya
+@bekle 1.2
+> Çerçeveyi masaya koyuyorsun. Kadın sana gülümsüyor. Her sabah gülümseyecek.
+~ cerceve = "masa"
+-> SON
+
+=== cerceve_kapat
+@olay kamera c_masa
+@olay cerceve_kapat
+@bekle 1.2
+> Çerçeveyi masaya yüzüstü koyuyorsun. Hologram masanın yüzeyine sızıyor, sonra sönüyor.
+~ cerceve = "kapali"
+-> SON
+
+=== cerceve_kutu
+@olay cerceve_kutuya
+@bekle 1.2
+> Çerçeveyi tulumların arasına geri koyuyorsun. Kapağı kapatıyorsun.
+~ cerceve = "kutu"
+-> SON
+
+=== esya_alet
+@olay kamera c_alet
+> Kaynakçı alet çantası. Her şey yerli yerinde, temiz, yağlanmış.
+> Bir tek kesicinin yuvası boş. Köpüğün içinde bir kesici şekli.
+@if arman_olum == "kesici" -> alet_kesici
+> Kesici dün gece onun elindeydi. Şimdi bir ara sokakta.
+-> SON
+
+=== alet_kesici
+> Kesici dün gece onun elindeydi. Şimdi senin çantanda. Yuvası tam ona göre.
+@sure 8 -> alet_birak
+* [Kesiciyi yuvasına koy] -> alet_koy
+* [Çantanda kalsın] -> alet_birak
+
+=== alet_koy
+@olay kesici_yuvaya
+@bekle 1.4
+> Kesiciyi yuvasına koyuyorsun. Köpük onu tanıyor gibi sarıyor.
+@olay esya_ver kesici
+~ kesici_yuvada = true
+-> SON
+
+=== alet_birak
+> Çantanda kalıyor. Ağırlığını hissediyorsun.
+-> SON
+
+=== esya_kayit
+@olay kamera c_kayit
+> Masadaki terminalde yanıp sönen bir ışık: "KALKIŞ SABAHI DİNLE — D.A."
+@sure 8 -> kayit_birak
+* [Kaydı oynat] -> kayit_oynat
+* [Kaydı sil] -> kayit_sil
+* [Şimdi değil] -> kayit_birak
+
+=== kayit_oynat
+@olay kayit_ac
+@bekle 1.2
+KAYIT: Selam Deniz. Ben... sen. Bunu kalkış sabahı dinleyesin diye kaydettim.
+KAYIT: Başardın. Listede adın vardı ve başardın.
+KAYIT: Unutma neden gittiğini. Gidemeyenler için. Her kaynağı onlar için yap.
+KAYIT: Annem... annem gülümseyerek uğurladı, değil mi? Öyle olsun.
+@olay kayit_kapat
+@bekle 0.8
+> Kayıt bitiyor. Sessizlik, havalandırmanın uğultusundan daha yüksek.
+~ deniz_kaydi = "dinlendi"
+! Deniz Arman'ın sesini unutmayacaksın.
+-> SON
+
+=== kayit_sil
+@olay terminal_dokun
+@bekle 0.8
+> Parmağın SİL'in üstünde bir an duruyor. Sonra basıyorsun.
+HAKEM: Kayıt silindi. Bu işlem geri alınamaz.
+~ deniz_kaydi = "silindi"
+! Bu seçim hatırlanacak.
+-> SON
+
+=== kayit_birak
+> Işık yanıp sönmeye devam ediyor. Bekleyebilir.
+-> SON
+
+=== erzak
+@olay kamera c_erzak
+@olay erzak_ac
+@bekle 1.2
+> Duvardaki bölme açılıyor. İçinde mühürlü bir paket: GEMİ TAHSİSATI — 412.
+@olay erzak_al
+@bekle 1.4
+> Paketi alıp açıyorsun. İki su paketi, iki besin paketi, bir enerji barı.
+@olay esya_al su_paketi
+@olay esya_al su_paketi
+@olay esya_al besin_paketi
+@olay esya_al besin_paketi
+@olay esya_al enerji_bari
+HAKEM: Haftalık tahsisatınız teslim edildi. Ek talepler Erzak Kurulu'nun onayına tabidir.
+> Bir hafta. Dünya'da bir ayda bu kadar yemek görmedin.
+@olay gorev Kalkışı bekle
+-> SON
+
+# ================================================================ Anons ve kalkış
+=== anons
+@olay anons_isik
+HAKEM: Tüm yolculara: Kalkışa on dakika.
+HAKEM: Lütfen kamaranızdaki kalkış koltuğuna oturun ve kemerlerinizi bağlayın.
+@olay koltuk_ac
+@bekle 2.6
+> Zemindeki kapak kayıyor ve kalkış koltuğu yerden yükseliyor. İnsan biçiminde, yumuşak, soğuk.
+@olay gorev Kalkış koltuğuna otur
+-> SON
+
+=== koltuk
+@olay koltuga_otur
+@bekle 2.4
+> Koltuğa oturuyorsun. Yastıklar bedenine göre şekil alıyor.
+@olay kemer_bagla
+@bekle 1.8
+> Kemerler omuzlarından inip göğsünde kilitleniyor. Klik.
+HAKEM: 412, kemerleriniz bağlı. Teşekkürler, Deniz.
+@olay kamera koltuk
+@bekle 1.0
+HAKEM: Kalkışa altmış saniye.
+> Pencerede Dünya. Bir saat önce kıtalar vardı orada. Şimdi sadece mavi bir yara.
+@sure 8 -> koltuk_sessiz
+* "Ada için." -> koltuk_ada
+* "Özür dilerim, Deniz." -> koltuk_ozur
+* "Anne, gidiyorum." -> koltuk_anne
+* [Gözlerini kapat] -> koltuk_sessiz
+
+=== koltuk_ada
+> Ada için. Her şey Ada için. Bunu ne kadar çok söylersen o kadar doğru olacak.
+~ kalkis_dusunce = "ada"
+-> kalkis
+
+=== koltuk_ozur
+> Duvardaki boş ekranda yüzünün yansıması. Özür dilediğin adamın kamarasındasın.
+~ kalkis_dusunce = "ozur"
+-> kalkis
+
+=== koltuk_anne
+> Annen "kardeşini yalnız bırakma" demişti. Bırakmadın. Ama ne pahasına?
+~ kalkis_dusunce = "anne"
+-> kalkis
+
+=== koltuk_sessiz
+> Gözlerini kapatıyorsun. Karanlıkta bir ara sokak var. Açıyorsun.
+~ kalkis_dusunce = "sessiz"
+-> kalkis
+
+=== kalkis
+HAKEM: On. Dokuz. Sekiz.
+@olay geri_sayim
+@bekle 2.6
+HAKEM: Üç. İki. Bir.
+@olay kalkis_basla
+@bekle 1.2
+> Gemi titriyor. Önce hafifçe, sonra bütün gövdesiyle.
+@olay kamera yuz
+@qte vur 4.5 10 "TUTUN" -> kalkis_tutundu | kalkis_bayildi
+
+=== kalkis_tutundu
+@olay tutun
+@bekle 1.2
+> Koltuğun kollarına tutunuyorsun. Ağırlık göğsüne bir taş gibi oturuyor. Nefes al. Nefes ver.
+@olay dunya_uzaklas
+@olay kamera pencere
+@bekle 3.5
+> Pencerede Dünya küçülüyor. Bir top. Bir bilye. Bir nokta.
+~ kalkis_bayildi = false
+-> kalkis_son
+
+=== kalkis_bayildi
+@olay bayil
+@bekle 2.0
+> Ağırlık seni koltuğa gömüyor. Görüntü kararıyor, kenarlardan içe doğru.
+@olay dunya_uzaklas
+@olay aydinlat 2
+@olay kamera pencere
+@bekle 3.0
+> Gözlerini açtığında pencerede Dünya yoktu. Yalnızca küçük, mavi bir nokta.
+~ kalkis_bayildi = true
+-> kalkis_son
+
+=== kalkis_son
+HAKEM: Kalkış tamamlandı. Kemerlerinizi çözebilirsiniz.
+HAKEM: Yolculuğumuzun ilk günü. Kalan süre: altı yıl, dört ay, on bir gün.
+@olay kemer_coz
+@bekle 1.4
+> Kemerler çözülüyor. Ama sen kalkmıyorsun.
+> 412 numaralı kamarada, ölü bir adamın koltuğunda, Dünya'nın son ışığını izliyorsun.
+@olay kararti 2.5
+@bekle 2.6
+@olay baslik DEVAM EDECEK
+-> SON

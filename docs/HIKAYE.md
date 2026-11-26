@@ -90,7 +90,7 @@ Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `
    - QTE'ler: KAÇIN (kaydır), İT (hızlı dokun).
    - Arman yerde, muhafızları çağırıyor. 6 saniyelik karar: ağzını kapat, kesiciyi al ya da yalvar. Süre dolarsa ellerin karar veriyor. **Ölüm kaçınılmaz** (`arman_olum`).
 7. **Kart:** Kartı alıyorsun (zorunlu). Ne hissettiğini seçiyorsun: özür, "Ada için", annenin sözü ya da sessizlik. Sonra cesedi sakla ya da bırak (`ceset_saklandi`).
-8. **Kalkış:** Terminal yalnızca kart kodunu okuyor. Ada abisini kargo koridorunda görüyor. Ekranda **DEVAM EDECEK** yazıyor.
+8. **Şafak:** Gece biter, uzay asansörü seçilmişleri yukarı taşır. Doğrudan Bölüm 2'ye geçilir.
 
 ## 6. Dünya 2526 ve EMANET
 
@@ -127,13 +127,28 @@ Yolculuk yıllar sürer; dondurma (kriyo) **yok**: yolcular gemide yaşar, çal�
 ### Bölüm 1: "Seçim Gecesi" ✅ oynanabilir
 Yukarıda (bölüm 5).
 
-### Bölüm 2: "Kalkış" (ilk günler)
-1. **Biniş:** Yolcu kuyruğu. Terminal yalnızca kartı okuyor ama görevli bir an yüzüne bakıyor. Nefesini tutarsın. Ada seni görür, tanımıyor gibi yapıp görevlinin dikkatini dağıtır.
-2. **Kalkış:** Koltuğa çakılma, sarsıntı (QTE: kemer kopuyor, yanındaki yaşlı adamı tut ya da kendini tut), pencerede küçülen Dünya.
-3. **Kamara 412:** Oda arkadaşın kaynakçı **Baran**, gerçek Deniz Arman'ı ustalar loncasından tanıyordu. İlk gece: *"Sen Deniz değilsin."* İtiraf / yalan / tehdit → Baran'ın sezon boyu dost mu şantajcı mı olacağı (`baran_dostluk`).
-4. **Sağlık taraması:** Dr. Okafor herkesten DNA alıyor. Kayıtlar uyuşmayacak. Ada sistemi kırmayı teklif eder: Ada'yı suça ortak et / tek başına örnekleri değiştir (gizlilik + QTE) / şansını dene.
-5. **Dünya'dan son yayın:** *"Seçim Merkezi yakınındaki bir ara sokakta ceset bulundu."* Cesedi saklayıp saklamadığın, kesiciyi alıp almadığın burada önem kazanır. Komite HAKEM'den 412'yi doğrulamasını ister.
-6. **Uçurum sonu:** HAKEM gece kamarada: *"412 numaralı yolcu, kalp ritminiz kayıtlarla uyuşmuyor. Endişelenmeyin. Henüz kimseye söylemedim."*
+### Bölüm 2: "Biniş" (ilk günler) — 1. kısım ✅ oynanabilir
+Ada ile buluşma bu bölümde **yok**; kardeşler farklı güvertelerde, buluşma ileride.
+Her yolcunun **kendi kamarası** var. Gemi 2526 teknolojisinde: uzay asansörü, yörünge iskelesi, dönen yaşam halkası,
+holografik ekranlar, kol ekranı (kimlik + kamara anahtarı), kamarada duvardan açılan kalkış koltuğu.
+1. **Yörünge İskelesi:** Gece uzay asansörüyle yukarı çıkılmış. Pencerede Dünya. Biniş kuyruğu, yolcu sohbeti, biniş ekranı.
+2. **Biniş kapısı:** Kart okutulur, önce **kırmızı**. Görevli yüzüne bakar ("Ellerin neden titriyor?"). İkinci okutmada yeşil:
+   "Deniz Arman, Kamara 412, Güverte 8". Görevli **kol ekranını** verir (`gorevli_supheli`).
+3. **Halka Meydanı:** Dört kat yüksekliğinde salon, askılı bahçe, dönen gemi hologramı, **anı duvarı** (not yaz: `anit_not`),
+   son kez Dünya'ya bakan kadın.
+4. **Asansör:** **Selim Arslan** (gemi yazarı) ile tanışma. Ona gerçek adını söylemek ya da yalan (`selim_tanisma`).
+5. **Güverte 8:** Koridor, kapı tabelaları; 411'de **B. Demir** (Baran) adı (sonraki sahnenin tohumu).
+6. **Kamara 412:** Kol ekranıyla kapı açılır. Deniz'in eşya kutusu (annesiyle fotoğrafı: masaya koy / kapat / kutuya: `cerceve`),
+   alet çantası (kesicinin boş yuvası, `kesici_yuvada`), terminalde Deniz'in **kendine bıraktığı kayıt** (dinle / sil: `deniz_kaydi`),
+   duvardaki **erzak bölmesi** (haftalık tahsisat: su paketi, besin paketi → ihtiyaç sistemi).
+7. **Anons ve kalkış:** HAKEM "kalkışa on dakika". Duvardan kalkış koltuğu açılır, oyuncu oturur, kemerler iner.
+   Son düşünce seçimi (`kalkis_dusunce`). Kalkış: QTE **TUTUN** (başaramazsan bayılırsın: `kalkis_bayildi`). Pencerede Dünya küçülür.
+
+**Sonraki kısımlar (yazılacak):**
+1. **Baran (411):** Gerçek Deniz Arman'ı ustalar loncasından tanıyordu. *"Sen Deniz değilsin."* İtiraf / yalan / tehdit (`baran_dostluk`).
+2. **Sağlık taraması:** Dr. Okafor herkesten DNA alıyor. Kayıtlar uyuşmayacak. Ada sistemi kırmayı teklif eder: Ada'yı suça ortak et / tek başına örnekleri değiştir (gizlilik + QTE) / şansını dene.
+3. **Dünya'dan son yayın:** *"Seçim Merkezi yakınındaki bir ara sokakta ceset bulundu."* Cesedi saklayıp saklamadığın, kesiciyi alıp almadığın burada önem kazanır. Komite HAKEM'den 412'yi doğrulamasını ister.
+4. **Uçurum sonu:** HAKEM gece kamarada: *"412 numaralı yolcu, kalp ritminiz kayıtlarla uyuşmuyor. Endişelenmeyin. Henüz kimseye söylemedim."*
 
 ### Bölüm 3: "Kızıl Durak" (1. ay, Mars)
 1. **Soğuk açılış:** Terk edilmiş istasyonda yakıt hattı patlıyor (QTE).

@@ -307,8 +307,8 @@ outline_size = 6
 
 [node name="Grafiti" type="Label3D" parent="Clues"]
 double_sided = false
-transform = Transform3D(0.0000, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0000, 8.85, 2.3, 20.5)
-pixel_size = 0.012
+transform = Transform3D(0.0000, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0000, 8.85, 2.3, 21.0)
+pixel_size = 0.0075
 modulate = Color(0.9, 0.12, 0.1, 1)
 outline_modulate = Color(0.2, 0, 0, 0.4)
 text = "KOMİTE KİMİ SEÇTİ?\nKENDİNİ."
@@ -318,7 +318,7 @@ outline_size = 6
 [node name="Liste" type="Label3D" parent="Clues"]
 double_sided = false
 transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, -5.5, 2.0, 57.8)
-pixel_size = 0.006
+pixel_size = 0.0038
 modulate = Color(0.5, 0.95, 1, 1)
 outline_modulate = Color(0, 0.15, 0.25, 0.6)
 text = "SON LİSTE — 500 / 500\n· · ·\n087  JANSEN, M. — TIP\n088  KAYA, ADA — GENÇ DAHİLER\n089  KIM, S. — TARIM\n· · ·\n411  ARDA, N. — İŞÇİ / TESİSAT\n412  ARMAN, DENİZ — İŞÇİ / KAYNAK\n413  ASLAN, B. — İŞÇİ / ELEKTRİK"
@@ -357,7 +357,7 @@ material_override = SubResource("NotMat")
 
 [node name="ArabaNotYazi" type="Label3D" parent="Clues"]
 transform = Transform3D(0.3429, 0, -0.9394, 0, 1, 0, 0.9394, 0, 0.3429, 3.742, 1.560, 10.219)
-pixel_size = 0.0011
+pixel_size = 0.00085
 modulate = Color(0.1, 0.1, 0.2, 1)
 outline_size = 0
 text = "Annemi listeye

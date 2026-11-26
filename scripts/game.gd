@@ -23,6 +23,9 @@ func _ready() -> void:
 
 const BOOT_LOG := "user://acilis_kaydi.txt"
 const BOOT_OK := "TAMAM"
+const SAVE_PATH := "user://kayit.json"
+## Kayıt noktası adı -> sahne
+const CHAPTERS := {"binis": "res://scenes/binis.tscn"}
 
 var _boot_frames: int = -1
 
@@ -80,3 +83,34 @@ func _add_key_action(action: String, keys: Array) -> void:
 		var ev := InputEventKey.new()
 		ev.physical_keycode = key
 		InputMap.action_add_event(action, ev)
+
+
+# --- Kayıt noktası (bölüm başı) -------------------------------------------------
+
+## Bölüm başında hikâye değişkenlerini ve çantayı kaydeder ("DEVAM ET" buradan başlar).
+func save_checkpoint(chapter: String) -> void:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"bolum": chapter, "vars": Story.vars}))
+
+
+func has_checkpoint() -> bool:
+	return not checkpoint_scene().is_empty()
+
+
+func checkpoint_scene() -> String:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return ""
+	var data = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if typeof(data) != TYPE_DICTIONARY:
+		return ""
+	return CHAPTERS.get(str(data.get("bolum", "")), "")
+
+
+## Kaydı Story'ye yükler ve bölümün sahnesini döndürür.
+func load_checkpoint() -> String:
+	var data = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if typeof(data) != TYPE_DICTIONARY:
+		return ""
+	Story.vars = data.get("vars", {})
+	return CHAPTERS.get(str(data.get("bolum", "")), "")

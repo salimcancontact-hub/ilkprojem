@@ -5,6 +5,7 @@ extends GameLevel
 
 const DLG := "res://dialogs/onsoz.dlg"
 const MENU_SCENE := "res://scenes/boot.tscn"
+const NEXT_SCENE := "res://scenes/binis.tscn"
 
 @onready var _arman: Npc = $Npcs/Arman
 @onready var _guard: Npc = $Npcs/Muhafiz
@@ -47,6 +48,12 @@ func _ready() -> void:
 		"sokak_genis": [Vector3(13.2, 2.4, 6.4), Vector3(15.6, 1.1, 10.6)],
 		"arman_yerde": [Vector3(13.6, 2.6, 12.2), Vector3(16.0, 0.2, 10.4)],
 		"surukle": [Vector3(19.0, 2.8, 17.0), Vector3(19.5, 0.4, 11.8)],
+		# İpuçlarına yakın bakış (mobilde yazılar okunabilsin)
+		"yakin_not": [Vector3(3.09, 1.6, 9.98), Vector3(3.752, 1.56, 10.215), true],
+		"yakin_grafiti": [Vector3(2.4, 2.1, 21.0), Vector3(8.85, 2.1, 21.0), true],
+		"yakin_liste": [Vector3(-5.5, 2.1, 53.6), Vector3(-5.5, 2.0, 57.8), true],
+		"yakin_ilan": [Vector3(-4.6, 1.6, 2.0), Vector3(-8.85, 1.55, 2.0), true],
+		"yakin_terminal": [Vector3(3.6, 1.75, 52.6), Vector3(3.6, 1.6, 56.0), true],
 	}
 	# Muhafızın elinde şok copu
 	_guard.model.attach(Props.baton(), "hand_r", Vector3(0, 0.02, 0.03), Vector3(0, 0, 0))
@@ -63,7 +70,7 @@ func _ready() -> void:
 	_dialog.fade_to(1.0, 0.0)
 	await get_tree().process_frame
 	_prewarm()
-	ResourceLoader.load_threaded_request("res://scenes/levels/emanet_hangar.tscn")
+	ResourceLoader.load_threaded_request(NEXT_SCENE)
 	await play_dialog(DLG, "giris")
 	# Başlık kartı ve kararmanın açılması bitmeden aramaya geçme
 	if _dialog._title_tween and _dialog._title_tween.is_running():
@@ -154,10 +161,6 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			var tw2 := create_tween()
 			tw2.tween_property(_player, "global_position", _player.global_position + dir * 2.5, 0.9)
 			tw2.tween_callback(func() -> void: _player.model.play("Idle", 0.2))
-		"koridor":
-			_setup_corridor()
-		"el_tut":
-			_hold_hands()
 		"kart_goster":
 			_show_point = _point((_arman.global_position + _player.global_position) / 2.0 + Vector3(0, 1.25, 0))
 			_arman.model.reach("r", _show_point, 0.5)
@@ -378,7 +381,7 @@ func _drag_body() -> void:
 	_player.model.release_all(0.4)
 	_player.model.play("Idle", 0.4)
 	await get_tree().create_timer(0.6, true, false, true).timeout
-	_arman.visible = false
+	# Ceset konteynerin arkasında yatmaya devam eder (gizlenmez); oyuncu artık ona takılmaz
 	for b in rd.bones.values():
 		(b as PhysicalBone3D).collision_layer = 0
 	grip_l.queue_free()
@@ -492,44 +495,6 @@ func _prewarm() -> void:
 	for k in 6:
 		await get_tree().process_frame
 	holder.queue_free()
-
-
-# --- Kapanış: gemide kargo koridoru ------------------------------------------
-
-const CORRIDOR := Vector3(600, 0, 600)  # hangar sahnesi şehirden çok uzağa kurulur (aşağı değil: düşme ölümü sayılır)
-var _ada_ship: CharacterModel
-
-
-func _setup_corridor() -> void:
-	var hangar: Node3D = (ResourceLoader.load_threaded_get("res://scenes/levels/emanet_hangar.tscn") as PackedScene).instantiate()
-	hangar.position = CORRIDOR
-	add_child(hangar)
-	_player.velocity = Vector3.ZERO
-	_player.global_position = CORRIDOR + Vector3(12.0, 0.05, 5.0)
-	_player.model.release_all(0.0)
-	_player.model.play("Idle", 0.0)
-	_ada_ship = load("res://scenes/characters/ada_model.tscn").instantiate()
-	_ada_ship.process_mode = Node.PROCESS_MODE_ALWAYS  # ara sahne duraklatılmış olsa da canlı
-	add_child(_ada_ship)
-	_ada_ship.global_position = CORRIDOR + Vector3(12.0, 0.0, 5.8)
-	_ada_ship.start_animation = "Idle"
-	_player.face_point(_ada_ship.global_position)
-	# Ada modeli -Z'ye bakar; oyuncuya dönük (+Z'den -Z'ye) zaten doğru
-	camera_shots["koridor"] = [CORRIDOR + Vector3(13.8, 1.6, 5.3), CORRIDOR + Vector3(12.0, 1.35, 5.4)]
-	_set_camera("koridor")
-
-
-## Ada ile oyuncunun elleri aralarındaki noktada buluşur.
-func _hold_hands() -> void:
-	if _ada_ship == null:
-		return
-	var meet := Node3D.new()
-	add_child(meet)
-	meet.global_position = CORRIDOR + Vector3(12.17, 1.02, 5.4)
-	_ada_ship.reach("r", meet, 0.8)
-	_player.model.reach("l", meet, 0.8)
-	camera_shots["el_ele"] = [CORRIDOR + Vector3(13.55, 1.45, 5.15), CORRIDOR + Vector3(12.05, 1.15, 5.4)]
-	_set_camera("el_ele")
 
 
 # --- Görüntülü arama ---------------------------------------------------------
@@ -815,5 +780,9 @@ func _final() -> void:
 	await _dialog.fade_to(1.0, 2.0)
 	await play_dialog(DLG, "kalkis")
 	_hud.set_gameplay_visible(false)
-	await get_tree().create_timer(4.5).timeout
-	get_tree().change_scene_to_file(MENU_SCENE)
+	# Bölüm 2: Biniş (arka planda yüklendi)
+	var next := ResourceLoader.load_threaded_get(NEXT_SCENE) as PackedScene
+	if next == null:
+		next = load(NEXT_SCENE)
+	Game.save_checkpoint("binis")
+	get_tree().change_scene_to_packed(next)

@@ -32,6 +32,11 @@ Kız kardeşi Ada gemidedir. Ayrıntılı hikâye: `docs/HIKAYE.md`.
   (kol IK'sı), `bone_marker`, `go_ragdoll` (fizik iskeleti: `ragdoll.gd`).
 - `scripts/story.gd` (autoload Story): değişkenler, `{ad}` yer tutucusu, sayılı envanter, açlık/susuzluk/yorgunluk.
 - Nesneler kodla üretilir: `scripts/props/props.gd`. Görüntülü arama: `holo_call.gd`.
+- Seviyeler: `scripts/levels/onsoz.gd` (Bölüm 1, Dünya) → `scripts/levels/binis.gd` (Bölüm 2, gemi). Gemi iç mekânları kodla
+  `scripts/levels/gemi_set.gd` (MegaKit + kod mobilya; bölge 1 iskele/meydan, bölge 2 güverte 8/kamara 412).
+  Dünya: `tools/make_earth.py` → `assets/textures/earth.png` + `shaders/earth.gdshader`; uzay: `shaders/stars.gdshader`.
+- Kamera: `camera_shots` içinde `[konum, hedef, true]` = kesin yakın çekim (engel denetimi yok). İncelemelerde TWD gibi elle kurulmuş açı.
+- Kayıt noktası: `Game.save_checkpoint("binis")`, menüde DEVAM ET.
 - Seviye kurucular: `tools/build_onsoz.gd`, `tools/build_hangar.gd` (MegaKit). Varlık dönüştürme: `tools/convert_megakit.py`.
 
 ## Hedef cihaz ve performans

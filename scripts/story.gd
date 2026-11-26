@@ -24,6 +24,11 @@ const CHARACTERS := {
 	"MUHAFIZ": {"name": "Komite Muhafızı", "color": Color(0.95, 0.8, 0.3)},
 	"YASLI": {"name": "Yaşlı Adam", "color": Color(0.8, 0.75, 0.7)},
 	"KADIN": {"name": "Kadın", "color": Color(0.85, 0.7, 0.8)},
+	# Bölüm 2
+	"GOREVLI": {"name": "Biniş Görevlisi", "color": Color(0.7, 0.9, 0.8)},
+	"YOLCU": {"name": "Yolcu", "color": Color(0.8, 0.8, 0.7)},
+	"SELIM": {"name": "Selim Arslan", "color": Color(0.95, 0.85, 0.6)},
+	"KAYIT": {"name": "Deniz Arman (kayıt)", "color": Color(1.0, 0.65, 0.3)},
 }
 
 ## Envanter eşyaları: kimlik -> ad ve açıklama
@@ -34,6 +39,11 @@ const ITEMS := {
 	"enerji_bari": {"name": "Enerji barı", "desc": "Ezilmiş, son kullanma tarihi üç yıl önce geçmiş. Yine de kalori.",
 		"use": {"aclik": -30.0, "yorgunluk": -8.0}, "verb": "YE", "action": "yeme"},
 	"kimlik_karti": {"name": "Kimlik kartı — Deniz Arman", "desc": "EMANET / 412. Kaynak ustası. Mavi ışığı hâlâ yanıyor. Kapıdaki terminal yalnızca bu kodu okuyor."},
+	"su_paketi": {"name": "Su paketi (500 ml)", "desc": "Gemi tahsisatı. Arıtılmış, soğuk, tadı yok. Mükemmel.",
+		"use": {"susuzluk": -40.0}, "verb": "İÇ", "action": "icme"},
+	"besin_paketi": {"name": "Besin paketi", "desc": "Gemi tahsisatı. Sıkıştırılmış tam öğün. Üstünde: 'Yeşil Kubbe'de yetiştirildi.'",
+		"use": {"aclik": -45.0, "yorgunluk": -5.0}, "verb": "YE", "action": "yeme"},
+	"kol_ekrani": {"name": "Kol ekranı", "desc": "EMANET yolcu cihazı. Ekranda: DENİZ ARMAN — 412. Kamaranın anahtarı."},
 	"kesici": {"name": "Kaynak kesicisi", "desc": "Deniz Arman'ın aleti. Sapında onun parmak izleri var. Ve seninkiler."},
 }
 

@@ -137,6 +137,8 @@ func _process(delta: float) -> void:
 # --- Diyalog ---------------------------------------------------------------
 
 func _start_dialog(npc: Npc) -> void:
+	if _dialog.active:
+		return  # bir konuşma sürerken ikincisi başlamaz (ilki yarıda kalıp ekranı kilitlemesin)
 	_talking_to = npc
 	_enter_dialog_mode()
 	if npc.model:
@@ -423,7 +425,11 @@ func _set_camera(shot: String) -> void:
 		_:
 			if camera_shots.has(shot):
 				_camera_locked = true
-				_place_cam(camera_shots[shot][0], camera_shots[shot][1])
+				var sh: Array = camera_shots[shot]
+				if sh.size() > 2 and sh[2]:
+					_place_cam_exact(sh[0], sh[1])
+				else:
+					_place_cam(sh[0], sh[1])
 				_dialog_cam.make_current()
 
 
@@ -441,6 +447,17 @@ func _place_cam(from: Vector3, target: Vector3) -> void:
 	_cam_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_cam_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_cam_tween.tween_method(func(t: float) -> void: _set_cam(from.lerp(to, t), target), 0.0, 1.0, 7.0)
+
+
+## Yakın inceleme çekimi: engel denetimi yok (hedef bir yüzeyin üstündeki yazı), çok hafif kayma.
+func _place_cam_exact(from: Vector3, target: Vector3) -> void:
+	if _cam_tween:
+		_cam_tween.kill()
+	var to := from.lerp(target, 0.06)
+	_set_cam(from, target)
+	_cam_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_cam_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_cam_tween.tween_method(func(t: float) -> void: _set_cam(from.lerp(to, t), target), 0.0, 1.0, 6.0)
 
 
 func _set_cam(pos: Vector3, target: Vector3) -> void:

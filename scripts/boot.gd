@@ -47,6 +47,10 @@ func _ready() -> void:
 	_menu.alignment = BoxContainer.ALIGNMENT_CENTER
 	_menu.add_theme_constant_override("separation", 16)
 	box.add_child(_menu)
+	if Game.has_checkpoint():
+		var cont := _button("DEVAM ET", 32, Vector2(420, 96))
+		cont.pressed.connect(_continue)
+		_menu.add_child(_centered(cont))
 	var start := _button("YENİ OYUN", 32, Vector2(420, 96))
 	start.pressed.connect(_show_name_entry)
 	_menu.add_child(_centered(start))
@@ -125,6 +129,21 @@ func _start() -> void:
 	_name_box.visible = false
 	_loading = GAME_SCENE
 	Game.boot_log("yükleniyor: oyun")
+	_bar.visible = true
+	_status.text = "Yükleniyor..."
+	ResourceLoader.load_threaded_request(_loading)
+
+
+## Son bölümün başından devam eder.
+func _continue() -> void:
+	if not _loading.is_empty():
+		return
+	var scene := Game.load_checkpoint()
+	if scene.is_empty():
+		return
+	_menu.visible = false
+	_loading = scene
+	Game.boot_log("yükleniyor: kayıt " + scene)
 	_bar.visible = true
 	_status.text = "Yükleniyor..."
 	ResourceLoader.load_threaded_request(_loading)

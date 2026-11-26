@@ -26,6 +26,9 @@ var _choosing := false
 var _choice_time := 0.0
 var _choice_total := 0.0
 var _block_input := 0.0
+## Yeni bir yazı geldiğinde dokunmanın yok sayıldığı süre.
+const MIN_READ := 0.45
+var _after_qte: bool = false
 var _toast_tween: Tween
 
 var _root: Control
@@ -120,6 +123,8 @@ func _on_wait(seconds: float) -> void:
 	_panel.visible = false
 	await get_tree().create_timer(seconds, true, false, true).timeout
 	_waiting = false
+	# Ara sahnede ekrana dokunmaya devam eden oyuncu sonraki yazıyı kaçırmasın
+	_block_input = maxf(_block_input, 0.7)
 	if active:
 		runner.advance()
 
@@ -148,6 +153,9 @@ func _on_qte_finished(success: bool) -> void:
 	_in_qte = false
 	_panel.visible = false
 	_set_panel_raised(false)
+	# QTE'de hızlı hızlı dokunan parmak, ardından gelen yazıları atlatmasın
+	_block_input = maxf(_block_input, 1.2)
+	_after_qte = true
 	runner.finish_qte(success)
 
 
@@ -279,6 +287,11 @@ func _on_narration(text: String) -> void:
 
 
 func _show_text(text: String) -> void:
+	# Her yazı en az bir an okunabilsin (art arda dokunuşlar yazıyı yutmasın)
+	_block_input = maxf(_block_input, MIN_READ)
+	if _after_qte:
+		_after_qte = false
+		_block_input = maxf(_block_input, 1.0)
 	_panel.visible = true
 	_set_panel_raised(false)
 	_text_label.text = Story.format_text(text)
@@ -294,6 +307,7 @@ func _finish_typing() -> void:
 
 func _on_choices(options: PackedStringArray, timeout: float) -> void:
 	_finish_typing()
+	_block_input = maxf(_block_input, 0.5)
 	for child in _grid.get_children():
 		child.queue_free()
 	_grid.columns = 2 if options.size() > 1 else 1
@@ -319,6 +333,8 @@ func _on_choices(options: PackedStringArray, timeout: float) -> void:
 
 
 func _pick(index: int) -> void:
+	if _block_input > 0.0:
+		return  # seçenekler belirirken kazara dokunuş seçim yapmasın
 	if not _choosing or index >= _grid.get_child_count():
 		return
 	_hide_choices()
