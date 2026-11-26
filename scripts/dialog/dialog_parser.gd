@@ -121,6 +121,8 @@ static func _parse_step(line: String, where: String) -> Variant:
 			push_error("%s: @if satırında '-> hedef' eksik" % where)
 			return null
 		return {"type": "if", "cond": rest.substr(0, arrow).strip_edges(), "target": rest.substr(arrow + 2).strip_edges()}
+	if line.begins_with("@qte"):
+		return _parse_qte(line.trim_prefix("@qte").strip_edges(), where)
 	if line.begins_with("@olay"):
 		var parts := line.trim_prefix("@olay").strip_edges().split(" ", false)
 		if parts.is_empty():
@@ -135,6 +137,43 @@ static func _parse_step(line: String, where: String) -> Variant:
 			return {"type": "line", "speaker": speaker, "text": line.substr(colon + 1).strip_edges()}
 	push_error("%s: anlaşılamayan satır: %s" % [where, line])
 	return null
+
+
+## @qte bas 1.5 "EĞİL" -> başarı | başarısızlık
+## @qte vur 3.0 10 "KALDIR" -> başarı | başarısızlık   (3 sn içinde 10 dokunuş)
+## @qte kaydir sol 1.2 "KAÇ" -> başarı | başarısızlık  (sol, sag, yukari, asagi)
+static func _parse_qte(rest: String, where: String) -> Variant:
+	var arrow := rest.find("->")
+	if arrow == -1:
+		push_error("%s: @qte satırında '-> başarı | başarısızlık' eksik" % where)
+		return null
+	var targets := rest.substr(arrow + 2).split("|")
+	var head := rest.substr(0, arrow).strip_edges()
+	var label := ""
+	var q1 := head.find("\"")
+	if q1 != -1:
+		var q2 := head.find("\"", q1 + 1)
+		label = head.substr(q1 + 1, q2 - q1 - 1)
+		head = head.substr(0, q1).strip_edges()
+	var parts := head.split(" ", false)
+	if parts.is_empty():
+		push_error("%s: @qte türü eksik" % where)
+		return null
+	var step := {"type": "qte", "kind": parts[0], "label": label, "time": 1.5, "count": 1, "dir": "",
+		"success": targets[0].strip_edges(), "fail": targets[1].strip_edges() if targets.size() > 1 else targets[0].strip_edges()}
+	match parts[0]:
+		"bas":
+			step["time"] = parts[1].to_float() if parts.size() > 1 else 1.5
+		"vur":
+			step["time"] = parts[1].to_float() if parts.size() > 1 else 3.0
+			step["count"] = parts[2].to_int() if parts.size() > 2 else 8
+		"kaydir":
+			step["dir"] = parts[1] if parts.size() > 1 else "sol"
+			step["time"] = parts[2].to_float() if parts.size() > 2 else 1.5
+		_:
+			push_error("%s: bilinmeyen QTE türü: %s" % [where, parts[0]])
+			return null
+	return step
 
 
 ## Var olmayan düğümlere yapılan atlamaları raporlar.
@@ -152,6 +191,9 @@ static func _collect_targets(steps: Array, out: Array) -> void:
 		match step["type"]:
 			"goto", "if":
 				out.append(step["target"])
+			"qte":
+				out.append(step["success"])
+				out.append(step["fail"])
 			"choices":
 				out.append(step["timeout_target"])
 				for option in step["options"]:

@@ -104,6 +104,7 @@ func _attach_parts(scene: PackedScene, color: Color) -> void:
 	var part: Node3D = scene.instantiate()
 	for mesh: MeshInstance3D in part.find_children("*", "MeshInstance3D", true, false):
 		var src_mat := mesh.mesh.surface_get_material(0)
+		mesh.owner = null
 		mesh.get_parent().remove_child(mesh)
 		skeleton.add_child(mesh)
 		mesh.skeleton = NodePath("..")

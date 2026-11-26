@@ -125,7 +125,7 @@ idle_animation = "Idle"
 transform = Transform3D(-0.9777, 0, -0.2098, 0, 1, 0, 0.2098, 0, -0.9777, -5.5, -0.15, 38)
 start_animation = "Idle"
 
-[node name="P2" parent="Crowd" instance=ExtResource("13_r")]
+[node name="P2" parent="Crowd" groups=["detay"] instance=ExtResource("13_r")]
 transform = Transform3D(-0.9135, 0, -0.4068, 0, 1, 0, 0.4068, 0, -0.9135, -4.6, -0.15, 38.8)
 start_animation = "Idle_FoldArms"
 
@@ -133,7 +133,7 @@ start_animation = "Idle_FoldArms"
 transform = Transform3D(-0.9836, 0, 0.1801, 0, 1, 0, -0.1801, 0, -0.9836, -1.0, -0.15, 37)
 start_animation = "Idle_Talking"
 
-[node name="P4" parent="Crowd" instance=ExtResource("15_r")]
+[node name="P4" parent="Crowd" groups=["detay"] instance=ExtResource("15_r")]
 transform = Transform3D(-0.8712, 0, -0.4909, 0, 1, 0, 0.4909, 0, -0.8712, 0.4, -0.15, 38.2)
 start_animation = "Idle_No"
 
@@ -141,7 +141,7 @@ start_animation = "Idle_No"
 transform = Transform3D(-0.9991, 0, 0.0430, 0, 1, 0, -0.0430, 0, -0.9991, 4.5, -0.15, 36.5)
 start_animation = "Idle_TalkingPhone"
 
-[node name="P6" parent="Crowd" instance=ExtResource("17_r")]
+[node name="P6" parent="Crowd" groups=["detay"] instance=ExtResource("17_r")]
 transform = Transform3D(-0.9870, 0, -0.1605, 0, 1, 0, 0.1605, 0, -0.9870, 5.6, -0.15, 37.4)
 start_animation = "Idle"
 
@@ -149,7 +149,7 @@ start_animation = "Idle"
 transform = Transform3D(-0.8626, 0, -0.5059, 0, 1, 0, 0.5059, 0, -0.8626, -6.2, -0.15, 42)
 start_animation = "Idle_Torch"
 
-[node name="P8" parent="Crowd" instance=ExtResource("19_r")]
+[node name="P8" parent="Crowd" groups=["detay"] instance=ExtResource("19_r")]
 transform = Transform3D(-1.0000, 0, 0.0089, 0, 1, 0, -0.0089, 0, -1.0000, -1.6, -0.15, 43)
 start_animation = "Idle_FoldArms"
 
@@ -157,7 +157,7 @@ start_animation = "Idle_FoldArms"
 transform = Transform3D(-0.8499, 0, -0.5269, 0, 1, 0, 0.5269, 0, -0.8499, 1.2, -0.15, 44.2)
 start_animation = "Idle"
 
-[node name="P10" parent="Crowd" instance=ExtResource("13_r")]
+[node name="P10" parent="Crowd" groups=["detay"] instance=ExtResource("13_r")]
 transform = Transform3D(-0.9968, 0, -0.0795, 0, 1, 0, 0.0795, 0, -0.9968, 5.0, -0.15, 43.5)
 start_animation = "Idle_FoldArms"
 
@@ -165,7 +165,7 @@ start_animation = "Idle_FoldArms"
 transform = Transform3D(-0.8697, 0, -0.4936, 0, 1, 0, 0.4936, 0, -0.8697, -5.0, -0.15, 49.5)
 start_animation = "Idle_Talking"
 
-[node name="P12" parent="Crowd" instance=ExtResource("15_r")]
+[node name="P12" parent="Crowd" groups=["detay"] instance=ExtResource("15_r")]
 transform = Transform3D(-0.8818, 0, -0.4716, 0, 1, 0, 0.4716, 0, -0.8818, -2.0, -0.15, 50.5)
 start_animation = "Idle_No"
 
@@ -173,7 +173,7 @@ start_animation = "Idle_No"
 transform = Transform3D(-0.9959, 0, -0.0905, 0, 1, 0, 0.0905, 0, -0.9959, 2.6, -0.15, 50)
 start_animation = "Idle_TalkingPhone"
 
-[node name="P14" parent="Crowd" instance=ExtResource("17_r")]
+[node name="P14" parent="Crowd" groups=["detay"] instance=ExtResource("17_r")]
 transform = Transform3D(-0.9241, 0, 0.3822, 0, 1, 0, -0.3822, 0, -0.9241, 4.6, -0.15, 51.2)
 start_animation = "Idle"
 
@@ -181,7 +181,7 @@ start_animation = "Idle"
 transform = Transform3D(-0.8998, 0, -0.4363, 0, 1, 0, 0.4363, 0, -0.8998, -6.0, -0.15, 54)
 start_animation = "Idle_Torch"
 
-[node name="P16" parent="Crowd" instance=ExtResource("19_r")]
+[node name="P16" parent="Crowd" groups=["detay"] instance=ExtResource("19_r")]
 transform = Transform3D(-0.9454, 0, -0.3260, 0, 1, 0, 0.3260, 0, -0.9454, 5.6, -0.15, 55)
 start_animation = "Idle_FoldArms"
 

@@ -16,11 +16,16 @@ var _nearby_npc: Npc = null
 var _talking_to: Npc = null
 var _dialog_cam: Camera3D
 var _player_cam: Camera3D
+## Ara sahne kamera açıları: ad -> [konum, bakılan nokta]. "@olay kamera ad" ile seçilir.
+var camera_shots: Dictionary = {}
+var _camera_locked: bool = false
+var _cutscene_live: bool = false
 var _shake_time: float = 0.0
 var _shake_strength: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("level")
 	get_tree().paused = false
 	Game.mark_level_started()
 
@@ -92,7 +97,19 @@ func _enter_dialog_mode() -> void:
 	_player.model.process_mode = Node.PROCESS_MODE_ALWAYS
 
 
+## Diyalog sürerken dünyanın donmamasını sağlar (ara sahnede kalabalık koşsun, ışıklar yansın).
+## Oyuncu bu sırada hareket edemez.
+func keep_world_running() -> void:
+	_cutscene_live = true
+	_player.input_enabled = false
+	get_tree().paused = false
+
+
 func _on_dialog_finished() -> void:
+	_camera_locked = false
+	if _cutscene_live:
+		_cutscene_live = false
+		_player.input_enabled = true
 	_player.model.process_mode = Node.PROCESS_MODE_INHERIT
 	if not _player.is_dead:
 		_player.model.play("Idle")
@@ -110,6 +127,8 @@ func _on_speaker_changed(speaker_id: String) -> void:
 	if _talking_to == null:
 		return
 	# Konuşan el kol hareketi yapar, diğeri dinler.
+	if _camera_locked:
+		return
 	_player.model.play("Idle_Talking" if speaker_id == player_speaker_id else "Idle", 0.3)
 	if _talking_to.model:
 		_talking_to.model.play("Idle_Talking" if speaker_id == _talking_to.npc_id else _talking_to.idle_animation, 0.3)
@@ -147,6 +166,8 @@ func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
 					model.play_once(args[1], "Idle")
 		"gorev":
 			_hud.set_objective(" ".join(args))
+		"kamera":
+			_set_camera(args[0] if args.size() > 0 else "otomatik")
 		"sarsinti":
 			shake(float(args[0]) if args.size() > 0 else 0.3, float(args[1]) if args.size() > 1 else 0.6)
 		_:
@@ -156,6 +177,22 @@ func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
 ## Alt sınıfların hikâye olaylarını işlediği yer.
 func _on_story_event(_event_name: String, _args: PackedStringArray) -> void:
 	pass
+
+
+## "oyuncu": oyuncunun kamerası, "otomatik": konuşana göre, diğerleri camera_shots'tan.
+func _set_camera(shot: String) -> void:
+	match shot:
+		"oyuncu":
+			_camera_locked = true
+			_player_cam.make_current()
+		"otomatik":
+			_camera_locked = false
+			_dialog_cam.make_current()
+		_:
+			if camera_shots.has(shot):
+				_camera_locked = true
+				_place_cam(camera_shots[shot][0], camera_shots[shot][1])
+				_dialog_cam.make_current()
 
 
 func _place_cam(from: Vector3, target: Vector3) -> void:

@@ -19,6 +19,11 @@ var _phase: String = "giris"
 func _ready() -> void:
 	super()
 	Story.reset()
+	camera_shots = {
+		"kalabalik": [Vector3(2.6, 2.1, 59.2), Vector3(-0.8, 1.2, 50.0)],
+		"muhafiz": [Vector3(-0.9, 1.75, 55.6), Vector3(0.2, 1.55, 58.6)],
+		"arman": [Vector3(-0.6, 3.0, 52.4), Vector3(1.8, 0.3, 55.0)],
+	}
 	_card.visible = false
 	_card.interactable = false
 	_alley.monitoring = false
@@ -35,7 +40,16 @@ func _ready() -> void:
 func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 	match event_name:
 		"isyan":
+			keep_world_running()
 			_start_riot()
+		"arman_dustu":
+			_arman.visible = true
+			_arman.position = Vector3(1.8, -0.15, 55.0)
+			_arman.rotation = Vector3(0, 2.4, 0)
+			_arman.get_node("Visual").rotation = Vector3.ZERO
+			_arman.model.hold_last_frame("Death01")
+		"arman_kalkti":
+			_arman_escape()
 		"final":
 			_final()
 
@@ -46,9 +60,6 @@ func _start_riot() -> void:
 	if _phase != "sokak":
 		return
 	_phase = "isyan"
-	if _dialog.active:
-		await _dialog.dialog_finished
-	_hud.set_objective("Kalabalıktan kaç! Deniz Arman'ın peşinden git.")
 	shake(0.12, 3.0)
 	_arman.set_interactable(false)
 	_guard.set_interactable(false)
@@ -76,9 +87,6 @@ func _start_riot() -> void:
 	for npc: Npc in [$Npcs/Yasli, $Npcs/Kadin]:
 		_run_to(npc.model, npc, [npc.position + Vector3(randf_range(-3, 3), 0, -25)], 6.0, "Jog_Fwd", true)
 
-	# Deniz Arman ara sokağa kaçar
-	_run_to(_arman.model, _arman, [Vector3(6.5, 0, 12.0), Vector3(13.0, 0, 10.5), Vector3(18.0, 0, 10.0)], 4.5, "Sprint", true)
-	await get_tree().create_timer(1.2).timeout
 	_alley.monitoring = true
 	# Kısa aralıklarla uzak patlamalar
 	for k in 3:
@@ -86,6 +94,13 @@ func _start_riot() -> void:
 		if _phase != "isyan":
 			return
 		shake(0.35, 0.5)
+
+
+## Deniz Arman yerden kalkıp ara sokağa koşar.
+func _arman_escape() -> void:
+	_arman.model.play("LayToIdle", 0.1)
+	await get_tree().create_timer(1.6).timeout
+	_run_to(_arman.model, _arman, [Vector3(5.0, -0.15, 40.0), Vector3(6.5, -0.15, 13.0), Vector3(13.0, -0.15, 10.5), Vector3(18.0, -0.15, 10.0)], 9.0, "Sprint", true)
 
 
 func _run_to(model: CharacterModel, mover: Node3D, points: Array, duration: float, anim: String, hide_at_end: bool) -> void:

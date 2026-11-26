@@ -17,6 +17,7 @@ func _ready() -> void:
 	Game.boot_log("açılış ekranı", true)
 	var info := "%s | %s | %s" % [OS.get_model_name(), RenderingServer.get_video_adapter_name(), OS.get_name()]
 	Game.boot_log("cihaz: " + info)
+	Game.boot_log(ToonStyle.quality_label())
 
 	var bg := ColorRect.new()
 	bg.color = Color(0.03, 0.035, 0.06)
@@ -45,6 +46,15 @@ func _ready() -> void:
 	box.add_child(_buttons)
 	_buttons.add_child(_button("ÖNSÖZ: Seçim Gecesi", "onsoz"))
 	_buttons.add_child(_button("BÖLÜM 1: İlk İniş", "bolum1"))
+	var q := Button.new()
+	q.text = ToonStyle.quality_label()
+	q.add_theme_font_size_override("font_size", 20)
+	q.custom_minimum_size = Vector2(320, 56)
+	q.pressed.connect(func() -> void:
+		var order := ["otomatik", "dusuk", "yuksek"]
+		ToonStyle.set_quality(order[(order.find(ToonStyle.quality_setting) + 1) % order.size()])
+		q.text = ToonStyle.quality_label())
+	box.add_child(_centered(q))
 
 	_bar = ProgressBar.new()
 	_bar.custom_minimum_size = Vector2(600, 14)

@@ -48,7 +48,7 @@ func is_player_near() -> bool:
 ## Hikâye ilerledikçe etkileşimi açıp kapatmak için.
 func set_interactable(value: bool) -> void:
 	interactable = value
-	var level := get_tree().current_scene
+	var level := get_tree().get_first_node_in_group("level")
 	if level is GameLevel:
 		(level as GameLevel).refresh_interactions()
 

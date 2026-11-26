@@ -38,6 +38,8 @@ var _fade: ColorRect
 var _title: Label
 var _subtitle: Label
 var _fade_tween: Tween
+var _qte: Control
+var _in_qte: bool = false
 var _title_tween: Tween
 
 
@@ -51,6 +53,7 @@ func _ready() -> void:
 	runner.notification_shown.connect(show_notification)
 	runner.event_fired.connect(_on_runner_event)
 	runner.finished.connect(_on_finished)
+	runner.qte_started.connect(_on_qte)
 
 
 ## Bir .dlg dosyasını verilen düğümden başlatır.
@@ -102,6 +105,21 @@ func show_title(text: String, subtitle: String = "", hold: float = 2.5) -> void:
 
 ## Arayüzle ilgili olaylar burada işlenir, hepsi seviyeye de iletilir.
 ##   @olay siyah | @olay kararti [sn] | @olay aydinlat [sn] | @olay baslik Metin | Alt yazı
+func _on_qte(step: Dictionary) -> void:
+	_finish_typing()
+	_in_qte = true
+	_choice_box.visible = false
+	_set_panel_raised(true)
+	_qte.start(step)
+
+
+func _on_qte_finished(success: bool) -> void:
+	_in_qte = false
+	_panel.visible = false
+	_set_panel_raised(false)
+	runner.finish_qte(success)
+
+
 func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
 	var t := float(args[0]) if args.size() > 0 and args[0].is_valid_float() else 1.0
 	match event_name:
@@ -149,7 +167,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not active:
+	if not active or _in_qte:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).physical_keycode
@@ -162,6 +180,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_tap(event: InputEvent) -> void:
+	if _in_qte:
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if not _choosing:
 			_advance()
@@ -370,6 +390,11 @@ func _build_ui() -> void:
 	_grid.add_theme_constant_override("v_separation", 12)
 	_grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_choice_box.add_child(_grid)
+
+	_qte = preload("res://scripts/dialog/qte_widget.gd").new()
+	_qte.visible = false
+	_qte.finished.connect(_on_qte_finished)
+	_root.add_child(_qte)
 
 	_toast = PanelContainer.new()
 	_toast.position = Vector2(24, BAR_HEIGHT + 16)

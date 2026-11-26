@@ -36,6 +36,31 @@ Art arda gelen `*` satırları bir seçim grubu oluşturur (en fazla 4 önerilir
 - `{koşul}` ile başlayan seçenek yalnızca koşul doğruysa görünür.
 - `@sure` yazılmazsa seçimin süresi yoktur. `@sure 8` yazılıp hedef verilmezse süre bitince son seçenek seçilir.
 
+## Anlık tuşa basma (QTE)
+
+Telltale tarzı gerilim anları. Başarıya ve başarısızlığa göre farklı düğümlere gidilir:
+
+```
+@qte bas 1.4 "İT" -> itti | itemedi              # süre dolmadan dokun
+@qte vur 3.2 9 "KALDIR" -> kaldirdi | kaldiramadi  # 3.2 sn içinde 9 kez dokun
+@qte kaydir sol 1.6 "EĞİL" -> egildi | vuruldu     # sola kaydır (sol, sag, yukari, asagi)
+```
+
+- Tırnak içindeki yazı halkanın içinde görünür (isteğe bağlı).
+- Sonuç `son_qte_basarili` değişkenine de yazılır.
+- Klavyede: Boşluk/Enter (bas, vur), ok tuşları (kaydır).
+
+## Ara sahne olayları
+
+| Olay | Anlamı |
+|---|---|
+| `@olay kamera ad` | Seviyede tanımlı kamera açısına geç (`oyuncu`: oyuncu kamerası, `otomatik`: konuşana göre) |
+| `@olay sarsinti 0.4 0.6` | Kamera sarsıntısı (güç, süre) |
+| `@olay siyah` / `kararti 2` / `aydinlat 2` | Ekranı anında/yavaşça karart veya aç |
+| `@olay baslik Metin \| Alt yazı` | Ortada sinematik başlık kartı |
+| `@olay gorev Metin` | Ekranın üstündeki görev yazısı |
+| `@olay anim KİŞİ Animasyon` | Karaktere tek seferlik hareket yaptır |
+
 ## Değişkenler ve koşullar
 
 - Değişken adları İngiliz harfleri, rakam ve `_` içerir (`ada_guven`, `kofi_yasiyor`).

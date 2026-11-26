@@ -7,6 +7,7 @@ signal narration_shown(text: String)
 signal choices_shown(options: PackedStringArray, timeout: float)
 signal notification_shown(text: String)
 signal event_fired(event_name: String, args: PackedStringArray)
+signal qte_started(step: Dictionary)
 signal finished
 
 var active: bool = false
@@ -15,6 +16,7 @@ var _nodes: Dictionary = {}
 var _stack: Array = []  # her eleman: {"steps": Array, "index": int}
 var _choice_step: Dictionary = {}
 var _visible_options: Array = []
+var _qte_step: Dictionary = {}
 
 
 func start(nodes: Dictionary, node_name: String) -> void:
@@ -27,7 +29,18 @@ func start(nodes: Dictionary, node_name: String) -> void:
 
 
 func is_choosing() -> bool:
-	return not _choice_step.is_empty()
+	return not _choice_step.is_empty() or not _qte_step.is_empty()
+
+
+## Arayüz QTE'yi bitirince çağırır.
+func finish_qte(success: bool) -> void:
+	if _qte_step.is_empty():
+		return
+	var step := _qte_step
+	_qte_step = {}
+	Story.set_var("son_qte_basarili", success)
+	_goto(step["success"] if success else step["fail"])
+	advance()
 
 
 ## Kullanıcı girdisi gerektiren bir adıma (replik, anlatım, seçim) kadar ilerler.
@@ -63,6 +76,10 @@ func advance() -> void:
 					_goto(step["target"])
 			"event":
 				event_fired.emit(step["name"], PackedStringArray(step["args"]))
+			"qte":
+				_qte_step = step
+				qte_started.emit(step)
+				return
 			"choices":
 				_visible_options = []
 				for option in step["options"]:

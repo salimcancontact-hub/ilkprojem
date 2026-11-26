@@ -132,8 +132,78 @@ MUHAFIZ: Konuşmuyorsan çekil.
 MUHAFIZ: Kordonun arkasına geç. Şimdi.
 > Arkadan bir bağırış yükseliyor. Sonra bir tane daha.
 > "Listeler sahte! Kendilerini seçtiler!"
-> Kalabalık bir dalga gibi barikatlara yükleniyor.
 @olay isyan
+@olay kamera kalabalik
+> Kalabalık bir dalga gibi barikatlara yükleniyor. Biri sana doğru bir şişe fırlatıyor.
+@qte kaydir sol 1.6 "EĞİL" -> sise_kurtul | sise_vurdu
+
+=== sise_kurtul
+> Şişe kulağının dibinden geçip muhafızın kaskında patlıyor.
+-> isyan_cop
+
+=== sise_vurdu
+> Şişe omzuna çarpıyor. Acı kolundan aşağı iniyor.
+~ yarali = true
+@olay sarsinti 0.4 0.5
+-> isyan_cop
+
+=== isyan_cop
+@olay kamera muhafiz
+MUHAFIZ: Geri çekil!
+> Muhafız şok copunu kaldırıyor.
+@qte bas 1.4 "İT" -> cop_kurtul | cop_vurdu
+
+=== cop_kurtul
+> Muhafızı itip kalabalığın içine dalıyorsun.
+~ muhafizi_itti = true
+-> isyan_arman
+
+=== cop_vurdu
+> Cop göğsüne değiyor. Bir anlığına dünya beyaza kesiyor.
+~ yarali = true
+@olay sarsinti 0.6 0.6
+-> isyan_arman
+
+=== isyan_arman
+@olay arman_dustu
+@olay kamera arman
+> Birkaç metre ötede Deniz Arman yere düşmüş. Kalabalık üzerinden geçiyor.
+> Kartı elinden kaymış. Mavi ışığı ayakların arasında yanıp sönüyor.
+ARMAN: Yardım et!
+@sure 5 -> arman_birak
+* Deniz'e yardım et. -> arman_yardim
+* Kaç. -> arman_birak
+
+=== arman_yardim
+~ arman_yardim = true
+> Kalabalığı yararak ona uzanıyorsun.
+@qte vur 3.2 9 "KALDIR" -> arman_kalkti | arman_kalkamadi
+
+=== arman_kalkti
+@olay arman_kalkti
+> Onu bileğinden yakalayıp ayağa çekiyorsun. Kartını da kapıp göğsüne bastırıyor.
+ARMAN: Borcum olsun, yabancı! Ara sokağa, hadi!
+! Deniz Arman bunu hatırlayacak.
+@olay kamera oyuncu
+@olay gorev Deniz Arman'la birlikte ara sokağa kaç!
+-> SON
+
+=== arman_kalkamadi
+~ arman_yardim = false
+> Elin elinden kayıyor. Kalabalık onu senden uzağa sürüklüyor.
+ARMAN: Ara sokak! Ara sokakta buluşalım!
+@olay arman_kalkti
+@olay kamera oyuncu
+@olay gorev Ara sokağa kaç!
+-> SON
+
+=== arman_birak
+~ arman_yardim = false
+> Arkanı dönüp koşuyorsun. Arkandan onun sesini duyuyor musun, yoksa sadece kalabalık mı?
+! Bu seçim seninle kalacak.
+@olay arman_kalkti
+@olay kamera oyuncu
+@olay gorev Ara sokağa kaç!
 -> SON
 
 === muhafiz_uzak
@@ -159,7 +229,15 @@ KADIN: Gemiye su yetiyor ama bize yetmiyor. Hesabı iyi yapmışlar.
 
 # ---------------------------------------------------------------- İsyan ve karanlık
 === karanlik
+@if arman_yardim -> karanlik_birlikte
 > Bir patlama. Beyaz bir ışık.
+> Sonra hiçbir şey.
+-> SON
+
+=== karanlik_birlikte
+> Ara sokağın ağzında Deniz Arman seni duvara doğru itiyor.
+ARMAN: Eğil!
+> Bir patlama. Beyaz bir ışık. Üzerine bir ağırlık çöküyor.
 > Sonra hiçbir şey.
 -> SON
 
@@ -173,8 +251,14 @@ KADIN: Gemiye su yetiyor ama bize yetmiyor. Hesabı iyi yapmışlar.
 === kart
 > Deniz Arman yerde yatıyor. Gözleri açık, yıldızlara bakıyor.
 > Kartı, parmaklarının birkaç santim ötesinde, hâlâ mavi mavi parlıyor.
+@if arman_yardim -> kart_koruma
 @if arman_su == 1 -> kart_su
 @if arman_su == 2 -> kart_su_red
+-> kart_secim
+
+=== kart_koruma
+> Patlamada senin üstüne kapanmıştı. O ağırlık oydu.
+> Sen nefes alıyorsun. O almıyor.
 -> kart_secim
 
 === kart_su

@@ -115,6 +115,8 @@ func _initialize() -> void:
 	for p in [Vector3(-2.6, 0, 34.0), Vector3(3.2, 0, 40.5), Vector3(-4.2, 0, 47.0), Vector3(19.0, 0, 9.0), Vector3(-6.5, 0, 16.0)]:
 		var f: Node3D = fire.instantiate()
 		f.position = p
+		if p.x < -6.0:
+			f.add_to_group("detay", true)
 		g.Props.add_child(f)
 		f.owner = level
 	var lamp_i := 0
@@ -125,12 +127,12 @@ func _initialize() -> void:
 				continue  # ara sokak
 			_put(g.Props, APO % "S_StreetLights", Vector3(side * 6.7, 0, z), Vector3(0, PI / 2 if side < 0 else -PI / 2, 0))
 			if lamp_i % 3 != 0:  # bazıları bozuk
-				_light(g.Lights, Vector3(side * 5.2, 6.2, z), Color(1.0, 0.7, 0.4), 1.6, 12.0, false)
+				_light(g.Lights, Vector3(side * 5.2, 6.2, z), Color(1.0, 0.7, 0.4), 1.6, 12.0, false, true)
 
 	# --- Seçim Merkezi ışıkları
 	_light(g.Lights, Vector3(0, 3.0, GATE_Z - 1.5), Color(0.6, 0.9, 1.0), 3.0, 12.0, true)
-	_light(g.Lights, Vector3(-8, 4.5, GATE_Z - 1.2), Color(0.5, 0.85, 1.0), 1.6, 9.0, false)
-	_light(g.Lights, Vector3(8, 4.5, GATE_Z - 1.2), Color(0.5, 0.85, 1.0), 1.6, 9.0, false)
+	_light(g.Lights, Vector3(-8, 4.5, GATE_Z - 1.2), Color(0.5, 0.85, 1.0), 1.6, 9.0, false, true)
+	_light(g.Lights, Vector3(8, 4.5, GATE_Z - 1.2), Color(0.5, 0.85, 1.0), 1.6, 9.0, false, true)
 	var sweep := load("res://scripts/props/searchlight.gd")
 	var i := 0
 	for x in [-10.5, 10.5]:
@@ -223,8 +225,10 @@ func _sign(parent: Node3D, text: String, pos: Vector3, pixel: float, color: Colo
 	l.owner = level
 
 
-func _light(parent: Node3D, pos: Vector3, color: Color, energy: float, rng: float, shadow: bool) -> void:
+func _light(parent: Node3D, pos: Vector3, color: Color, energy: float, rng: float, shadow: bool, detail: bool = false) -> void:
 	var l := OmniLight3D.new()
+	if detail:
+		l.add_to_group("detay", true)
 	l.position = pos
 	l.light_color = color
 	l.light_energy = energy
