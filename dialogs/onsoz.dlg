@@ -482,6 +482,7 @@ ARMAN: Muhafız! Buraya! Buraya—
 
 === karar_yalvar
 @olay oldur_cok
+@olay kamera oldurme_yakin
 ARMAN: Buraya! Bu adam bir—
 > Ellerin onu susturuyor. Sanki senin değillermiş gibi.
 -> olum
@@ -489,12 +490,14 @@ ARMAN: Buraya! Bu adam bir—
 === karar_zaman
 ~ arman_olum = "zaman"
 @olay oldur_cok
+@olay kamera oldurme_yakin
 > Düşünmüyorsun. Ellerin düşünüyor.
 -> olum
 
 === karar_bogma
 @olay oldur_cok
-@bekle 1.0
+@olay kamera oldurme_yakin
+@bekle 1.2
 > Avucunu ağzına bastırıyorsun. Çırpınıyor. Sonra daha az. Sonra hiç.
 -> olum
 
@@ -502,6 +505,7 @@ ARMAN: Buraya! Bu adam bir—
 @olay kesici_al
 @bekle 1.4
 @olay oldur_cok
+@olay kamera oldurme_yakin
 > Kesiciyi alıyorsun. Mavi alev. Bir an.
 @olay esya_al kesici
 -> olum
@@ -576,7 +580,7 @@ ARMAN: Buraya! Bu adam bir—
 
 === ceset_sakla
 @olay ceset_surukle
-@bekle 4.6
+@bekle 5.4
 > Onu konteynerin arkasındaki karanlığa sürüklüyorsun. Ağır. Bir insan bu kadar ağır olmamalı.
 @olay final
 -> SON

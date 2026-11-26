@@ -143,8 +143,8 @@ func _on_dialog_finished() -> void:
 func _on_speaker_changed(speaker_id: String) -> void:
 	if _talking_to == null:
 		return
-	# Konuşan el kol hareketi yapar, diğeri dinler.
-	if _camera_locked:
+	# Boğuşma ya da kilitli ara sahne kamerası sırasında duruşlar ve açı değişmez.
+	if _camera_locked or _struggle_npc:
 		return
 	_player.model.play("Idle_Talking" if speaker_id == player_speaker_id else "Idle", 0.3)
 	if _talking_to.model:
@@ -217,7 +217,19 @@ func _start_struggle() -> void:
 	_player.model.play("Push", 0.1)
 	_struggle_npc.model.play("Push", 0.1)
 	var right := _struggle_dir.cross(Vector3.UP).normalized()
-	camera_shots["_bogusma"] = [_struggle_mid + right * 2.4 + Vector3.UP * 1.5 - _struggle_dir * 0.4, _struggle_mid + Vector3.UP * 1.1]
+	var target := _struggle_mid + Vector3.UP * 1.1
+	# Önü en açık yandaki açıyı seç (barikat/duvar arkasına düşmesin)
+	var best := target + right * 2.4 + Vector3.UP * 0.4
+	var best_free := -1.0
+	for side in [1.0, -1.0]:
+		for height in [0.4, 1.2]:
+			for back in [-0.4, 0.8]:
+				var cand: Vector3 = target + right * side * 2.4 + Vector3.UP * height + _struggle_dir * back
+				var free := _unblocked(target, cand).distance_to(target)
+				if free > best_free + 0.05:
+					best_free = free
+					best = cand
+	camera_shots["_bogusma"] = [best, target]
 	_set_camera("_bogusma")
 
 

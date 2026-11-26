@@ -24,6 +24,9 @@ var _current: String = ""
 ## true iken (ör. yerde yatan, bayılmış) karakter başka animasyona geçmez.
 var pose_locked: bool = false
 var _attachments: Dictionary = {}  # nesne -> BoneAttachment3D
+var _iks: Dictionary = {}  # "l"/"r" -> SkeletonIK3D
+var _ik_tweens: Dictionary = {}
+var _bone_markers: Dictionary = {}
 
 
 func _ready() -> void:
@@ -128,6 +131,74 @@ func detach(prop: Node3D, world: Node = null) -> void:
 	if world:
 		world.add_child(prop)
 		prop.global_transform = xf
+
+
+## Elini (side: "l" veya "r") bir hedefe uzatır (ters kinematik). Hedef hareket ederse el de izler.
+## elbow: dirseğin bükülmesi gereken yönde (dünya koordinatında) bir ipucu noktası (isteğe bağlı).
+func reach(side: String, target: Node3D, time: float = 0.35, elbow: Node3D = null) -> void:
+	var ik: SkeletonIK3D = _iks.get(side)
+	if ik == null:
+		ik = SkeletonIK3D.new()
+		ik.name = "IK_" + side
+		ik.root_bone = "upperarm_" + side
+		ik.tip_bone = "hand_" + side
+		ik.override_tip_basis = false
+		ik.max_iterations = 40
+		ik.min_distance = 0.005
+		skeleton.add_child(ik)
+		_iks[side] = ik
+	ik.target_node = ik.get_path_to(target)
+	ik.use_magnet = elbow != null
+	if elbow:
+		ik.magnet = skeleton.global_transform.affine_inverse() * elbow.global_position
+	ik.interpolation = 0.0 if not ik.is_running() else ik.interpolation
+	ik.active = true
+	ik.start()
+	_tween_ik(side, 1.0, time)
+
+
+## Eli serbest bırakır (animasyona geri döner).
+func release(side: String, time: float = 0.35) -> void:
+	if not _iks.has(side):
+		return
+	var ik: SkeletonIK3D = _iks[side]
+	await _tween_ik(side, 0.0, time)
+	if ik.interpolation <= 0.001:
+		ik.stop()
+
+
+func release_all(time: float = 0.35) -> void:
+	for side in _iks.keys():
+		release(side, time)
+
+
+func _tween_ik(side: String, value: float, time: float) -> void:
+	var ik: SkeletonIK3D = _iks[side]
+	if _ik_tweens.has(side) and _ik_tweens[side]:
+		(_ik_tweens[side] as Tween).kill()
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(ik, "interpolation", value, time).set_trans(Tween.TRANS_SINE)
+	_ik_tweens[side] = tw
+	await tw.finished
+
+
+## Bir kemiğin üzerinde duran (onu izleyen) nokta; başka karakterin IK hedefi olabilir.
+func bone_marker(bone: String) -> Node3D:
+	if _bone_markers.has(bone) and is_instance_valid(_bone_markers[bone]):
+		return _bone_markers[bone]
+	var ba := BoneAttachment3D.new()
+	ba.name = "Isaret_" + bone
+	ba.bone_name = bone
+	skeleton.add_child(ba)
+	_bone_markers[bone] = ba
+	return ba
+
+
+func bone_position(bone: String) -> Vector3:
+	var idx := skeleton.find_bone(bone)
+	if idx < 0:
+		return global_position
+	return skeleton.global_transform * skeleton.get_bone_global_pose(idx).origin
 
 
 func resolve(anim_name: String) -> String:

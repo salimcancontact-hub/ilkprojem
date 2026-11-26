@@ -22,8 +22,9 @@ var _arman_card: Node3D
 var _water: Node3D
 var _cutter: Node3D
 var _wrist: Node3D
+var _offer: Node3D
 ## Konteynerin arkası (ceset buraya sürüklenir)
-const HIDE_SPOT := Vector3(22.6, -0.15, 14.4)
+const HIDE_SPOT := Vector3(22.4, -0.15, 13.6)
 
 
 func _ready() -> void:
@@ -72,31 +73,60 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_arman.get_node("Visual").rotation = Vector3.ZERO
 			_arman.model.hold_last_frame("Death01")
 		"arman_kalkti":
+			_player.model.release_all(0.3)
 			_player.model.play("Idle", 0.2)
 			_arman_escape()
 		"kaldir_hazirlik":
-			_beside(_arman.global_position, 0.85)
+			_beside(_arman.global_position, 0.75)
 			_player.model.play("Crouch_Idle", 0.2)
+			_player.model.reach("r", _arman.model.bone_marker("hand_r"), 0.5)
 		# --- Su şişesi
 		"su_cikar":
 			_water = Props.water_bottle()
-			_arman.model.attach(_water, "hand_l", Vector3(0, 0.06, 0.05))
-			_arman.model.play_once("Interact", "Idle")
+			_arman.model.attach(_water, "hand_l", Vector3(0, 0.07, 0.04))
+			_offer = _point((_arman.global_position + _player.global_position) / 2.0 + Vector3(0, 1.15, 0))
+			_arman.model.reach("l", _offer, 0.6)
 		"su_al":
-			_player.model.play_once("Interact", "Idle")
-			await get_tree().create_timer(0.45, true, false, true).timeout
+			_player.model.reach("r", _offer, 0.45)
+			await get_tree().create_timer(0.5, true, false, true).timeout
 			if _water:
 				_arman.model.detach(_water)
-				_player.model.attach(_water, "hand_r", Vector3(0, 0.06, 0.05))
+				_player.model.attach(_water, "hand_r", Vector3(0, 0.07, 0.04))
+			_arman.model.release("l", 0.5)
+			_player.model.release("r", 0.6)
 		"su_ic":
-			_player.model.play_once("Consume", "Idle")
-			await get_tree().create_timer(2.2, true, false, true).timeout
+			# Şişe dudaklara: el IK ile ağza gider, dirsek yana-aşağı bükülür; şişe yavaşça yatar
+			var vis: Node3D = _player.get_node("Visual")
+			var mouth := Node3D.new()
+			vis.add_child(mouth)
+			mouth.position = Vector3(0.0, 1.6, -0.1)
+			var hand_to := Node3D.new()
+			vis.add_child(hand_to)
+			hand_to.position = Vector3(0.07, 1.36, -0.2)
+			var elbow := Node3D.new()
+			vis.add_child(elbow)
+			elbow.position = Vector3(0.38, 1.2, -0.1)
+			_player.model.play("Idle", 0.2)
+			_player.model.reach("r", hand_to, 0.5, elbow)
+			var lift := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			lift.tween_property(hand_to, "position", Vector3(0.05, 1.5, -0.16), 0.6).set_delay(0.5)
+			var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw.tween_method(func(t: float) -> void:
+				if _water:
+					var to_mouth := (mouth.global_position - _water.global_position).normalized()
+					var tilt := to_mouth.lerp(Vector3.UP.lerp(to_mouth, 0.6) + Vector3(0, -0.6, 0), clampf((t - 0.45) * 2.0, 0.0, 1.0))
+					_aim_up(_water, Vector3.UP.slerp(tilt.normalized(), clampf(t * 2.2, 0.0, 1.0))), 0.0, 1.0, 2.2)
+			await tw.finished
+			_player.model.release("r", 0.5)
+			await get_tree().create_timer(0.5, true, false, true).timeout
+			for n in [mouth, hand_to, elbow]:
+				n.queue_free()
 			if _water:
 				_player.model.detach(_water)
 				_water.queue_free()
 				_water = null
 		"su_geri":
-			_arman.model.play_once("Interact", "Idle")
+			_arman.model.release("l", 0.5)
 			await get_tree().create_timer(0.6, true, false, true).timeout
 			if _water:
 				_arman.model.detach(_water)
@@ -117,17 +147,28 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				tw.tween_property(_cutter, "rotation", Vector3(PI / 2, 1.2, 0), 0.45)
 		"kesici_al":
 			if _cutter:
-				_player.face_point(_cutter.global_position)
-				_beside(_cutter.global_position, 0.55)
-				_player.model.play_once("PickUp_Table", "Crouch_Idle")
+				_beside(_cutter.global_position, 0.6)
+				_player.model.play("Crouch_Idle", 0.25)
+				_player.model.reach("r", _cutter, 0.5)
 				await get_tree().create_timer(0.7, true, false, true).timeout
 				_player.model.attach(_cutter, "hand_r", Vector3(0, 0.05, 0.06), Vector3(-1.2, 0, 0))
+				_player.model.release("r", 0.5)
 				var light: OmniLight3D = _cutter.get_node("Uc/Isik")
 				light.light_energy = 4.0
 		"oldur_cok":
-			_beside(_arman.global_position + Vector3(0, 0, 0.2), 0.7)
+			var nk := _arman.model.bone_position("neck_01")
+			var away := (_player.global_position - nk)
+			away.y = 0
+			away = away.normalized()
+			camera_shots["oldurme_yakin"] = [nk + away * 1.1 + away.cross(Vector3.UP) * 0.9 + Vector3(0, 1.0, 0), nk + Vector3(0, 0.25, 0)]
+			var neck := _arman.model.bone_marker("neck_01")
+			_beside(neck.global_position, 0.55)
 			_player.model.play("Crouch_Idle", 0.3)
+			if _cutter == null or not (_cutter.get_parent() is BoneAttachment3D):
+				_player.model.reach("l", neck, 0.6)
+			_player.model.reach("r", neck, 0.6)
 		"arman_oldu":
+			_player.model.release_all(0.3)
 			_arman.model.hold_last_frame("Death01")
 			_arman.get_node("CollisionShape3D").disabled = true
 			if _arman_card:
@@ -143,14 +184,18 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_cutter.queue_free()  # çantaya girdi
 				_cutter = null
 		"kart_al":
-			_player.face_point(_card.global_position)
-			_player.model.play_once("PickUp_Table", "Idle")
+			_beside(_card.global_position, 0.6)
+			_player.model.play("Crouch_Idle", 0.25)
+			_player.model.reach("r", _card, 0.5)
 			await get_tree().create_timer(0.7, true, false, true).timeout
 			_card.get_node("CardMesh").visible = false
 			_card.get_node("CardLight").visible = false
 			var held := Props.card()
 			_player.model.attach(held, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
-			await get_tree().create_timer(1.6, true, false, true).timeout
+			_player.model.release("r", 0.4)
+			await get_tree().create_timer(0.6, true, false, true).timeout
+			_player.model.play("Idle", 0.4)
+			await get_tree().create_timer(1.0, true, false, true).timeout
 			_player.model.detach(held)
 			held.queue_free()
 		"ceset_surukle":
@@ -167,6 +212,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			await get_tree().create_timer(0.6, true, false, true).timeout
 			_arman.model.hold_last_frame("Death01")
 		"arman_oldu":
+			_player.model.release_all(0.3)
 			_arman.model.hold_last_frame("Death01")
 			_arman.get_node("CollisionShape3D").disabled = true
 			_card.global_position = _arman.global_position + Vector3(-0.7, 0, 0.6)
@@ -223,25 +269,82 @@ func _beside(point: Vector3, distance: float) -> void:
 	_player.face_point(point)
 
 
-## Cesedi konteynerin arkasına sürükleme ara sahnesi.
+## Cesedi konteynerin arkasına sürükleme ara sahnesi:
+## oyuncu çömelip cesedin bileklerinden tutar, geri geri çeker; cesedin kolları ellerine uzanır.
 func _drag_body() -> void:
-	_set_camera("surukle")
 	var body_start := _arman.global_position
 	var dir := (HIDE_SPOT - body_start)
 	dir.y = 0
 	dir = dir.normalized()
-	# Oyuncu cesedin önünde, ona dönük, geri geri yürür
-	_player.global_position = body_start + dir * 0.9
-	_player.face_point(body_start)
-	_player.model.play("Walk_Carry", 0.2, 0.6)
-	_arman.rotation.y = atan2(-dir.x, -dir.z) + PI
+	# Ceset başı çekilen yöne bakacak şekilde döner
+	var head := _arman.model.bone_position("Head")
+	var pelvis := _arman.model.bone_position("pelvis")
+	var body_dir := head - pelvis
+	body_dir.y = 0
+	if body_dir.length() > 0.05:
+		var cur := atan2(body_dir.x, body_dir.z)
+		var want := atan2(dir.x, dir.z)
+		_arman.rotation.y += want - cur
+	head = _arman.model.bone_position("Head")
+	# Oyuncu cesedin başının önünde, ona dönük
+	var start := head + dir * 0.75
+	start.y = _player.global_position.y
+	_player.global_position = start
+	_player.face_point(head)
+	var grip_l := Node3D.new()
+	var grip_r := Node3D.new()
+	_player.get_node("Visual").add_child(grip_l)
+	_player.get_node("Visual").add_child(grip_r)
+	grip_l.position = Vector3(-0.16, 0.5, -0.42)
+	grip_r.position = Vector3(0.16, 0.5, -0.42)
+	# Kamera yandan, hareketi takip eder
+	var mid := (body_start + HIDE_SPOT) / 2.0
+	var side := dir.cross(Vector3.UP).normalized()
+	if (mid + side).distance_to(Vector3(19.0, 0, 18.0)) > (mid - side).distance_to(Vector3(19.0, 0, 18.0)):
+		side = -side
+	camera_shots["surukle"] = [mid + side * 3.6 + Vector3(0, 1.6, 0), mid + Vector3(0, 0.35, 0)]
+	_set_camera("surukle")
+	_player.model.play("Crouch_Fwd", 0.2, -0.7)
+	_player.model.reach("l", grip_l, 0.4)
+	_player.model.reach("r", grip_r, 0.4)
+	_arman.model.reach("l", grip_l, 0.5)
+	_arman.model.reach("r", grip_r, 0.5)
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	var travel := HIDE_SPOT - body_start
+	travel.y = 0
 	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
-	tw.tween_property(_player, "global_position", HIDE_SPOT + dir * 0.9, 4.2)
-	tw.tween_property(_arman, "global_position", HIDE_SPOT, 4.2)
+	tw.tween_property(_player, "global_position", _player.global_position + travel, 4.0)
+	tw.tween_property(_arman, "global_position", _arman.global_position + travel, 4.0)
 	await tw.finished
+	_player.model.release_all(0.4)
+	_arman.model.release_all(0.4)
+	_player.model.play("Idle", 0.4)
+	await get_tree().create_timer(0.5, true, false, true).timeout
 	_arman.visible = false
-	_player.model.play("Idle", 0.3)
+	grip_l.queue_free()
+	grip_r.queue_free()
 	Story.set_var("ceset_yeri", "konteyner")
+
+
+## Dünyada sabit bir hedef noktası (IK için).
+func _point(at: Vector3) -> Node3D:
+	var n := Node3D.new()
+	add_child(n)
+	n.global_position = at
+	return n
+
+
+## Nesnenin Y eksenini (ör. şişenin ağzını) verilen yöne çevirir.
+func _aim_up(node: Node3D, up: Vector3) -> void:
+	if up.length() < 0.01:
+		return
+	up = up.normalized()
+	var side := up.cross(Vector3.FORWARD)
+	if side.length() < 0.01:
+		side = up.cross(Vector3.RIGHT)
+	side = side.normalized()
+	var fwd := side.cross(up).normalized()
+	node.global_basis = Basis(side, up, fwd)
 
 
 # --- Şişe ------------------------------------------------------------------

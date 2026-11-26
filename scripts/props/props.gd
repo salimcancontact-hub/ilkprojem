@@ -19,14 +19,14 @@ static func card() -> Node3D:
 	root.name = "Kart"
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(0.09, 0.006, 0.056)
+	box.size = Vector3(0.11, 0.008, 0.07)
 	mi.mesh = box
-	mi.material_override = _mat(Color(0.3, 0.7, 1.0), Color(0.3, 0.75, 1.0), 4.0)
+	mi.material_override = _mat(Color(0.3, 0.7, 1.0), Color(0.3, 0.75, 1.0), 6.0)
 	root.add_child(mi)
 	var l := OmniLight3D.new()
 	l.light_color = Color(0.3, 0.7, 1.0)
-	l.light_energy = 0.7
-	l.omni_range = 1.0
+	l.light_energy = 1.0
+	l.omni_range = 1.3
 	root.add_child(l)
 	return root
 
@@ -37,9 +37,9 @@ static func water_bottle() -> Node3D:
 	root.name = "SuSisesi"
 	var body := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.032
-	cyl.bottom_radius = 0.035
-	cyl.height = 0.22
+	cyl.top_radius = 0.036
+	cyl.bottom_radius = 0.04
+	cyl.height = 0.24
 	body.mesh = cyl
 	var m := _mat(Color(0.6, 0.8, 0.95, 1.0))
 	m.metallic = 0.2

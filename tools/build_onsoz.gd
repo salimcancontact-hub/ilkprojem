@@ -105,7 +105,7 @@ func _initialize() -> void:
 		_put(g.Props, APO % ["S_TrafficCone_1", "S_TrafficCone_2"][_rng.randi() % 2], p, Vector3(0, _rng.randf() * TAU, 0))
 	for p in [Vector3(16.0, 0, 13.5), Vector3(17.0, 0, 13.6), Vector3(-7.4, 0, 20.0)]:
 		_put(g.Props, APO % "S_PalletBroken", p, Vector3(0, _rng.randf() * TAU, 0))
-	_put(g.Props, APO % "S_WheelsStack", Vector3(21.5, 0, 14.5))
+	_put(g.Props, APO % "S_WheelsStack", Vector3(21.2, 0, 7.0))
 	_put(g.Props, APO % "S_Pipes", Vector3(-7.3, 0, 46.0))
 	for z in [-6.0, 10.0, 26.0, 42.0]:
 		_put(g.Props, CITY % "S_PropManholeCover", Vector3(_rng.randf_range(-3, 3), 0.01, z))
