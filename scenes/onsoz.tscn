@@ -285,6 +285,7 @@ focus_height = 1.25
 [node name="Clues" type="Node3D" parent="."]
 
 [node name="SuIlani" type="Label3D" parent="Clues"]
+double_sided = false
 transform = Transform3D(0.0000, 0, -1.0000, 0, 1, 0, 1.0000, 0, 0.0000, -8.85, 1.7, 2.0)
 pixel_size = 0.006
 modulate = Color(0.95, 0.92, 0.82, 1)
@@ -294,6 +295,7 @@ font_size = 64
 outline_size = 6
 
 [node name="Grafiti" type="Label3D" parent="Clues"]
+double_sided = false
 transform = Transform3D(0.0000, 0, 1.0000, 0, 1, 0, -1.0000, 0, 0.0000, 8.85, 2.3, 20.5)
 pixel_size = 0.012
 modulate = Color(0.9, 0.12, 0.1, 1)
@@ -303,6 +305,7 @@ font_size = 96
 outline_size = 6
 
 [node name="Liste" type="Label3D" parent="Clues"]
+double_sided = false
 transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, -5.5, 2.0, 57.8)
 pixel_size = 0.006
 modulate = Color(0.5, 0.95, 1, 1)
@@ -312,6 +315,7 @@ font_size = 64
 outline_size = 6
 
 [node name="TerminalYazi" type="Label3D" parent="Clues"]
+double_sided = false
 transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, 3.6, 1.95, 56.0)
 pixel_size = 0.004
 modulate = Color(1, 0.75, 0.3, 1)

@@ -275,32 +275,44 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 @olay isyan
 @olay kamera kalabalik
 > Kalabalık bir dalga gibi barikatlara yükleniyor. Biri sana doğru bir şişe fırlatıyor.
+@olay sise_at
 @qte kaydir sol 1.6 "EĞİL" -> sise_kurtul | sise_vurdu
 
 === sise_kurtul
+@olay sise_kacti
+@olay anim EVREN Roll
 > Şişe kulağının dibinden geçip muhafızın kaskında patlıyor.
 -> isyan_cop
 
 === sise_vurdu
-> Şişe omzuna çarpıyor. Acı kolundan aşağı iniyor.
+@olay sise_carpti
+@olay anim EVREN Hit_Head
+> Şişe kafana çarpıp parçalanıyor. Kulakların çınlıyor.
 ~ yarali = true
-@olay sarsinti 0.4 0.5
+@olay sarsinti 0.5 0.6
 -> isyan_cop
 
 === isyan_cop
 @olay kamera muhafiz
+@olay anim MUHAFIZ Melee_Hook
 MUHAFIZ: Geri çekil!
-> Muhafız şok copunu kaldırıyor.
-@qte bas 1.4 "İT" -> cop_kurtul | cop_vurdu
+> Muhafız şok copunu kaldırıp yakana yapışıyor.
+@olay bogusma
+@qte vur 5 10 "İT" -> cop_kurtul | cop_vurdu
 
 === cop_kurtul
+@olay bogusma_bitti
 @olay anim EVREN Punch_Cross
-> Muhafızı itip kalabalığın içine dalıyorsun.
+@olay muhafiz_dustu
+> Muhafızı itip suratına bir yumruk indiriyorsun. Barikatın üstüne devriliyor.
 ~ muhafizi_itti = true
 -> isyan_arman
 
 === cop_vurdu
-> Cop göğsüne değiyor. Bir anlığına dünya beyaza kesiyor.
+@olay bogusma_bitti
+@olay anim EVREN Hit_Chest
+> Cop göğsüne iniyor. Bir anlığına dünya beyaza kesiyor.
+> Sonra kalabalık ikinizi birbirinizden koparıyor.
 ~ yarali = true
 @olay sarsinti 0.6 0.6
 -> isyan_arman
@@ -318,7 +330,7 @@ ARMAN: Yardım et!
 === arman_yardim
 ~ arman_yardim = true
 > Kalabalığı yararak ona uzanıyorsun.
-@qte vur 3.2 9 "KALDIR" -> arman_kalkti | arman_kalkamadi
+@qte vur 5 9 "KALDIR" -> arman_kalkti | arman_kalkamadi
 
 === arman_kalkti
 @olay arman_kalkti
@@ -424,7 +436,7 @@ ARMAN: Geri çekil!
 @olay bogusma
 > Bileğini yakalıyorsun. Kesicinin mavi alevi yüzüne doğru yaklaşıyor.
 ARMAN: Bırak!
-@qte vur 3.2 12 "İT" olumcul -> bogus2_ok | bogus2_ok
+@qte vur 5 14 "İT" olumcul -> bogus2_ok | bogus2_ok
 
 === bogus2_ok
 @olay bogusma_bitti

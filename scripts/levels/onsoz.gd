@@ -90,6 +90,124 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				g.queue_free()
 		"final":
 			_final()
+		"sise_at":
+			_throw_bottle()
+		"sise_kacti":
+			_bottle_miss()
+		"sise_carpti":
+			_bottle_hit()
+		"muhafiz_dustu":
+			_guard.model.play("Hit_Knockback", 0.05)
+			var push := (_guard.global_position - _player.global_position)
+			push.y = 0
+			create_tween().tween_property(_guard, "global_position", _guard.global_position + push.normalized() * 1.2, 0.35)
+			await get_tree().create_timer(0.7).timeout
+			_guard.model.hold_last_frame("Death01")
+
+
+# --- Şişe ------------------------------------------------------------------
+
+var _bottle: MeshInstance3D
+var _bottle_tween: Tween
+
+
+func _throw_bottle() -> void:
+	_bottle = MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.025
+	mesh.bottom_radius = 0.045
+	mesh.height = 0.28
+	_bottle.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.25, 0.55, 0.3)
+	mat.emission_enabled = true
+	mat.emission = Color(0.15, 0.35, 0.15)
+	mat.emission = Color(0.4, 0.9, 0.45)
+	mat.emission_energy_multiplier = 2.5
+	_bottle.material_override = mat
+	_bottle.scale = Vector3.ONE * 1.8
+	var glow := OmniLight3D.new()
+	glow.light_color = Color(0.6, 1.0, 0.6)
+	glow.light_energy = 1.5
+	glow.omni_range = 2.0
+	_bottle.add_child(glow)
+	var trail := CPUParticles3D.new()
+	var dot := SphereMesh.new()
+	dot.radius = 0.03
+	dot.height = 0.06
+	var tm := StandardMaterial3D.new()
+	tm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	tm.albedo_color = Color(0.7, 1.0, 0.7, 0.8)
+	tm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dot.material = tm
+	trail.mesh = dot
+	trail.amount = 24
+	trail.lifetime = 0.35
+	trail.local_coords = false
+	trail.gravity = Vector3.ZERO
+	trail.initial_velocity_min = 0.0
+	trail.initial_velocity_max = 0.1
+	trail.scale_amount_min = 0.6
+	_bottle.add_child(trail)
+	add_child(_bottle)
+	var head := _player.head_position()
+	var from := head + Vector3(-3.0, 2.6, -9.0)
+	_bottle.global_position = from
+	_bottle_tween = create_tween().set_parallel(true)
+	_bottle_tween.tween_property(_bottle, "global_position", head + Vector3(0, 0.05, 0), 1.35)
+	_bottle_tween.tween_property(_bottle, "rotation", Vector3(TAU * 3.0, 0, TAU), 1.35)
+
+
+func _bottle_miss() -> void:
+	if _bottle == null:
+		return
+	if _bottle_tween:
+		_bottle_tween.kill()
+	var target := _guard.head_position()
+	var tw := create_tween()
+	tw.tween_property(_bottle, "global_position", target, 0.25)
+	tw.tween_callback(func() -> void:
+		_shatter(_bottle.global_position)
+		_guard.model.play_once("Hit_Head", "Idle_Shield"))
+
+
+func _bottle_hit() -> void:
+	if _bottle == null:
+		return
+	if _bottle_tween:
+		_bottle_tween.kill()
+	_shatter(_player.head_position())
+
+
+## Cam kırıkları
+func _shatter(at: Vector3) -> void:
+	if _bottle:
+		_bottle.queue_free()
+		_bottle = null
+	var p := CPUParticles3D.new()
+	var shard := BoxMesh.new()
+	shard.size = Vector3(0.03, 0.005, 0.02)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.5, 0.85, 0.55)
+	mat.emission_enabled = true
+	mat.emission = Color(0.3, 0.6, 0.35)
+	shard.material = mat
+	p.mesh = shard
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 24
+	p.lifetime = 0.9
+	p.direction = Vector3(0, 1, 0)
+	p.spread = 180.0
+	p.initial_velocity_min = 1.5
+	p.initial_velocity_max = 3.5
+	p.gravity = Vector3(0, -9.8, 0)
+	p.angular_velocity_min = -720.0
+	p.angular_velocity_max = 720.0
+	add_child(p)
+	p.global_position = at
+	p.emitting = true
+	get_tree().create_timer(1.5).timeout.connect(p.queue_free)
 
 
 # --- İsyan -----------------------------------------------------------------

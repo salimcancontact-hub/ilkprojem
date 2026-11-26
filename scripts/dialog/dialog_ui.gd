@@ -117,7 +117,7 @@ func _on_qte(step: Dictionary) -> void:
 	_in_qte = true
 	_qte_step = step.duplicate()
 	_choice_box.visible = false
-	_set_panel_raised(true)
+	_panel.visible = false  # TWD'deki gibi QTE sırasında yazı yok, sadece sahne
 	_qte.start(_qte_step)
 
 
@@ -147,7 +147,6 @@ func _death_and_retry() -> void:
 	tw2.tween_property(_fade, "color:a", 0.0, 0.6)
 	await tw2.finished
 	_fade.color = Color(0, 0, 0, 0)
-	_panel.visible = true
 	# Her denemede biraz daha kolay
 	_qte_step["time"] = _qte_step["time"] * 1.15
 	_qte_step["count"] = maxi(int(_qte_step["count"]) - 2, 4)
