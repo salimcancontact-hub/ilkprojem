@@ -3,25 +3,27 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rn1wxi1lum8j"
-path="res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.ctex"
+path.s3tc="res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.s3tc.ctex"
+path.etc2="res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/characters/textures/kalabalik_e1_body.png"
-dest_files=["res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.ctex"]
+dest_files=["res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.s3tc.ctex", "res://.godot/imported/kalabalik_e1_body.png-ab15d29227fdbc11f8d983be2988fa45.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

@@ -3,25 +3,27 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnpuj5kk08oip"
-path="res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.ctex"
+path.s3tc="res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.s3tc.ctex"
+path.etc2="res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/city/textures/T_MetalConcrete_D.png"
-dest_files=["res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.ctex"]
+dest_files=["res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.s3tc.ctex", "res://.godot/imported/T_MetalConcrete_D.png-e32f0ba85273238b3bda3bc6642271ec.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

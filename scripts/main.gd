@@ -22,6 +22,7 @@ var _shake_strength: float = 0.0
 
 func _ready() -> void:
 	get_tree().paused = false
+	Game.mark_level_started()
 
 	_hud.joystick.changed.connect(func(v: Vector2) -> void: _player.move_input = v)
 	_hud.restart_requested.connect(func() -> void: get_tree().reload_current_scene())

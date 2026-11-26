@@ -5,8 +5,9 @@ config_version=5
 [application]
 
 config/name="EMANET"
+config/version="0.2.0"
 config/description="3D mobil aksiyon/macera oyunu"
-run/main_scene="res://scenes/onsoz.tscn"
+run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.png"
 
@@ -14,6 +15,7 @@ config/icon="res://icon.png"
 
 Game="*res://scripts/game.gd"
 Story="*res://scripts/story.gd"
+ToonStyle="*res://scripts/toon_style.gd"
 
 [display]
 

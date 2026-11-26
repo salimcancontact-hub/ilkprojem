@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5de5uexrj8l1"
-path="res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.ctex"
+path.s3tc="res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.s3tc.ctex"
+path.etc2="res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "c25690ca59ac7daed6b1e7eef6a68ae9"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/Superhero_Male_T_Hair_1_BaseColor.png"
-dest_files=["res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.ctex"]
+dest_files=["res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.s3tc.ctex", "res://.godot/imported/Superhero_Male_T_Hair_1_BaseColor.png-2fd9bf0ca7f3cc7bb0ece6546dd0f1d0.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1

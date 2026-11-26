@@ -2,8 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
-[ext_resource type="PackedScene" path="res://scenes/gem.tscn" id="4_gem"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/npc.tscn" id="6_npc"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_ui.tscn" id="7_dialog"]
@@ -61,6 +59,7 @@ rings = 48
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
+combat_enabled = false
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env")
@@ -83,43 +82,13 @@ layers = 2
 [node name="Player" parent="." instance=ExtResource("2_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, 1.0)
 camera_yaw_deg = 180.0
+can_attack = false
 
 [node name="Ada" parent="." instance=ExtResource("6_npc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.8, 0, 12.6)
 npc_id = "ADA"
 dialog_path = "res://dialogs/bolum1_ada.dlg"
 model_scene = ExtResource("9_ada")
-
-[node name="Enemies" type="Node3D" parent="."]
-
-[node name="Drone1" parent="Enemies" instance=ExtResource("3_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 22.5)
-
-[node name="Drone2" parent="Enemies" instance=ExtResource("3_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.1, 24)
-
-[node name="Drone3" parent="Enemies" instance=ExtResource("3_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.1, 27)
-
-[node name="Gems" type="Node3D" parent="."]
-
-[node name="Cell1" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.0, 28)
-
-[node name="Cell2" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.0, 28)
-
-[node name="Cell3" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.5, 1, 11.5)
-
-[node name="Cell4" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 13)
-
-[node name="Cell5" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 1, 27.2)
-
-[node name="Cell6" parent="Gems" instance=ExtResource("4_gem")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 1, 22.5)
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 
