@@ -47,6 +47,10 @@ Telltale tarzı gerilim anları. Başarıya ve başarısızlığa göre farklı 
 ```
 
 - Tırnak içindeki yazı halkanın içinde görünür (isteğe bağlı).
+- `olumcul` eklenirse kaybedince karakter ölür ("ÖLDÜN — Tekrar dene") ve aynı an biraz kolaylaşarak tekrarlanır:
+  `@qte vur 3.2 12 "İT" olumcul -> kazandi | kazandi`
+- Tehlike arttıkça ekranın kenarları kırmızıya döner; hızlı dokunmada güç çubuğu görünür.
+- `@olay bogusma` ile oyuncu ve konuşulan karakter karşı karşıya itişir (QTE gücüne göre öne/geri gider); `@olay bogusma_bitti` ile biter.
 - Sonuç `son_qte_basarili` değişkenine de yazılır.
 - Klavyede: Boşluk/Enter (bas, vur), ok tuşları (kaydır).
 

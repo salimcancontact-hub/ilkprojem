@@ -154,13 +154,17 @@ static func _parse_qte(rest: String, where: String) -> Variant:
 	if q1 != -1:
 		var q2 := head.find("\"", q1 + 1)
 		label = head.substr(q1 + 1, q2 - q1 - 1)
-		head = head.substr(0, q1).strip_edges()
+		head = (head.substr(0, q1) + " " + head.substr(q2 + 1)).strip_edges()
 	var parts := head.split(" ", false)
+	var lethal := parts.has("olumcul")
+	if lethal:
+		parts.remove_at(parts.find("olumcul"))
 	if parts.is_empty():
 		push_error("%s: @qte türü eksik" % where)
 		return null
 	var step := {"type": "qte", "kind": parts[0], "label": label, "time": 1.5, "count": 1, "dir": "",
-		"success": targets[0].strip_edges(), "fail": targets[1].strip_edges() if targets.size() > 1 else targets[0].strip_edges()}
+		"success": targets[0].strip_edges(), "fail": targets[1].strip_edges() if targets.size() > 1 else targets[0].strip_edges(),
+		"lethal": lethal}
 	match parts[0]:
 		"bas":
 			step["time"] = parts[1].to_float() if parts.size() > 1 else 1.5

@@ -20,6 +20,10 @@ var _player_cam: Camera3D
 var camera_shots: Dictionary = {}
 var _camera_locked: bool = false
 var _cutscene_live: bool = false
+## Boğuşma: oyuncu ile karşısındaki karakter itişir (QTE gücüne göre öne/geri).
+var _struggle_npc: Npc = null
+var _struggle_mid: Vector3
+var _struggle_dir: Vector3
 var _shake_time: float = 0.0
 var _shake_strength: float = 0.0
 
@@ -54,6 +58,12 @@ func _ready() -> void:
 	_dialog.speaker_changed.connect(_on_speaker_changed)
 	_dialog.event_fired.connect(_on_dialog_event)
 	_dialog.dialog_finished.connect(_on_dialog_finished)
+	_dialog.qte_progress.connect(_on_struggle_progress)
+	_dialog.qte_tapped.connect(func() -> void:
+		if _struggle_npc:
+			shake(0.06, 0.12))
+	_dialog.qte_death.connect(_on_qte_death)
+	_dialog.qte_retry.connect(_on_qte_retry)
 
 
 func _exit_tree() -> void:
@@ -107,6 +117,7 @@ func keep_world_running() -> void:
 
 func _on_dialog_finished() -> void:
 	_camera_locked = false
+	_struggle_npc = null
 	if _cutscene_live:
 		_cutscene_live = false
 		_player.input_enabled = true
@@ -166,12 +177,65 @@ func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
 					model.play_once(args[1], "Idle")
 		"gorev":
 			_hud.set_objective(" ".join(args))
+		"bogusma":
+			_start_struggle()
+		"bogusma_bitti":
+			_struggle_npc = null
 		"kamera":
 			_set_camera(args[0] if args.size() > 0 else "otomatik")
 		"sarsinti":
 			shake(float(args[0]) if args.size() > 0 else 0.3, float(args[1]) if args.size() > 1 else 0.6)
 		_:
 			_on_story_event(event_name, args)
+
+
+## Oyuncu ile konuşulan karakter karşı karşıya geçip itişir; kamera yandan çeker.
+func _start_struggle() -> void:
+	if _talking_to == null or _talking_to.model == null:
+		return
+	_struggle_npc = _talking_to
+	var a := _player.global_position
+	var b := _struggle_npc.global_position
+	_struggle_dir = (b - a)
+	_struggle_dir.y = 0.0
+	_struggle_dir = _struggle_dir.normalized()
+	_struggle_mid = (a + b) / 2.0
+	_struggle_mid.y = a.y
+	_apply_struggle(0.5)
+	_player.model.play("Push", 0.1)
+	_struggle_npc.model.play("Push", 0.1)
+	var right := _struggle_dir.cross(Vector3.UP).normalized()
+	camera_shots["_bogusma"] = [_struggle_mid + right * 2.4 + Vector3.UP * 1.5 - _struggle_dir * 0.4, _struggle_mid + Vector3.UP * 1.1]
+	_set_camera("_bogusma")
+
+
+## fill: 0 = oyuncu ezildi, 1 = oyuncu üstün geldi.
+func _apply_struggle(fill: float) -> void:
+	if _struggle_npc == null:
+		return
+	var shift := (fill - 0.5) * 0.6
+	_player.global_position = _struggle_mid - _struggle_dir * (0.42 - shift)
+	_struggle_npc.global_position = _struggle_mid + _struggle_dir * (0.42 + shift)
+	_player.face_point(_struggle_npc.global_position)
+	_struggle_npc.face_point(_player.global_position)
+
+
+func _on_struggle_progress(fill: float) -> void:
+	_apply_struggle(fill)
+
+
+func _on_qte_death() -> void:
+	shake(0.5, 0.5)
+	_player.model.play("Death01", 0.1)
+
+
+func _on_qte_retry() -> void:
+	if _struggle_npc:
+		_apply_struggle(0.5)
+		_player.model.play("Push", 0.0)
+		_struggle_npc.model.play("Push", 0.0)
+	else:
+		_player.model.play("Idle", 0.0)
 
 
 ## Alt sınıfların hikâye olaylarını işlediği yer.

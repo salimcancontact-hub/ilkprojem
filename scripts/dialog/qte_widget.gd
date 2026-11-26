@@ -3,6 +3,9 @@ extends Control
 ## Türler: "bas" (zamanında dokun), "vur" (hızlı hızlı dokun), "kaydir" (doğru yöne kaydır).
 
 signal finished(success: bool)
+## Hızlı dokunmada güç değiştikçe (0..1) — boğuşma animasyonu için.
+signal progress_changed(fill: float)
+signal tapped
 
 const RADIUS := 78.0
 const DIRS := {"sol": Vector2.LEFT, "sag": Vector2.RIGHT, "yukari": Vector2.UP, "asagi": Vector2.DOWN}
@@ -21,11 +24,22 @@ var _pressing: bool = false
 var _result_t: float = 0.0
 var _result_ok: bool = false
 var _pulse: float = 0.0
+var _vignette: ColorRect
+## 0..1 arası tehlike: süre azaldıkça ve güç düşük kaldıkça artar.
+var danger: float = 0.0
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_vignette = ColorRect.new()
+	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://shaders/danger_vignette.gdshader")
+	_vignette.material = mat
+	_vignette.show_behind_parent = true
+	add_child(_vignette)
 
 
 func start(step: Dictionary) -> void:
@@ -36,6 +50,7 @@ func start(step: Dictionary) -> void:
 	_count = maxi(step["count"], 1)
 	_dir = step["dir"]
 	_fill = 0.0
+	danger = 0.0
 	_result_t = 0.0
 	_pressing = false
 	active = true
@@ -56,10 +71,24 @@ func _process(delta: float) -> void:
 		return
 	_left -= delta
 	if _kind == "vur":
-		_fill = maxf(_fill - delta * 0.12, 0.0)
+		var before := _fill
+		_fill = maxf(_fill - delta * 0.18, 0.0)
+		if before != _fill:
+			progress_changed.emit(_fill)
+		var time_pressure := 1.0 - clampf(_left / _time, 0.0, 1.0)
+		danger = clampf((1.0 - _fill) * (0.35 + time_pressure * 1.1), 0.0, 1.0)
+	else:
+		danger = clampf(1.0 - _left / _time, 0.0, 1.0) * 0.45
+	_update_vignette()
 	if _left <= 0.0:
 		_end(false)
 	queue_redraw()
+
+
+func _update_vignette() -> void:
+	var m := _vignette.material as ShaderMaterial
+	m.set_shader_parameter("intensity", danger if active else 0.0)
+	m.set_shader_parameter("pulse", _pulse * (6.0 + danger * 10.0))
 
 
 func _input(event: InputEvent) -> void:
@@ -92,6 +121,8 @@ func _hit() -> void:
 		_end(true)
 	elif _kind == "vur":
 		_fill += 1.0 / _count
+		tapped.emit()
+		progress_changed.emit(minf(_fill, 1.0))
 		if _fill >= 1.0:
 			_end(true)
 
@@ -105,13 +136,15 @@ func _check_swipe(v: Vector2) -> void:
 
 func _end(ok: bool) -> void:
 	active = false
+	danger = 0.0
+	_update_vignette()
 	_result_ok = ok
 	_result_t = 0.35
 	queue_redraw()
 
 
 func _draw() -> void:
-	var c := Vector2(size.x / 2.0, size.y * 0.73)
+	var c := Vector2(size.x / 2.0, size.y * 0.71)
 	var t := clampf(_left / _time, 0.0, 1.0)
 	var col := Color(1, 1, 1)
 	if _result_t > 0.0:
@@ -141,6 +174,13 @@ func _draw() -> void:
 	else:
 		draw_string(font, c + Vector2(-tw / 2.0, 11), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 		if _kind == "vur":
+			var bw := 440.0
+			var bh := 18.0
+			var bp := c + Vector2(-bw / 2.0, RADIUS + 26)
+			var red_a := 0.55 + 0.45 * sin(_pulse * (8.0 + danger * 14.0)) * danger
+			draw_rect(Rect2(bp - Vector2(3, 3), Vector2(bw + 6, bh + 6)), Color(0, 0, 0, 0.7))
+			draw_rect(Rect2(bp, Vector2(bw, bh)), Color(0.75, 0.05, 0.05, clampf(red_a, 0.3, 1.0)))
+			draw_rect(Rect2(bp, Vector2(bw * clampf(_fill, 0.0, 1.0), bh)), Color(0.95, 0.95, 0.95))
 			var sub := "x%d" % _count
 			var sw := font.get_string_size(sub, HORIZONTAL_ALIGNMENT_CENTER, -1, 20).x
 			draw_string(font, c + Vector2(-sw / 2.0, 40), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 1, 0.7))

@@ -294,6 +294,7 @@ MUHAFIZ: Geri çekil!
 @qte bas 1.4 "İT" -> cop_kurtul | cop_vurdu
 
 === cop_kurtul
+@olay anim EVREN Punch_Cross
 > Muhafızı itip kalabalığın içine dalıyorsun.
 ~ muhafizi_itti = true
 -> isyan_arman
@@ -404,28 +405,31 @@ ARMAN: ...Neden öyle bakıyorsun?
 @olay kamera sokak_genis
 > Deniz alet kemerinden bir kaynak kesicisi çekiyor. Mavi alevi titriyor.
 ARMAN: Geri çekil!
+@olay anim ARMAN Melee_Hook
 @qte kaydir sag 1.5 "KAÇIN" -> bogus1_ok | bogus1_fail
 
 === bogus1_ok
+@olay anim EVREN Roll
 > Alev yüzünün birkaç santim önünden geçiyor.
 -> bogus2
 
 === bogus1_fail
+@olay anim EVREN Hit_Chest
 > Alev kolunu yalıyor. Acı nefesini kesiyor.
 ~ yanik_izi = true
 @olay sarsinti 0.4 0.5
 -> bogus2
 
 === bogus2
-> Bileğini yakalıyorsun. İkiniz birden duvara çarpıyorsunuz.
-@qte vur 3.0 10 "İT" -> bogus2_ok | bogus2_fail
+@olay bogusma
+> Bileğini yakalıyorsun. Kesicinin mavi alevi yüzüne doğru yaklaşıyor.
+ARMAN: Bırak!
+@qte vur 3.2 12 "İT" olumcul -> bogus2_ok | bogus2_ok
 
 === bogus2_ok
-> Kesici elinden düşüp kayıyor. Deniz yere yığılıyor.
--> karar_ani
-
-=== bogus2_fail
-> Deniz seni itiyor ama ayağı kayıyor. Başını betona vurarak yere düşüyor.
+@olay bogusma_bitti
+> Kesiciyi yüzünden uzaklaştırıyorsun. Alet elinden düşüp kayıyor.
+> Deniz dengesini kaybediyor. Başını betona vurarak yere yığılıyor.
 -> karar_ani
 
 === karar_ani

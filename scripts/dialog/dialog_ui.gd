@@ -6,6 +6,12 @@ signal dialog_finished
 ## Konuşan karakter değişti ("" = anlatım). Kamera açıları için kullanılır.
 signal speaker_changed(speaker_id: String)
 signal event_fired(event_name: String, args: PackedStringArray)
+## Boğuşma QTE'lerinde güç değişimi (0..1) ve her dokunuş.
+signal qte_progress(fill: float)
+signal qte_tapped
+## Ölümcül bir QTE kaybedildi (karakter ölür) / yeniden deneniyor.
+signal qte_death
+signal qte_retry
 
 const TYPE_SPEED := 45.0
 const BAR_HEIGHT := 70.0
@@ -40,6 +46,7 @@ var _subtitle: Label
 var _fade_tween: Tween
 var _qte: Control
 var _in_qte: bool = false
+var _qte_step: Dictionary = {}
 var _title_tween: Tween
 
 
@@ -108,16 +115,43 @@ func show_title(text: String, subtitle: String = "", hold: float = 2.5) -> void:
 func _on_qte(step: Dictionary) -> void:
 	_finish_typing()
 	_in_qte = true
+	_qte_step = step.duplicate()
 	_choice_box.visible = false
 	_set_panel_raised(true)
-	_qte.start(step)
+	_qte.start(_qte_step)
 
 
 func _on_qte_finished(success: bool) -> void:
+	if not success and _qte_step.get("lethal", false):
+		await _death_and_retry()
+		return
 	_in_qte = false
 	_panel.visible = false
 	_set_panel_raised(false)
 	runner.finish_qte(success)
+
+
+## TWD tarzı: ekran kırmızıya keser, karakter ölür, aynı an biraz kolaylaşarak tekrarlanır.
+func _death_and_retry() -> void:
+	qte_death.emit()
+	_panel.visible = false
+	var old := _fade.color
+	_fade.color = Color(0.45, 0.0, 0.0, 0.0)
+	var tw := create_tween()
+	tw.tween_property(_fade, "color:a", 0.85, 0.5)
+	await tw.finished
+	show_title("ÖLDÜN", "Tekrar dene", 1.2)
+	await get_tree().create_timer(2.6, true, false, true).timeout
+	qte_retry.emit()
+	var tw2 := create_tween()
+	tw2.tween_property(_fade, "color:a", 0.0, 0.6)
+	await tw2.finished
+	_fade.color = Color(0, 0, 0, 0)
+	_panel.visible = true
+	# Her denemede biraz daha kolay
+	_qte_step["time"] = _qte_step["time"] * 1.15
+	_qte_step["count"] = maxi(int(_qte_step["count"]) - 2, 4)
+	_qte.start(_qte_step)
 
 
 func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
@@ -394,6 +428,8 @@ func _build_ui() -> void:
 	_qte = preload("res://scripts/dialog/qte_widget.gd").new()
 	_qte.visible = false
 	_qte.finished.connect(_on_qte_finished)
+	_qte.progress_changed.connect(func(v: float) -> void: qte_progress.emit(v))
+	_qte.tapped.connect(func() -> void: qte_tapped.emit())
 	_root.add_child(_qte)
 
 	_toast = PanelContainer.new()
