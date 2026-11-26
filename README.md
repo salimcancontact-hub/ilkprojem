@@ -32,8 +32,12 @@ EMANET gemisinin hangarında Deniz'i yönet: Ada ile konuş, HAKEM'in güvenlik 
 - `scripts/` – GDScript kodları (`scripts/dialog/` diyalog sistemi)
 - `dialogs/` – diyalog metinleri
 - `docs/` – hikâye ve rehber belgeleri
-- `assets/` – karakter modelleri, animasyonlar, üniforma dokuları
-- `addons/quaternius-modular-scifi-pack/` – gemi iç mekânı parçaları
-- `tools/` – yardımcı araçlar (ör. üniforma boyayıcı)
+- `assets/` – karakter modelleri, animasyonlar, üniforma dokuları, MegaKit gemi parçaları (`assets/megakit/`)
+- `scenes/levels/` – seviyeler (EMANET hangarı)
+- `shaders/` – uzay gökyüzü ve gezegen shader'ları
+- `tools/` – yardımcı araçlar:
+  - `paint_uniform.py` – karakter üniformalarını boyar
+  - `convert_megakit.py` – MegaKit USD → glTF (Blender Python modülü gerekir)
+  - `build_hangar.gd` – hangarı ASCII haritadan kurar: `godot --headless --path . --script res://tools/build_hangar.gd`
 
 Kullanılan hazır varlıkların lisansları: [`CREDITS.md`](CREDITS.md)
