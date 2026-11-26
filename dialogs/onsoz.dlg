@@ -11,6 +11,90 @@
 > "Herkes aynı soruyu soruyor: Neden onlar? Neden ben değil?"
 > — Selim Arslan'ın günlüğünden
 @olay aydinlat 3
+-> SON
+
+# ---------------------------------------------------------------- Ada'nın araması
+=== ada_arama
+@olay telefon
+@olay kamera evren_yakin
+> Bileğindeki ekran titriyor. Arayan: ADA.
+ADA: Abi? Neredesin? Arkada bağırışlar var.
+@sure 8 -> arama_sessiz
+* Merkezin önündeyim. -> arama_durust
+  ~ ada_bag += 1
+* Evdeyim. Televizyon açık. -> arama_yalan
+  ~ yalan_sayisi += 1
+* Sen iyi misin? -> arama_soru
+  ~ ada_bag += 1
+* [Sessiz kal] -> arama_sessiz
+
+=== arama_durust
+ADA: Abi... Lütfen. Seni içeri almazlar. Eve git.
+-> arama_anne
+
+=== arama_yalan
+ADA: Yalan söylüyorsun. Arkadaki sirenleri duyuyorum.
+! Ada bunu hatırlayacak.
+-> arama_anne
+
+=== arama_soru
+ADA: Bir odaya altmış kişi koydular. Herkes uyuyormuş gibi yapıyor.
+ADA: Sabah beşte kalkıyoruz. Dönüş yok.
+-> arama_anne
+
+=== arama_sessiz
+ADA: Abi? Orada mısın?
+ADA: ...Oradasın. Nefesini duyuyorum.
+-> arama_anne
+
+=== arama_anne
+ADA: Annem son gün ne dedi, hatırlıyor musun?
+@sure 10 -> anne_sessiz
+* "Kardeşini yalnız bırakma." -> anne_soz
+  ~ ada_bag += 1
+* Bunu şimdi konuşmayalım. -> anne_kac
+* [Sessiz kal] -> anne_sessiz
+
+=== anne_soz
+ADA: Ama bu senin suçun değil. Komite karar verdi, sen değil.
+ADA: Sen beni bırakmıyorsun. Ben gidiyorum. Fark var.
+-> arama_son
+
+=== anne_kac
+ADA: Hep böyle yapıyorsun. Zor bir şey olunca kapıyı kapatıyorsun.
+-> arama_son
+
+=== anne_sessiz
+ADA: Ben hatırlıyorum. Sen de hatırlıyorsun.
+-> arama_son
+
+=== arama_son
+ADA: Söz ver bana. Bu gece aptalca bir şey yapmayacaksın.
+@sure 8 -> soz_sessiz
+* Söz veriyorum. -> soz_ver
+  ~ ada_soz = true
+* Söz veremem. -> soz_verme
+  ~ durustluk += 1
+* [Sessiz kal] -> soz_sessiz
+
+=== soz_ver
+ADA: ...Tamam. Seni seviyorum, aptal.
+> Bağlantı kesiliyor.
+-> arama_bitti
+
+=== soz_verme
+ADA: Abi—
+> Bağlantı kesiliyor.
+! Ada bunu hatırlayacak.
+-> arama_bitti
+
+=== soz_sessiz
+ADA: Biliyordum.
+> Bağlantı kesiliyor.
+-> arama_bitti
+
+=== arama_bitti
+@olay telefon_kapat
 @olay gorev Seçim Merkezi'ne git.
 -> SON
 
@@ -58,14 +142,27 @@ ARMAN: Senin adın ne?
 
 === isim_onemsiz
 ARMAN: Herkesin adı önemli. Komite öyle düşünmese bile.
--> arman_su
+-> arman_kimin
 
 === isim_yalan
 ARMAN: Can! Güzel isim. Bu gece herkese lazım olan şey.
--> arman_su
+-> arman_kimin
 
 === isim_sessiz
 ARMAN: Peki, gizemli yabancı. Sorun değil.
+-> arman_kimin
+
+=== arman_kimin
+ARMAN: Bu gece buraya kimin için geldin?
+* Kardeşim içeride. Yarın gidiyor. -> arman_kardes
+  ~ arman_ada = true
+* Kimse için. Sadece bakmaya. -> arman_su
+
+=== arman_kardes
+ARMAN: Ah... Demek öyle.
+> "Ada," diyorsun. "Adı Ada."
+ARMAN: Ada. Tamam. Yukarıda ona göz kulak olurum. Söz.
+! Deniz Arman bunu hatırlayacak.
 -> arman_su
 
 === arman_su
@@ -107,9 +204,15 @@ MUHAFIZ: Kimlik kartı.
 @sure 7 -> muhafiz_sessiz
 * Kartım yok. Ama adım listede olabilir. -> muhafiz_isim
 * Lütfen. Sadece bir bakın. -> muhafiz_yalvar
+* Kız kardeşim içeride. Sadece onu görmek istiyorum. -> muhafiz_kardes
 * Kim karar veriyor? Neye göre seçiyorsunuz? -> muhafiz_soru
   ~ komiteyi_sorguladi = true
 * [Sessiz kal] -> muhafiz_sessiz
+
+=== muhafiz_kardes
+MUHAFIZ: Aileler içeri giremez. Kural bu.
+MUHAFIZ: İçerideki herkesin dışarıda biri var.
+-> muhafiz_red
 
 === muhafiz_isim
 MUHAFIZ: Kart yoksa isim yok. İsim yoksa liste yok.
@@ -270,7 +373,16 @@ ARMAN: Eğil!
 -> kart_secim
 
 === kart_secim
+@if arman_ada -> kart_ada
+-> kart_secim2
+
+=== kart_ada
+> "Yukarıda ona göz kulak olurum" demişti. Ada'ya.
+-> kart_secim2
+
+=== kart_secim2
 > Kartın üzerinde onun yüzü, onun adı: DENİZ ARMAN — KAYNAK USTASI — EMANET / 412
+> Annenin sesi kulağında: "Kardeşini yalnız bırakma."
 @sure 15 -> kart_birak
 * Kartı al. -> kart_al
   ~ kimlik_karti_alindi = true
@@ -280,7 +392,7 @@ ARMAN: Eğil!
   ! Bu seçim seninle kalacak.
 
 === kart_al
-> Kart avucunda ılık.
+> Kart avucunda ılık. Bir ölünün adı. Ama Ada'nın yanına giden tek yol.
 > "Benim yerime git" demiş miydi? Yoksa sen mi öyle duymak istiyorsun?
 @olay final
 -> SON
@@ -296,11 +408,14 @@ ARMAN: Eğil!
 > Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
 @if kimlik_karti_alindi -> kalkis_kart
 > Kargo bölmesinde, hiçbir kayıtta görünmeyen bir yolcu vardı.
+> Ada onu üç gün sonra, bir yedek parça kasasının arkasında buldu.
 -> kalkis_son
 
 === kalkis_kart
 > 412 numaralı yolcunun adı Deniz Arman'dı.
 > En azından kayıtlar öyle diyordu.
+> Ada abisini kalkıştan iki saat sonra, kargo koridorunda gördü.
+> Hiçbir şey söylemedi. Sadece elini tuttu.
 -> kalkis_son
 
 === kalkis_son

@@ -22,6 +22,7 @@ func _ready() -> void:
 	camera_shots = {
 		"kalabalik": [Vector3(2.6, 2.1, 59.2), Vector3(-0.8, 1.2, 50.0)],
 		"muhafiz": [Vector3(-0.9, 1.75, 55.6), Vector3(0.2, 1.55, 58.6)],
+		"evren_yakin": [Vector3(0.7, 1.62, -4.7), Vector3(-0.05, 1.38, -6.0)],
 		"arman": [Vector3(-0.6, 3.0, 52.4), Vector3(1.8, 0.3, 55.0)],
 	}
 	_card.visible = false
@@ -34,6 +35,12 @@ func _ready() -> void:
 	_dialog.fade_to(1.0, 0.0)
 	await get_tree().process_frame
 	await play_dialog(DLG, "giris")
+	# Başlık kartı ve kararmanın açılması bitmeden aramaya geçme
+	if _dialog._title_tween and _dialog._title_tween.is_running():
+		await _dialog._title_tween.finished
+	await _dialog.fade_to(0.0, 1.2)
+	_player.face_point(Vector3(0, 0, 60))
+	await play_dialog(DLG, "ada_arama")
 	_phase = "sokak"
 
 
@@ -52,6 +59,22 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_arman_escape()
 		"final":
 			_final()
+		"telefon":
+			_player.face_point(Vector3(0, 0, 60))
+			_player.model.play("Idle_TalkingPhone", 0.3)
+			# Ekranın soğuk ışığı yüzüne vursun
+			var glow := OmniLight3D.new()
+			glow.name = "PhoneGlow"
+			glow.light_color = Color(0.55, 0.8, 1.0)
+			glow.light_energy = 2.2
+			glow.omni_range = 1.6
+			glow.position = Vector3(0.1, 1.45, -0.45)
+			_player.get_node("Visual").add_child(glow)
+		"telefon_kapat":
+			_player.model.play("Idle", 0.4)
+			var g := _player.get_node_or_null("Visual/PhoneGlow")
+			if g:
+				g.queue_free()
 
 
 # --- İsyan -----------------------------------------------------------------

@@ -1,107 +1,93 @@
-# EMANET — Bölüm 1: "İlk İniş"
-# Sahne: Kül gezegenine inişten önce, SERÇE'nin rampasında Ada ile konuşma.
-# Sözdizimi: docs/DIYALOG_SOZDIZIMI.md
+# EMANET — Bölüm 1: "İlk İniş" — Hangar
+# Kül gezegenine inişten önce, SERÇE'nin rampasında Ada ile konuşma.
+# Gemide herkes Evren'i "Deniz" olarak tanır. Ada yalnızken ona "abi" der.
 
 === baslangic
 @if ada_konustu -> tekrar
 ~ ada_konustu = true
-> Ada, SERÇE'nin rampasında oturmuş, tabletindeki gezegen verilerine bakıyor.
-ADA: Kül gezegeni. Yüzey sıcaklığı gündüz 61 derece, rüzgâr saatte 140 kilometre.
-ADA: Bu verilerle bizi aşağı göndermeleri ya çok cesur ya da çok aptalca.
-@sure 8
-* İkisi de olabilir. Yine de iniyoruz. -> cesur
-  ~ ada_guven += 1
+> Ada, SERÇE'nin rampasında oturmuş, tabletindeki gezegen verilerine bakıyor. Çevrede kimse yok.
+ADA: Kül gezegeni. Gündüz 61 derece, rüzgâr saatte 140 kilometre.
+ADA: Mara buna "rutin bir iniş" diyor. Ben ona "toplu intihar" diyorum.
+@sure 8 -> sessiz
+* İkimiz de döneceğiz. Söz. -> soz
+  ~ ada_bag += 1
 * Korkuyor musun? -> korku
 * Verileri bana bırak. Sen örneklere odaklan. -> soguk
-  ~ ada_guven -= 1
+  ~ ada_bag -= 1
   ! Ada bunu hatırlayacak.
 * [Sessiz kal] -> sessiz
 
-=== cesur
-ADA: Hm. En azından dürüstsün.
-ADA: Mara da aynısını söyledi. Kelimesi kelimesine.
--> aile
+=== soz
+ADA: Sen ve sözlerin.
+ADA: Son verdiğin sözü hatırlıyor musun? Seçim gecesi? "Aptalca bir şey yapmayacağım."
+> Gülümsüyor ama gözleri gülmüyor.
+-> yildonumu
 
 === korku
-ADA: Korku mu?
-ADA: ...Belki biraz. İlk iniş sonuçta. Simülasyonda dört kere öldüm.
-DENIZ: Ben on bir kere öldüm.
-ADA: Bu beni hiç rahatlatmadı, Deniz.
-> Ama gülümsüyor.
-~ ada_guven += 1
--> aile
+ADA: Korku mu? Dört yıldır her sabah korkuyorum, abi.
+ADA: Birisi kayıtlara bakacak diye. Birisi yüzüne bakıp "Sen Deniz Arman değilsin" diyecek diye.
+~ ada_bag += 1
+-> yildonumu
 
 === soguk
-ADA: Tabii. "Dahi çocuk" örneklerine baksın, büyükler işi halletsin.
-ADA: On dokuz yaşındayım, biliyorsun değil mi?
--> aile
+ADA: Tabii, "Deniz Usta". Büyükler işi halletsin.
+ADA: Yirmi iki yaşındayım, biliyorsun değil mi? Bu gemide senin sırrını taşıyan tek kişiyim.
+-> yildonumu
 
 === sessiz
-> Deniz cevap vermiyor. Ada tabletini kapatıp ona bakıyor.
-ADA: Bu sessizliği bir cevap olarak alıyorum.
-~ ada_guven -= 1
+> Cevap vermiyorsun. Ada tabletini kapatıp sana bakıyor.
+ADA: Yine kapıyı kapattın.
+~ ada_bag -= 1
 ! Ada sessiz kaldığını fark etti.
--> aile
+-> yildonumu
 
-=== aile
-ADA: Bir şey sorabilir miyim?
-ADA: Dünya'da kimin kaldı? Hiç bahsetmiyorsun.
-@sure 7 -> aile_sessiz
-* Kimsem kalmadı. -> aile_yalan
-  ~ yalan_sayisi += 1
-* Uzun hikâye. Bir gün anlatırım. -> aile_erteleme
-* {ada_guven >= 1} Bir arkadaşım vardı. Bu gemide onun olması gerekiyordu. -> aile_ipucu
-  ~ ada_guven += 2
-  ~ ada_ipucu = true
+=== yildonumu
+ADA: Bugün kaç gün oldu, biliyor musun?
+ADA: Dört yıl. Annem öleli tam beş yıl. Dünya'da bugün onun günü.
+@sure 9 -> yildonumu_sessiz
+* Biliyorum. Sabah ona bir mesaj yazdım. Göndermeden sildim. -> yildonumu_paylas
+  ~ ada_bag += 2
   ! Ada bunu hatırlayacak.
-* [Sessiz kal] -> aile_sessiz
+* Burada geçmişi konuşamayız. Biri duyabilir. -> yildonumu_temkin
+  ~ pragmatizm += 1
+* [Sessiz kal] -> yildonumu_sessiz
 
-=== aile_yalan
-ADA: Herkesin birisi vardır.
-ADA: ...Ama peki. Kurcalamayacağım.
+=== yildonumu_paylas
+> Ada bir süre sessiz kalıyor. Sonra başını omzuna yaslıyor.
+ADA: Ben de her gece ona mesaj kaydediyorum. Hiçbirini göndermedim.
+ADA: Bazen düşünüyorum... Sen olmasan buraya dayanamazdım.
 -> kapanis
 
-=== aile_erteleme
-ADA: "Bir gün." Bunu not ediyorum.
-ADA: Ve unutmam, biliyorsun.
-~ sozu_var = true
+=== yildonumu_temkin
+ADA: Haklısın. HAKEM her şeyi dinliyor.
+ADA: Ama bazen bu gemide yalnızca yalan söyleyerek yaşadığımızı unutuyorum.
 -> kapanis
 
-=== aile_ipucu
-> Ada bir süre sessiz kalıyor.
-ADA: O zaman ikimiz de birinin yerine buradayız.
-ADA: Annem benim yerime kaldı. Onun kontenjanını bana verdiler.
-ADA: ...Teşekkürler. Bunu söylemek zor olmalı.
--> kapanis
-
-=== aile_sessiz
-> Deniz başını çeviriyor. Ada anlıyor.
-ADA: Tamam. Dokunmuyorum.
+=== yildonumu_sessiz
+ADA: Tamam. Anladım.
 -> kapanis
 
 === kapanis
-@if ada_guven >= 2 -> kapanis_sicak
-ADA: Neyse. Mara on dakikaya kalkış diyor. Kaskını unutma.
+@if ada_bag >= 2 -> kapanis_sicak
+ADA: Mara on dakikaya kalkış diyor. Kaskını unutma, "Deniz".
 -> SON
 
 === kapanis_sicak
-ADA: Hey, Deniz...
-ADA: Aşağıda arkamı kollar mısın?
+ADA: Hey... Aşağıda arkamı kollar mısın?
 * Her zaman.
-  ~ ada_guven += 1
+  ~ ada_bag += 1
 * Sen de benimkini.
-ADA: Anlaştık.
+ADA: Anlaştık, abi.
 -> SON
 
 === tekrar
-@if ada_guven >= 2 -> tekrar_sicak
-@if ada_guven < 0 -> tekrar_soguk
-ADA: Kalkışa az kaldı. Kristalleri toplamamız lazım, unuttun mu?
+@if ada_bag >= 2 -> tekrar_sicak
+@if ada_bag < 0 -> tekrar_soguk
+ADA: Kalkışa az kaldı. Mara'yı bekletme.
 -> SON
 
 === tekrar_sicak
-ADA: Gergin misin? Ben biraz.
-ADA: Ama sen oradaysan sorun yok.
+ADA: Gergin misin? Ben biraz. Ama sen oradaysan sorun yok.
 -> SON
 
 === tekrar_soguk
