@@ -139,16 +139,37 @@ func show_message(text: String) -> void:
 	joystick.visible = false
 
 
-func _layout() -> void:
+## Telefonun gezinme çubuğu ve çentiği için ekran kenarlarından bırakılacak pay.
+func _safe_insets() -> Rect2:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
-	_gem_label.position = Vector2(vp.x - _gem_label.get_minimum_size().x - 24, 18)
-	_enemy_label.position = Vector2(vp.x - _enemy_label.get_minimum_size().x - 24, 62)
-	joystick.position = Vector2(40, vp.y - joystick.size.y - 30)
-	_attack_btn.position = Vector2(vp.x - 150 - 50, vp.y - 150 - 50)
-	_jump_btn.position = Vector2(vp.x - 110 - 230, vp.y - 110 - 40)
-	_talk_btn.position = Vector2(vp.x - 110 - 70, vp.y - 110 - 260)
+	var win := Vector2(DisplayServer.window_get_size())
+	var safe := Rect2(DisplayServer.get_display_safe_area())
+	if win.x <= 0 or win.y <= 0 or safe.size.x <= 0:
+		return Rect2(0, 0, 0, 0)
+	var s := vp / win
+	var left := maxf(safe.position.x * s.x, 0.0)
+	var top := maxf(safe.position.y * s.y, 0.0)
+	var right := maxf((win.x - safe.end.x) * s.x, 0.0)
+	var bottom := maxf((win.y - safe.end.y) * s.y, 0.0)
+	return Rect2(left, top, right, bottom)
+
+
+func _layout() -> void:
+	var full: Vector2 = get_viewport().get_visible_rect().size
+	var ins := _safe_insets()
+	# Gezinme çubuğunu her zaman hesaba katmak için mobilde en az 24 px ek pay
+	var extra := 24.0 if OS.has_feature("mobile") else 0.0
+	var off := Vector2(ins.position.x + extra, ins.position.y)
+	var vp: Vector2 = full - Vector2(ins.position.x + ins.size.x + extra * 2.0, ins.position.y + ins.size.y)
+	_gem_label.position = off + Vector2(vp.x - _gem_label.get_minimum_size().x - 24, 18)
+	_enemy_label.position = off + Vector2(vp.x - _enemy_label.get_minimum_size().x - 24, 62)
+	_health_bar.position = off + Vector2(24, 24)
+	joystick.position = off + Vector2(40, vp.y - joystick.size.y - 30)
+	_attack_btn.position = off + Vector2(vp.x - 150 - 50, vp.y - 150 - 50)
+	_jump_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 40)
+	_talk_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 200)
 	_objective.size = Vector2(vp.x * 0.6, 0)
-	_objective.position = Vector2(vp.x * 0.2, 22)
+	_objective.position = off + Vector2(vp.x * 0.2, 22)
 
 
 func _make_label(font_size: int) -> Label:
