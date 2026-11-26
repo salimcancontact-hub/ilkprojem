@@ -18,6 +18,12 @@ const MENU_SCENE := "res://scenes/boot.tscn"
 const ALLEY_SPOT := Vector3(16.2, -0.15, 10.6)
 
 var _phase: String = "giris"
+var _arman_card: Node3D
+var _water: Node3D
+var _cutter: Node3D
+var _wrist: Node3D
+## Konteynerin arkası (ceset buraya sürüklenir)
+const HIDE_SPOT := Vector3(22.6, -0.15, 14.4)
 
 
 func _ready() -> void:
@@ -30,7 +36,11 @@ func _ready() -> void:
 		"evren_yakin": [Vector3(0.7, 1.62, -4.7), Vector3(-0.05, 1.38, -6.0)],
 		"sokak_genis": [Vector3(13.2, 2.4, 6.4), Vector3(15.6, 1.1, 10.6)],
 		"arman_yerde": [Vector3(13.6, 2.6, 12.2), Vector3(16.0, 0.2, 10.4)],
+		"surukle": [Vector3(19.0, 2.8, 17.0), Vector3(19.5, 0.4, 11.8)],
 	}
+	# Deniz Arman kartını elinde tutuyor
+	_arman_card = Props.card()
+	_arman.model.attach(_arman_card, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
 	_card.visible = false
 	_card.interactable = false
 	_alley.monitoring = false
@@ -62,7 +72,96 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_arman.get_node("Visual").rotation = Vector3.ZERO
 			_arman.model.hold_last_frame("Death01")
 		"arman_kalkti":
+			_player.model.play("Idle", 0.2)
 			_arman_escape()
+		"kaldir_hazirlik":
+			_beside(_arman.global_position, 0.85)
+			_player.model.play("Crouch_Idle", 0.2)
+		# --- Su şişesi
+		"su_cikar":
+			_water = Props.water_bottle()
+			_arman.model.attach(_water, "hand_l", Vector3(0, 0.06, 0.05))
+			_arman.model.play_once("Interact", "Idle")
+		"su_al":
+			_player.model.play_once("Interact", "Idle")
+			await get_tree().create_timer(0.45, true, false, true).timeout
+			if _water:
+				_arman.model.detach(_water)
+				_player.model.attach(_water, "hand_r", Vector3(0, 0.06, 0.05))
+		"su_ic":
+			_player.model.play_once("Consume", "Idle")
+			await get_tree().create_timer(2.2, true, false, true).timeout
+			if _water:
+				_player.model.detach(_water)
+				_water.queue_free()
+				_water = null
+		"su_geri":
+			_arman.model.play_once("Interact", "Idle")
+			await get_tree().create_timer(0.6, true, false, true).timeout
+			if _water:
+				_arman.model.detach(_water)
+				_water.queue_free()
+				_water = null
+		# --- Kaynak kesicisi ve ölüm
+		"kesici_cek":
+			_cutter = Props.cutter()
+			_arman.model.attach(_cutter, "hand_l", Vector3(0, 0.05, 0.06), Vector3(-1.2, 0, 0))
+			_arman.model.play_once("Interact", "Idle")
+		"kesici_dus":
+			if _cutter:
+				_arman.model.detach(_cutter, self)
+				var land := _arman.global_position + Vector3(-0.9, 0.0, 1.1)
+				land.y = -0.12
+				var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+				tw.tween_property(_cutter, "global_position", land, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+				tw.tween_property(_cutter, "rotation", Vector3(PI / 2, 1.2, 0), 0.45)
+		"kesici_al":
+			if _cutter:
+				_player.face_point(_cutter.global_position)
+				_beside(_cutter.global_position, 0.55)
+				_player.model.play_once("PickUp_Table", "Crouch_Idle")
+				await get_tree().create_timer(0.7, true, false, true).timeout
+				_player.model.attach(_cutter, "hand_r", Vector3(0, 0.05, 0.06), Vector3(-1.2, 0, 0))
+				var light: OmniLight3D = _cutter.get_node("Uc/Isik")
+				light.light_energy = 4.0
+		"oldur_cok":
+			_beside(_arman.global_position + Vector3(0, 0, 0.2), 0.7)
+			_player.model.play("Crouch_Idle", 0.3)
+		"arman_oldu":
+			_arman.model.hold_last_frame("Death01")
+			_arman.get_node("CollisionShape3D").disabled = true
+			if _arman_card:
+				var at := _arman_card.global_position
+				_arman.model.detach(_arman_card)
+				_arman_card.queue_free()
+				_arman_card = null
+				_card.global_position = Vector3(at.x, -0.13, at.z)
+			_card.visible = true
+			_player.model.play("Idle", 0.3)
+			if _cutter and _cutter.get_parent() is BoneAttachment3D:
+				_player.model.detach(_cutter)
+				_cutter.queue_free()  # çantaya girdi
+				_cutter = null
+		"kart_al":
+			_player.face_point(_card.global_position)
+			_player.model.play_once("PickUp_Table", "Idle")
+			await get_tree().create_timer(0.7, true, false, true).timeout
+			_card.get_node("CardMesh").visible = false
+			_card.get_node("CardLight").visible = false
+			var held := Props.card()
+			_player.model.attach(held, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
+			await get_tree().create_timer(1.6, true, false, true).timeout
+			_player.model.detach(held)
+			held.queue_free()
+		"ceset_surukle":
+			_drag_body()
+		"uzaklas":
+			var away := _player.global_position + Vector3(-3.5, 0, -1.0)
+			_player.face_point(away)
+			_player.model.play("Walk", 0.2)
+			var tw2 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw2.tween_property(_player, "global_position", away, 2.4)
+			tw2.tween_callback(func() -> void: _player.model.play("Idle", 0.3))
 		"arman_yerde":
 			_arman.model.play("Hit_Knockback", 0.05)
 			await get_tree().create_timer(0.6, true, false, true).timeout
@@ -83,11 +182,17 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			glow.omni_range = 1.6
 			glow.position = Vector3(0.1, 1.45, -0.45)
 			_player.get_node("Visual").add_child(glow)
+			_wrist = Props.wrist_screen()
+			_player.model.attach(_wrist, "hand_l", Vector3(0, -0.02, 0.0))
 		"telefon_kapat":
 			_player.model.play("Idle", 0.4)
 			var g := _player.get_node_or_null("Visual/PhoneGlow")
 			if g:
 				g.queue_free()
+			if _wrist:
+				_player.model.detach(_wrist)
+				_wrist.queue_free()
+				_wrist = null
 		"final":
 			_final()
 		"sise_at":
@@ -102,7 +207,41 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			push.y = 0
 			create_tween().tween_property(_guard, "global_position", _guard.global_position + push.normalized() * 1.2, 0.35)
 			await get_tree().create_timer(0.7).timeout
-			_guard.model.hold_last_frame("Death01")
+			_guard.model.hold_last_frame("Death01")  # kilitli: konuşma bitince kalkmaz
+			_guard.get_node("CollisionShape3D").set_deferred("disabled", true)
+
+
+## Oyuncuyu bir noktanın yanına (aradaki mesafe kadar) yerleştirip ona baktırır.
+func _beside(point: Vector3, distance: float) -> void:
+	var from := _player.global_position - point
+	from.y = 0
+	if from.length() < 0.01:
+		from = Vector3(-1, 0, 0)
+	var pos := point + from.normalized() * distance
+	pos.y = _player.global_position.y
+	_player.global_position = pos
+	_player.face_point(point)
+
+
+## Cesedi konteynerin arkasına sürükleme ara sahnesi.
+func _drag_body() -> void:
+	_set_camera("surukle")
+	var body_start := _arman.global_position
+	var dir := (HIDE_SPOT - body_start)
+	dir.y = 0
+	dir = dir.normalized()
+	# Oyuncu cesedin önünde, ona dönük, geri geri yürür
+	_player.global_position = body_start + dir * 0.9
+	_player.face_point(body_start)
+	_player.model.play("Walk_Carry", 0.2, 0.6)
+	_arman.rotation.y = atan2(-dir.x, -dir.z) + PI
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	tw.tween_property(_player, "global_position", HIDE_SPOT + dir * 0.9, 4.2)
+	tw.tween_property(_arman, "global_position", HIDE_SPOT, 4.2)
+	await tw.finished
+	_arman.visible = false
+	_player.model.play("Idle", 0.3)
+	Story.set_var("ceset_yeri", "konteyner")
 
 
 # --- Şişe ------------------------------------------------------------------
@@ -249,6 +388,7 @@ func _start_riot() -> void:
 
 ## Deniz Arman yerden kalkıp ara sokağa koşar ve orada nefeslenir.
 func _arman_escape() -> void:
+	_arman.model.unlock_pose()
 	_arman.model.play("LayToIdle", 0.1)
 	await get_tree().create_timer(1.6).timeout
 	_run_to(_arman.model, _arman, [Vector3(5.0, -0.15, 40.0), Vector3(6.5, -0.15, 13.0), Vector3(12.5, -0.15, 10.6), ALLEY_SPOT], 9.0, "Sprint", false)

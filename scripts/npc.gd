@@ -14,6 +14,8 @@ signal player_nearby(npc: Npc, is_near: bool)
 @export var focus_height: float = 1.55
 ## Karakterin boştayken oynattığı animasyon.
 @export var idle_animation: String = "Idle"
+## İnceleme noktalarında oyuncunun oynayacağı hareket (ör. "Interact"). Boşsa sadece bakar.
+@export var inspect_anim: String = ""
 ## false ise oyuncu yaklaşsa da etkileşim düğmesi çıkmaz.
 @export var interactable: bool = true
 

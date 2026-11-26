@@ -121,6 +121,8 @@ static func _parse_step(line: String, where: String) -> Variant:
 			push_error("%s: @if satırında '-> hedef' eksik" % where)
 			return null
 		return {"type": "if", "cond": rest.substr(0, arrow).strip_edges(), "target": rest.substr(arrow + 2).strip_edges()}
+	if line.begins_with("@bekle"):
+		return {"type": "wait", "time": line.trim_prefix("@bekle").strip_edges().to_float()}
 	if line.begins_with("@qte"):
 		return _parse_qte(line.trim_prefix("@qte").strip_edges(), where)
 	if line.begins_with("@olay"):

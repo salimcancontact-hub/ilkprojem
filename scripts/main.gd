@@ -24,6 +24,7 @@ var _cutscene_live: bool = false
 var _struggle_npc: Npc = null
 var _struggle_mid: Vector3
 var _struggle_dir: Vector3
+var _cam_tween: Tween
 var _shake_time: float = 0.0
 var _shake_strength: float = 0.0
 
@@ -87,6 +88,8 @@ func _start_dialog(npc: Npc) -> void:
 		npc.model.process_mode = Node.PROCESS_MODE_ALWAYS
 		npc.face_point(_player.global_position)
 	_player.face_point(npc.global_position)
+	if npc.model == null and not npc.inspect_anim.is_empty():
+		_player.model.play_once(npc.inspect_anim, "Idle")
 	_dialog_cam.make_current()
 	_dialog.start(npc.dialog_path, npc.start_node)
 
@@ -101,6 +104,9 @@ func play_dialog(path: String, node_name: String) -> void:
 
 func _enter_dialog_mode() -> void:
 	get_tree().paused = true
+	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
+		if npc._marker:
+			npc._marker.visible = false
 	_hud.set_gameplay_visible(false)
 	_player.stand_idle()
 	# Oyun duraklasa da karakterler diyalogda hareket etmeye devam etsin.
@@ -177,6 +183,12 @@ func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
 					model.play_once(args[1], "Idle")
 		"gorev":
 			_hud.set_objective(" ".join(args))
+		"esya_al":
+			Story.add_item(args[0])
+			var item: Dictionary = Story.ITEMS.get(args[0], {"name": args[0]})
+			_dialog.show_notification("Çantaya eklendi: " + item["name"])
+		"esya_ver":
+			Story.remove_item(args[0])
 		"bogusma":
 			_start_struggle()
 		"bogusma_bitti":
@@ -238,6 +250,13 @@ func _on_qte_retry() -> void:
 		_player.model.play("Idle", 0.0)
 
 
+## Diyalog dışı ara sahne: oyuncu kontrolü durur, sinema bantları çıkar.
+func cinematic(on: bool) -> void:
+	_player.input_enabled = not on
+	_hud.set_gameplay_visible(not on)
+	_dialog.set_letterbox(on)
+
+
 ## Alt sınıfların hikâye olaylarını işlediği yer.
 func _on_story_event(_event_name: String, _args: PackedStringArray) -> void:
 	pass
@@ -259,9 +278,42 @@ func _set_camera(shot: String) -> void:
 				_dialog_cam.make_current()
 
 
+## Kamerayı yerleştirir: araya duvar/barikat giriyorsa önüne çeker,
+## sonra TWD'deki gibi yavaşça kaydırıp hedefe yaklaştırır.
 func _place_cam(from: Vector3, target: Vector3) -> void:
-	_dialog_cam.global_position = from
-	_dialog_cam.look_at(target, Vector3.UP)
+	from = _unblocked(target, from)
+	if _cam_tween:
+		_cam_tween.kill()
+	var dir := (target - from).normalized()
+	var right := dir.cross(Vector3.UP).normalized()
+	var to := from + dir * 0.35 + right * 0.18
+	to = _unblocked(target, to)
+	_set_cam(from, target)
+	_cam_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_cam_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_cam_tween.tween_method(func(t: float) -> void: _set_cam(from.lerp(to, t), target), 0.0, 1.0, 7.0)
+
+
+func _set_cam(pos: Vector3, target: Vector3) -> void:
+	_dialog_cam.global_position = pos
+	if not pos.is_equal_approx(target):
+		_dialog_cam.look_at(target, Vector3.UP)
+
+
+## Hedef ile kamera arasında çarpışan bir şey varsa kamerayı onun önüne alır.
+func _unblocked(target: Vector3, cam_pos: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(target, cam_pos, 1)
+	var exclude: Array[RID] = [_player.get_rid()]
+	if _talking_to:
+		exclude.append(_talking_to.get_rid())
+	if _struggle_npc:
+		exclude.append(_struggle_npc.get_rid())
+	q.exclude = exclude
+	var hit := space.intersect_ray(q)
+	if hit.is_empty():
+		return cam_pos
+	return hit["position"] + (target - cam_pos).normalized() * 0.3
 
 
 func _on_npc_nearby(npc: Npc, is_near: bool) -> void:

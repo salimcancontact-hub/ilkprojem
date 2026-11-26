@@ -14,7 +14,7 @@ signal qte_death
 signal qte_retry
 
 const TYPE_SPEED := 45.0
-const BAR_HEIGHT := 70.0
+const BAR_HEIGHT := 86.0
 const SIDE_MARGIN := 60.0
 
 var active: bool = false
@@ -47,6 +47,7 @@ var _fade_tween: Tween
 var _qte: Control
 var _in_qte: bool = false
 var _qte_step: Dictionary = {}
+var _waiting: bool = false
 var _title_tween: Tween
 
 
@@ -61,6 +62,7 @@ func _ready() -> void:
 	runner.event_fired.connect(_on_runner_event)
 	runner.finished.connect(_on_finished)
 	runner.qte_started.connect(_on_qte)
+	runner.wait_requested.connect(_on_wait)
 
 
 ## Bir .dlg dosyasını verilen düğümden başlatır.
@@ -112,6 +114,24 @@ func show_title(text: String, subtitle: String = "", hold: float = 2.5) -> void:
 
 ## Arayüzle ilgili olaylar burada işlenir, hepsi seviyeye de iletilir.
 ##   @olay siyah | @olay kararti [sn] | @olay aydinlat [sn] | @olay baslik Metin | Alt yazı
+func _on_wait(seconds: float) -> void:
+	_finish_typing()
+	_waiting = true
+	_panel.visible = false
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	_waiting = false
+	if active:
+		runner.advance()
+
+
+## Diyalog dışında da sinema bantları (ara sahneler için).
+func set_letterbox(on: bool, time: float = 0.4) -> void:
+	_root.visible = on or active
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_top_bar, "offset_bottom", BAR_HEIGHT if on else 0.0, time)
+	tw.tween_property(_bottom_bar, "offset_top", -BAR_HEIGHT if on else 0.0, time)
+
+
 func _on_qte(step: Dictionary) -> void:
 	_finish_typing()
 	_in_qte = true
@@ -200,7 +220,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not active or _in_qte:
+	if not active or _in_qte or _waiting:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).physical_keycode
@@ -213,7 +233,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_tap(event: InputEvent) -> void:
-	if _in_qte:
+	if _in_qte or _waiting:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if not _choosing:

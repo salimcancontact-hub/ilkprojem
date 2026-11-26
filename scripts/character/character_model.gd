@@ -21,6 +21,9 @@ var skeleton: Skeleton3D
 static var _libraries: Dictionary = {}
 
 var _current: String = ""
+## true iken (ör. yerde yatan, bayılmış) karakter başka animasyona geçmez.
+var pose_locked: bool = false
+var _attachments: Dictionary = {}  # nesne -> BoneAttachment3D
 
 
 func _ready() -> void:
@@ -55,6 +58,8 @@ func _ready() -> void:
 
 ## Bir animasyonu yumuşak geçişle oynatır. Ad, kütüphane öneki olmadan verilir ("Walk").
 func play(anim_name: String, blend: float = 0.2, speed: float = 1.0) -> void:
+	if pose_locked:
+		return
 	var full := resolve(anim_name)
 	if full.is_empty():
 		push_warning("Animasyon bulunamadı: %s" % anim_name)
@@ -69,6 +74,8 @@ func play(anim_name: String, blend: float = 0.2, speed: float = 1.0) -> void:
 
 ## Tek seferlik bir hareket oynatır, bitince "then" animasyonuna döner.
 func play_once(anim_name: String, then: String = "Idle", blend: float = 0.15) -> void:
+	if pose_locked:
+		return
 	play(anim_name, blend)
 	var full := _current
 	var len := animation_player.get_animation(full).length if animation_player.has_animation(full) else 0.0
@@ -78,14 +85,49 @@ func play_once(anim_name: String, then: String = "Idle", blend: float = 0.15) ->
 
 
 ## Animasyonun son karesinde donar (ör. yerde yatan bir karakter).
-func hold_last_frame(anim_name: String) -> void:
+func hold_last_frame(anim_name: String, lock: bool = true) -> void:
 	var full := resolve(anim_name)
 	if full.is_empty():
 		return
+	pose_locked = lock
 	_current = full
 	animation_player.play(full, 0.0)
 	animation_player.seek(animation_player.get_animation(full).length - 0.02, true)
 	animation_player.pause()
+
+
+## Kilitli duruşu bırakır (ör. yerden kalkarken).
+func unlock_pose() -> void:
+	pose_locked = false
+	animation_player.play()
+
+
+## Bir nesneyi kemiğe takar (ör. "hand_r"). Konum/dönüş kemiğe göredir.
+func attach(prop: Node3D, bone: String = "hand_r", offset := Vector3.ZERO, rot := Vector3.ZERO) -> void:
+	detach(prop)
+	var ba := BoneAttachment3D.new()
+	ba.bone_name = bone
+	skeleton.add_child(ba)
+	if prop.get_parent():
+		prop.get_parent().remove_child(prop)
+	ba.add_child(prop)
+	prop.position = offset
+	prop.rotation = rot
+	_attachments[prop] = ba
+
+
+## Nesneyi kemikten çıkarır; world verilirse dünya konumunu koruyarak oraya bırakır.
+func detach(prop: Node3D, world: Node = null) -> void:
+	if not _attachments.has(prop):
+		return
+	var ba: BoneAttachment3D = _attachments[prop]
+	_attachments.erase(prop)
+	var xf := prop.global_transform
+	ba.remove_child(prop)
+	ba.queue_free()
+	if world:
+		world.add_child(prop)
+		prop.global_transform = xf
 
 
 func resolve(anim_name: String) -> String:

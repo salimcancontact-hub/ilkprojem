@@ -26,6 +26,13 @@ const CHARACTERS := {
 	"KADIN": {"name": "Kadın", "color": Color(0.85, 0.7, 0.8)},
 }
 
+## Envanter eşyaları: kimlik -> ad ve açıklama
+const ITEMS := {
+	"su_sisesi": {"name": "Su şişesi", "desc": "Deniz Arman'ın verdiği, yarısı içilmiş plastik şişe. Su ılık ve metal tadında."},
+	"kimlik_karti": {"name": "Kimlik kartı — Deniz Arman", "desc": "EMANET / 412. Kaynak ustası. Mavi ışığı hâlâ yanıyor. Kapıdaki terminal yalnızca bu kodu okuyor."},
+	"kesici": {"name": "Kaynak kesicisi", "desc": "Deniz Arman'ın aleti. Sapında onun parmak izleri var. Ve seninkiler."},
+}
+
 var vars: Dictionary = {}
 
 
@@ -60,6 +67,27 @@ func format_text(text: String) -> String:
 		var value := player_name() if key == "ad" else str(vars.get(key, ""))
 		out = out.replace(m.get_string(0), value)
 	return out
+
+
+func inventory() -> Array:
+	return vars.get("envanter", [])
+
+
+func has_item(id: String) -> bool:
+	return inventory().has(id)
+
+
+func add_item(id: String) -> void:
+	var inv: Array = inventory().duplicate()
+	if not inv.has(id):
+		inv.append(id)
+	set_var("envanter", inv)
+
+
+func remove_item(id: String) -> void:
+	var inv: Array = inventory().duplicate()
+	inv.erase(id)
+	set_var("envanter", inv)
 
 
 func speaker_info(speaker_id: String) -> Dictionary:

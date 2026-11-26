@@ -64,6 +64,13 @@ Telltale tarzı gerilim anları. Başarıya ve başarısızlığa göre farklı 
 | `@olay baslik Metin \| Alt yazı` | Ortada sinematik başlık kartı |
 | `@olay gorev Metin` | Ekranın üstündeki görev yazısı |
 | `@olay anim KİŞİ Animasyon` | Karaktere tek seferlik hareket yaptır |
+| `@olay esya_al kimlik` / `esya_ver kimlik` | Çantaya eşya ekle/çıkar (eşyalar `scripts/story.gd` → `ITEMS`) |
+| `@bekle 1.5` | Yazı gizlenir, sahnedeki aksiyon 1,5 sn kendi başına oynar |
+
+### Fiziksel eylem kuralı
+Hikâyede bir karakter fiziksel bir şey yapıyorsa (bir şey uzatıyor, alıyor, içiyor, düşüyor, sürüklüyor) bunun ekranda da karşılığı olmalı:
+önce `@olay` ile hareketi başlat, gerekirse `@bekle` ile görünmesini sağla, sonra anlatım satırını yaz.
+Yere düşen/bayılan karakterler kilitli duruşta kalır (`hold_last_frame`), konuşma bitince ayağa kalkmaz.
 
 ## Değişkenler ve koşullar
 

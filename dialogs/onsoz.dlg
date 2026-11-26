@@ -210,7 +210,9 @@ ARMAN: Ada. Tamam. Yukarıda ona göz kulak olurum. Söz.
 -> arman_su
 
 === arman_su
-> Deniz çantasından yarısı dolu bir su şişesi çıkarıyor.
+@olay su_cikar
+@bekle 1.0
+> Deniz çantasından yarısı dolu bir su şişesi çıkarıp sana uzatıyor.
 ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
 * Şişeyi al. -> su_al
   ~ arman_su = 1
@@ -218,11 +220,17 @@ ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
   ~ arman_su = 2
 
 === su_al
+@olay su_al
+@bekle 0.8
+@olay su_ic
+@bekle 2.0
 > Su ılık ve metal tadında. Yine de son iki günün en güzel şeyi.
+@olay esya_al su_sisesi
 ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
 -> arman_son
 
 === su_reddet
+@olay su_geri
 ARMAN: Ha! Gururlu adam. Hoşuma gitti.
 -> arman_son
 
@@ -242,6 +250,7 @@ ARMAN: Hadi, muhafıza sor. Kaybedecek neyin var?
 @if muhafiz_konustu -> muhafiz_tekrar
 ~ muhafiz_konustu = true
 > Kapının önünde, yüzü projektörlerin ışığında kaybolmuş bir Komite muhafızı.
+@olay anim MUHAFIZ Interact
 MUHAFIZ: Kimlik kartı.
 @sure 7 -> muhafiz_sessiz
 * Kartım yok. Ama adım listede olabilir. -> muhafiz_isim
@@ -274,6 +283,7 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 > "Listeler sahte! Kendilerini seçtiler!"
 @olay isyan
 @olay kamera kalabalik
+@bekle 1.8
 > Kalabalık bir dalga gibi barikatlara yükleniyor. Biri sana doğru bir şişe fırlatıyor.
 @olay sise_at
 @qte kaydir sol 1.6 "EĞİL" -> sise_kurtul | sise_vurdu
@@ -304,6 +314,7 @@ MUHAFIZ: Geri çekil!
 @olay bogusma_bitti
 @olay anim EVREN Punch_Cross
 @olay muhafiz_dustu
+@bekle 1.2
 > Muhafızı itip suratına bir yumruk indiriyorsun. Barikatın üstüne devriliyor.
 ~ muhafizi_itti = true
 -> isyan_arman
@@ -320,6 +331,7 @@ MUHAFIZ: Geri çekil!
 === isyan_arman
 @olay arman_dustu
 @olay kamera arman
+@bekle 1.2
 > Birkaç metre ötede Deniz Arman yere düşmüş. Kalabalık üzerinden geçiyor.
 > Kartı göğsüne bastırmış, bırakmıyor.
 ARMAN: Yardım et!
@@ -329,11 +341,14 @@ ARMAN: Yardım et!
 
 === arman_yardim
 ~ arman_yardim = true
-> Kalabalığı yararak ona uzanıyorsun.
+@olay kaldir_hazirlik
+@bekle 0.8
+> Kalabalığı yararak ona uzanıyorsun, bileğini yakalıyorsun.
 @qte vur 5 9 "KALDIR" -> arman_kalkti | arman_kalkamadi
 
 === arman_kalkti
 @olay arman_kalkti
+@bekle 1.4
 > Onu bileğinden yakalayıp ayağa çekiyorsun.
 ARMAN: Sana bir can borçluyum, yabancı! Ara sokağa, hadi!
 ! Deniz Arman bunu hatırlayacak.
@@ -405,6 +420,7 @@ ARMAN: Sakın. Sakın yaklaşma.
 -> bogusma
 
 === sokak_kap
+@olay anim EVREN Interact
 > Elin kendiliğinden uzanıyor.
 -> bogusma
 
@@ -415,9 +431,12 @@ ARMAN: ...Neden öyle bakıyorsun?
 
 === bogusma
 @olay kamera sokak_genis
+@olay kesici_cek
+@bekle 1.0
 > Deniz alet kemerinden bir kaynak kesicisi çekiyor. Mavi alevi titriyor.
 ARMAN: Geri çekil!
 @olay anim ARMAN Melee_Hook
+@bekle 0.4
 @qte kaydir sag 1.5 "KAÇIN" -> bogus1_ok | bogus1_fail
 
 === bogus1_ok
@@ -440,6 +459,8 @@ ARMAN: Bırak!
 
 === bogus2_ok
 @olay bogusma_bitti
+@olay kesici_dus
+@bekle 0.8
 > Kesiciyi yüzünden uzaklaştırıyorsun. Alet elinden düşüp kayıyor.
 > Deniz dengesini kaybediyor. Başını betona vurarak yere yığılıyor.
 -> karar_ani
@@ -447,6 +468,7 @@ ARMAN: Bırak!
 === karar_ani
 @olay arman_yerde
 @olay kamera arman_yerde
+@bekle 1.2
 > Deniz yerde. Sersemlemiş. Elini telsizine uzatıyor.
 ARMAN: Muhafız! Buraya! Buraya—
 > Caddenin ağzında el fenerleri dönüyor. Birkaç saniyen var.
@@ -459,21 +481,29 @@ ARMAN: Muhafız! Buraya! Buraya—
   ~ arman_olum = "yalvar"
 
 === karar_yalvar
+@olay oldur_cok
 ARMAN: Buraya! Bu adam bir—
 > Ellerin onu susturuyor. Sanki senin değillermiş gibi.
 -> olum
 
 === karar_zaman
 ~ arman_olum = "zaman"
+@olay oldur_cok
 > Düşünmüyorsun. Ellerin düşünüyor.
 -> olum
 
 === karar_bogma
+@olay oldur_cok
+@bekle 1.0
 > Avucunu ağzına bastırıyorsun. Çırpınıyor. Sonra daha az. Sonra hiç.
 -> olum
 
 === karar_kesici
+@olay kesici_al
+@bekle 1.4
+@olay oldur_cok
 > Kesiciyi alıyorsun. Mavi alev. Bir an.
+@olay esya_al kesici
 -> olum
 
 === olum
@@ -506,7 +536,10 @@ ARMAN: Buraya! Bu adam bir—
 -> kart_al
 
 === kart_al
+@olay kart_al
+@bekle 1.4
 > Kartı parmaklarının arasından alıyorsun. Hâlâ ılık.
+@olay esya_al kimlik_karti
 > DENİZ ARMAN — KAYNAK USTASI — EMANET / 412
 ~ kimlik_karti_alindi = true
 @sure 10 -> kart_sessiz
@@ -542,11 +575,15 @@ ARMAN: Buraya! Bu adam bir—
   ~ ceset_saklandi = false
 
 === ceset_sakla
+@olay ceset_surukle
+@bekle 4.6
 > Onu konteynerin arkasındaki karanlığa sürüklüyorsun. Ağır. Bir insan bu kadar ağır olmamalı.
 @olay final
 -> SON
 
 === ceset_birak
+@olay uzaklas
+@bekle 2.6
 > Arkana bakmadan yürüyorsun. Sabaha kadar kimse bu sokağa girmez. Belki.
 @olay final
 -> SON

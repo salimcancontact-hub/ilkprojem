@@ -18,6 +18,9 @@ var _talk_label: Label
 var _objective: Label
 var _combat: bool = true
 var _gameplay_visible: bool = true
+var _bag_btn: Button
+var _bag_panel: PanelContainer
+var _bag_list: VBoxContainer
 var _overlay: ColorRect
 var _message: Label
 
@@ -52,6 +55,26 @@ func _ready() -> void:
 	_talk_btn = _make_button("KONUŞ", "interact", 110, Color(0.3, 0.8, 0.5, 0.6))
 	_talk_btn.visible = false
 	_talk_label = _talk_btn.get_child(0)
+
+	_bag_btn = Button.new()
+	_bag_btn.text = "ÇANTA"
+	_bag_btn.add_theme_font_size_override("font_size", 22)
+	_bag_btn.custom_minimum_size = Vector2(130, 56)
+	_bag_btn.pressed.connect(_toggle_bag)
+	add_child(_bag_btn)
+	_bag_panel = PanelContainer.new()
+	var ps := StyleBoxFlat.new()
+	ps.bg_color = Color(0.02, 0.03, 0.05, 0.92)
+	ps.border_color = Color(1, 0.85, 0.5, 0.6)
+	ps.set_border_width_all(2)
+	ps.set_corner_radius_all(10)
+	ps.set_content_margin_all(22)
+	_bag_panel.add_theme_stylebox_override("panel", ps)
+	_bag_panel.visible = false
+	add_child(_bag_panel)
+	_bag_list = VBoxContainer.new()
+	_bag_list.add_theme_constant_override("separation", 14)
+	_bag_panel.add_child(_bag_list)
 
 	_objective = _make_label(24)
 	_objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -119,8 +142,44 @@ func set_objective(text: String) -> void:
 
 
 ## Diyalog sırasında oyun arayüzünü gizler.
+func _toggle_bag() -> void:
+	_bag_panel.visible = not _bag_panel.visible
+	if not _bag_panel.visible:
+		return
+	for c in _bag_list.get_children():
+		c.queue_free()
+	var title := Label.new()
+	title.text = "Çanta"
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color(1, 0.85, 0.5))
+	_bag_list.add_child(title)
+	var inv := Story.inventory()
+	if inv.is_empty():
+		var e := Label.new()
+		e.text = "Boş."
+		e.add_theme_font_size_override("font_size", 22)
+		_bag_list.add_child(e)
+	for id in inv:
+		var item: Dictionary = Story.ITEMS.get(id, {"name": id, "desc": ""})
+		var n := Label.new()
+		n.text = "• " + item["name"]
+		n.add_theme_font_size_override("font_size", 24)
+		_bag_list.add_child(n)
+		var ds := Label.new()
+		ds.text = item["desc"]
+		ds.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ds.custom_minimum_size = Vector2(560, 0)
+		ds.add_theme_font_size_override("font_size", 18)
+		ds.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85))
+		_bag_list.add_child(ds)
+	_layout()
+
+
 func set_gameplay_visible(visible_now: bool) -> void:
 	_gameplay_visible = visible_now
+	_bag_btn.visible = visible_now
+	if not visible_now:
+		_bag_panel.visible = false
 	for node: CanvasItem in [joystick, _jump_btn]:
 		node.visible = visible_now
 	for node: CanvasItem in [_health_bar, _gem_label, _enemy_label, _attack_btn]:
@@ -168,6 +227,8 @@ func _layout() -> void:
 	_attack_btn.position = off + Vector2(vp.x - 150 - 50, vp.y - 150 - 50)
 	_jump_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 40)
 	_talk_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 200)
+	_bag_btn.position = off + Vector2(vp.x - 130 - 24, 96)
+	_bag_panel.position = off + Vector2(vp.x - _bag_panel.get_combined_minimum_size().x - 24, 160)
 	_objective.size = Vector2(vp.x * 0.6, 0)
 	_objective.position = off + Vector2(vp.x * 0.2, 22)
 

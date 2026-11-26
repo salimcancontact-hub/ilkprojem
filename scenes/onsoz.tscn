@@ -280,6 +280,7 @@ npc_id = "IPUCU"
 dialog_path = "res://dialogs/onsoz.dlg"
 start_node = "ipucu_terminal"
 prompt = "İNCELE"
+inspect_anim = "Interact"
 focus_height = 1.25
 
 [node name="Clues" type="Node3D" parent="."]

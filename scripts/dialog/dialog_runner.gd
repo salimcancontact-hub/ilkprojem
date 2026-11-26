@@ -8,6 +8,8 @@ signal choices_shown(options: PackedStringArray, timeout: float)
 signal notification_shown(text: String)
 signal event_fired(event_name: String, args: PackedStringArray)
 signal qte_started(step: Dictionary)
+## Yazısız bekleme: sahnede aksiyon oynasın diye (saniye).
+signal wait_requested(seconds: float)
 signal finished
 
 var active: bool = false
@@ -79,6 +81,9 @@ func advance() -> void:
 			"qte":
 				_qte_step = step
 				qte_started.emit(step)
+				return
+			"wait":
+				wait_requested.emit(step["time"])
 				return
 			"choices":
 				_visible_options = []
