@@ -1,8 +1,9 @@
-# EMANET — Önsöz: "Seçim Gecesi"
+# EMANET — "Seçim Gecesi" (oyunun başlangıcı)
 # Dünya, 2526. Seçim Merkezi'nin önü.
-# Oyuncu bu bölümde adı henüz bilinmeyen biridir (EVREN, ekranda "???").
+# Oyuncunun adı {ad} ile yazılır (oyun başında seçilir). Ada ona "abi" der.
+# Bu gecenin sonunda oyuncu, gemiye binebilmek için Deniz Arman'ı öldürmek zorunda kalır.
 
-# ---------------------------------------------------------------- Açılış
+# ================================================================ Açılış
 === giris
 @olay siyah
 @olay baslik Dünya, 2526 | Seçim Gecesi
@@ -13,7 +14,7 @@
 @olay aydinlat 3
 -> SON
 
-# ---------------------------------------------------------------- Ada'nın araması
+# ================================================================ Ada'nın araması
 === ada_arama
 @olay telefon
 @olay kamera evren_yakin
@@ -95,10 +96,47 @@ ADA: Biliyordum.
 
 === arama_bitti
 @olay telefon_kapat
-@olay gorev Seçim Merkezi'ne git.
+@olay gorev Seçim Merkezi'ne git. Parlayan noktaları incele.
 -> SON
 
-# ---------------------------------------------------------------- Deniz Arman
+# ================================================================ İpuçları (incelenebilir noktalar)
+=== ipucu_su
+> Duvarda soluk bir bildiri: "SU DAĞITIMI SÜRESİZ ERTELENDİ — Komite Tedarik Ofisi."
+> Altına biri kalemle eklemiş: "Gemiye kırk bin ton su yüklendi."
+~ ipucu += 1
+-> SON
+
+=== ipucu_araba
+> Terk edilmiş bir kamyonet. Ön camına elle yazılmış bir not yapıştırılmış:
+> "Annemi listeye yazdıramadım. Hepinize iyi yolculuklar."
+~ ipucu += 1
+-> SON
+
+=== ipucu_grafiti
+> Kırmızı sprey boyayla, kocaman harflerle: "KOMİTE KİMİ SEÇTİ? KENDİNİ."
+> Boya hâlâ ıslak.
+~ ipucu += 1
+-> SON
+
+=== ipucu_liste
+> Holografik liste yavaşça akıyor. Beş yüz isim.
+> 088 — KAYA, ADA — GENÇ DAHİLER PROGRAMI
+> Adının yanında küçük bir not: "Aile kabulü yoktur."
+> Biraz aşağıda: 412 — ARMAN, DENİZ — İŞÇİ / KAYNAK
+~ liste_goruldu = true
+~ ipucu += 1
+-> SON
+
+=== ipucu_terminal
+> Yolcu tarama terminali. Ekranda bir bakım uyarısı yanıp sönüyor:
+> "Biyometrik tarama devre dışı. Geçici olarak yalnızca kart kodu doğrulaması yapılmaktadır."
+> Yani kapıdan geçmek için yüz değil, yalnızca kart gerekiyor.
+~ terminal_goruldu = true
+~ ipucu += 1
+! Bunu aklında tut.
+-> SON
+
+# ================================================================ Deniz Arman
 === arman
 @if arman_konustu -> arman_tekrar
 ~ arman_konustu = true
@@ -122,7 +160,7 @@ ARMAN: Bakma bence. Umut, cevaptan daha uzun yaşıyor.
 
 === arman_kart
 ARMAN: Gerçek mi? Yirmi yıl kaynak yaptım dostum. Köprüler, su boruları, tuzdan arındırma tesisleri...
-ARMAN: Biri bir yerde "Bu adam işe yarar" demiş demek ki.
+ARMAN: Biri bir yerde "Bu adam işe yarar" demiş demek ki. Dört yüz on iki numara. Bak.
 @olay anim ARMAN Yes
 -> arman_tanisma
 
@@ -135,10 +173,16 @@ ARMAN: Deniz. Deniz Arman. Kaynakçı. Ve yarın sabah...
 ARMAN: ...yıldızlara gidiyorum.
 ARMAN: Senin adın ne?
 @sure 8 -> isim_sessiz
+* Adım {ad}. -> isim_gercek
+  ~ arman_isim_bildi = true
 * Bunun bir önemi yok. -> isim_onemsiz
 * [Yalan söyle] Can. -> isim_yalan
   ~ yalan_sayisi += 1
 * [Sessiz kal] -> isim_sessiz
+
+=== isim_gercek
+ARMAN: {ad}. Güzel isim. Unutmam.
+-> arman_kimin
 
 === isim_onemsiz
 ARMAN: Herkesin adı önemli. Komite öyle düşünmese bile.
@@ -172,7 +216,6 @@ ARMAN: Al. Yarın gemide bol su olacakmış. Bana artık lazım değil.
   ~ arman_su = 1
 * Sende kalsın. Yolun uzun. -> su_reddet
   ~ arman_su = 2
-  ! Deniz Arman bunu hatırlayacak.
 
 === su_al
 > Su ılık ve metal tadında. Yine de son iki günün en güzel şeyi.
@@ -181,7 +224,6 @@ ARMAN: Gördün mü? Dünya hâlâ biraz iyi.
 
 === su_reddet
 ARMAN: Ha! Gururlu adam. Hoşuma gitti.
-ARMAN: Yukarıda seni anlatacağım. "Bana su vermeye çalışan adama ben su verdim" diyeceğim.
 -> arman_son
 
 === arman_son
@@ -194,7 +236,7 @@ ARMAN: Kapıdaki muhafızlara bir şans ver. Belki listede bir hata vardır, kim
 ARMAN: Hadi, muhafıza sor. Kaybedecek neyin var?
 -> SON
 
-# ---------------------------------------------------------------- Muhafız
+# ================================================================ Muhafız ve isyan
 === muhafiz
 @if not gorev_muhafiz -> muhafiz_uzak
 @if muhafiz_konustu -> muhafiz_tekrar
@@ -203,7 +245,6 @@ ARMAN: Hadi, muhafıza sor. Kaybedecek neyin var?
 MUHAFIZ: Kimlik kartı.
 @sure 7 -> muhafiz_sessiz
 * Kartım yok. Ama adım listede olabilir. -> muhafiz_isim
-* Lütfen. Sadece bir bakın. -> muhafiz_yalvar
 * Kız kardeşim içeride. Sadece onu görmek istiyorum. -> muhafiz_kardes
 * Kim karar veriyor? Neye göre seçiyorsunuz? -> muhafiz_soru
   ~ komiteyi_sorguladi = true
@@ -216,10 +257,6 @@ MUHAFIZ: İçerideki herkesin dışarıda biri var.
 
 === muhafiz_isim
 MUHAFIZ: Kart yoksa isim yok. İsim yoksa liste yok.
--> muhafiz_red
-
-=== muhafiz_yalvar
-MUHAFIZ: Bu gece bunu söyleyen dokuz bininci kişisin.
 -> muhafiz_red
 
 === muhafiz_soru
@@ -271,7 +308,7 @@ MUHAFIZ: Geri çekil!
 @olay arman_dustu
 @olay kamera arman
 > Birkaç metre ötede Deniz Arman yere düşmüş. Kalabalık üzerinden geçiyor.
-> Kartı elinden kaymış. Mavi ışığı ayakların arasında yanıp sönüyor.
+> Kartı göğsüne bastırmış, bırakmıyor.
 ARMAN: Yardım et!
 @sure 5 -> arman_birak
 * Deniz'e yardım et. -> arman_yardim
@@ -284,11 +321,11 @@ ARMAN: Yardım et!
 
 === arman_kalkti
 @olay arman_kalkti
-> Onu bileğinden yakalayıp ayağa çekiyorsun. Kartını da kapıp göğsüne bastırıyor.
-ARMAN: Borcum olsun, yabancı! Ara sokağa, hadi!
+> Onu bileğinden yakalayıp ayağa çekiyorsun.
+ARMAN: Sana bir can borçluyum, yabancı! Ara sokağa, hadi!
 ! Deniz Arman bunu hatırlayacak.
 @olay kamera oyuncu
-@olay gorev Deniz Arman'la birlikte ara sokağa kaç!
+@olay gorev Deniz Arman'ın peşinden ara sokağa kaç!
 -> SON
 
 === arman_kalkamadi
@@ -303,21 +340,220 @@ ARMAN: Ara sokak! Ara sokakta buluşalım!
 === arman_birak
 ~ arman_yardim = false
 > Arkanı dönüp koşuyorsun. Arkandan onun sesini duyuyor musun, yoksa sadece kalabalık mı?
-! Bu seçim seninle kalacak.
 @olay arman_kalkti
 @olay kamera oyuncu
 @olay gorev Ara sokağa kaç!
 -> SON
 
-=== muhafiz_uzak
-MUHAFIZ: Kordonun arkasında kal.
+# ================================================================ Ara sokak
+=== ara_sokak
+> Ara sokak. Sirenler ana caddede yankılanıyor.
+@if arman_yardim -> sokak_dost
+ARMAN: Sen... Kapıdaki adamsın.
+-> sokak_devam
+
+=== sokak_dost
+ARMAN: Başardık! Sana bir can borçluyum, dostum.
+-> sokak_devam
+
+=== sokak_devam
+> Deniz kartını göğsüne bastırıyor. Mavi ışığı parmaklarının arasından sızıyor.
+ARMAN: Sabah beşte uçuş. Beş saat. Sadece beş saat daha dayanmam lazım.
+> Gözün kartta. 412. Ada'nın gemisi.
+@if terminal_goruldu -> sokak_terminal
+-> sokak_secim
+
+=== sokak_terminal
+> Terminaldeki uyarı aklına geliyor: "Yalnızca kart kodu doğrulaması."
+-> sokak_secim
+
+=== sokak_secim
+@sure 8 -> sokak_sessiz
+* O kart... Benim ona ihtiyacım var. -> sokak_iste
+* Git buradan. Hemen. -> sokak_uyar
+  ~ arman_uyardi = true
+* [Kartı kap] -> sokak_kap
+* [Sessiz kal] -> sokak_sessiz
+
+=== sokak_iste
+ARMAN: Ne? Hayır... Hayır, sen ne diyorsun?
+@if arman_ada -> sokak_iste_ada
+ARMAN: Bu benim hayatım!
+-> bogusma
+
+=== sokak_iste_ada
+ARMAN: Kardeşin içeride, biliyorum. Ama bu benim hayatım!
+-> bogusma
+
+=== sokak_uyar
+ARMAN: Neden? Neye bakıyorsun öyle?
+> Bakışını görüyor. Kartı daha sıkı tutuyor. Bir adım geri çekiliyor.
+ARMAN: Sakın. Sakın yaklaşma.
+-> bogusma
+
+=== sokak_kap
+> Elin kendiliğinden uzanıyor.
+-> bogusma
+
+=== sokak_sessiz
+> Hiçbir şey söylemiyorsun. Ama gözlerin kartta.
+ARMAN: ...Neden öyle bakıyorsun?
+-> bogusma
+
+=== bogusma
+@olay kamera sokak_genis
+> Deniz alet kemerinden bir kaynak kesicisi çekiyor. Mavi alevi titriyor.
+ARMAN: Geri çekil!
+@qte kaydir sag 1.5 "KAÇIN" -> bogus1_ok | bogus1_fail
+
+=== bogus1_ok
+> Alev yüzünün birkaç santim önünden geçiyor.
+-> bogus2
+
+=== bogus1_fail
+> Alev kolunu yalıyor. Acı nefesini kesiyor.
+~ yanik_izi = true
+@olay sarsinti 0.4 0.5
+-> bogus2
+
+=== bogus2
+> Bileğini yakalıyorsun. İkiniz birden duvara çarpıyorsunuz.
+@qte vur 3.0 10 "İT" -> bogus2_ok | bogus2_fail
+
+=== bogus2_ok
+> Kesici elinden düşüp kayıyor. Deniz yere yığılıyor.
+-> karar_ani
+
+=== bogus2_fail
+> Deniz seni itiyor ama ayağı kayıyor. Başını betona vurarak yere düşüyor.
+-> karar_ani
+
+=== karar_ani
+@olay arman_yerde
+@olay kamera arman_yerde
+> Deniz yerde. Sersemlemiş. Elini telsizine uzatıyor.
+ARMAN: Muhafız! Buraya! Buraya—
+> Caddenin ağzında el fenerleri dönüyor. Birkaç saniyen var.
+@sure 6 -> karar_zaman
+* [Ağzını kapat] -> karar_bogma
+  ~ arman_olum = "bogma"
+* [Kesiciyi al] -> karar_kesici
+  ~ arman_olum = "kesici"
+* Yapma... Lütfen, sus. -> karar_yalvar
+  ~ arman_olum = "yalvar"
+
+=== karar_yalvar
+ARMAN: Buraya! Bu adam bir—
+> Ellerin onu susturuyor. Sanki senin değillermiş gibi.
+-> olum
+
+=== karar_zaman
+~ arman_olum = "zaman"
+> Düşünmüyorsun. Ellerin düşünüyor.
+-> olum
+
+=== karar_bogma
+> Avucunu ağzına bastırıyorsun. Çırpınıyor. Sonra daha az. Sonra hiç.
+-> olum
+
+=== karar_kesici
+> Kesiciyi alıyorsun. Mavi alev. Bir an.
+-> olum
+
+=== olum
+@olay kararti 0.3
+@olay arman_oldu
+> ...
+> El fenerleri sokağın ağzından geçip gidiyor. Kimse içeri bakmıyor.
+> Ellerin titriyor.
+! Bu seçim seninle kalacak.
+@olay aydinlat 2.5
+@olay gorev Kartı al.
 -> SON
 
-=== muhafiz_tekrar
-MUHAFIZ: Geri çekil dedim!
+# ================================================================ Kart
+=== kart
+> Deniz Arman yerde yatıyor. Gözleri açık.
+@if arman_yardim -> kart_yardim
+-> kart_bak
+
+=== kart_yardim
+> Bir saat önce onu kalabalığın altından çekip çıkarmıştın. "Sana bir can borçluyum" demişti.
+-> kart_bak
+
+=== kart_bak
+@if arman_ada -> kart_ada
+-> kart_al
+
+=== kart_ada
+> "Yukarıda ona göz kulak olurum" demişti. Ada'ya.
+-> kart_al
+
+=== kart_al
+> Kartı parmaklarının arasından alıyorsun. Hâlâ ılık.
+> DENİZ ARMAN — KAYNAK USTASI — EMANET / 412
+~ kimlik_karti_alindi = true
+@sure 10 -> kart_sessiz
+* Özür dilerim, Deniz. -> kart_ozur
+  ~ vicdan += 1
+* Ada için. -> kart_ada_icin
+  ~ pragmatizm += 1
+* Annem bana söz verdirdi. -> kart_anne
+* [Sessiz kal] -> kart_sessiz
+
+=== kart_ozur
+> Sesin çatlıyor. Ölüler özür kabul etmez.
+-> ceset
+
+=== kart_ada_icin
+> Söylediğin anda inanıyorsun. Bir dakika sonra daha az.
+-> ceset
+
+=== kart_anne
+> "Kardeşini yalnız bırakma." Bunun için mi söylemişti?
+-> ceset
+
+=== kart_sessiz
+> Söyleyecek hiçbir şey yok.
+-> ceset
+
+=== ceset
+> Uzakta bir siren yaklaşıyor.
+@sure 8 -> ceset_birak
+* Cesedi konteynerin arkasına sakla. -> ceset_sakla
+  ~ ceset_saklandi = true
+* Olduğu gibi bırak ve git. -> ceset_birak
+  ~ ceset_saklandi = false
+
+=== ceset_sakla
+> Onu konteynerin arkasındaki karanlığa sürüklüyorsun. Ağır. Bir insan bu kadar ağır olmamalı.
+@olay final
 -> SON
 
-# ---------------------------------------------------------------- Kalabalık
+=== ceset_birak
+> Arkana bakmadan yürüyorsun. Sabaha kadar kimse bu sokağa girmez. Belki.
+@olay final
+-> SON
+
+# ================================================================ Kapanış
+=== kalkis
+> Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
+> 412 numaralı yolcunun adı Deniz Arman'dı. Kayıtlar öyle diyordu.
+> Tarama terminali yalnızca kart kodunu okudu. Kimse yüzüne bakmadı.
+> Ada abisini kalkıştan iki saat sonra, kargo koridorunda gördü.
+@if ada_soz -> kalkis_soz
+> Hiçbir şey sormadı. Sadece elini tuttu.
+-> kalkis_son
+
+=== kalkis_soz
+> "Söz vermiştin," dedi. Sonra elini tuttu. Elleri hâlâ titriyordu.
+-> kalkis_son
+
+=== kalkis_son
+@olay baslik DEVAM EDECEK
+-> SON
+
+# ================================================================ Kalabalık
 === yasli
 > Yaşlı bir adam, Komite'nin holografik tabelasına bakıyor.
 YASLI: Kızımın adı listede. Mühendis. Tabii ki listede.
@@ -330,94 +566,10 @@ KADIN: Su kartları da bitti. Dağıtım merkezini üç gün önce kapattılar.
 KADIN: Gemiye su yetiyor ama bize yetmiyor. Hesabı iyi yapmışlar.
 -> SON
 
-# ---------------------------------------------------------------- İsyan ve karanlık
-=== karanlik
-@if arman_yardim -> karanlik_birlikte
-> Bir patlama. Beyaz bir ışık.
-> Sonra hiçbir şey.
+=== muhafiz_uzak
+MUHAFIZ: Kordonun arkasında kal.
 -> SON
 
-=== karanlik_birlikte
-> Ara sokağın ağzında Deniz Arman seni duvara doğru itiyor.
-ARMAN: Eğil!
-> Bir patlama. Beyaz bir ışık. Üzerine bir ağırlık çöküyor.
-> Sonra hiçbir şey.
--> SON
-
-=== uyanis
-> Kulaklarında bir çınlama. Ağzında toz ve kan tadı.
-> Sokak bomboş. Sirenler uzaklaşıyor.
-@olay gorev ...
--> SON
-
-# ---------------------------------------------------------------- Kart
-=== kart
-> Deniz Arman yerde yatıyor. Gözleri açık, yıldızlara bakıyor.
-> Kartı, parmaklarının birkaç santim ötesinde, hâlâ mavi mavi parlıyor.
-@if arman_yardim -> kart_koruma
-@if arman_su == 1 -> kart_su
-@if arman_su == 2 -> kart_su_red
--> kart_secim
-
-=== kart_koruma
-> Patlamada senin üstüne kapanmıştı. O ağırlık oydu.
-> Sen nefes alıyorsun. O almıyor.
--> kart_secim
-
-=== kart_su
-> Cebindeki şişenin ağırlığını hissediyorsun. Onun verdiği su.
--> kart_secim
-
-=== kart_su_red
-> "Yukarıda seni anlatacağım" demişti.
--> kart_secim
-
-=== kart_secim
-@if arman_ada -> kart_ada
--> kart_secim2
-
-=== kart_ada
-> "Yukarıda ona göz kulak olurum" demişti. Ada'ya.
--> kart_secim2
-
-=== kart_secim2
-> Kartın üzerinde onun yüzü, onun adı: DENİZ ARMAN — KAYNAK USTASI — EMANET / 412
-> Annenin sesi kulağında: "Kardeşini yalnız bırakma."
-@sure 15 -> kart_birak
-* Kartı al. -> kart_al
-  ~ kimlik_karti_alindi = true
-  ! Bu seçim seninle kalacak.
-* Kartı bırak. -> kart_birak
-  ~ kimlik_karti_alindi = false
-  ! Bu seçim seninle kalacak.
-
-=== kart_al
-> Kart avucunda ılık. Bir ölünün adı. Ama Ada'nın yanına giden tek yol.
-> "Benim yerime git" demiş miydi? Yoksa sen mi öyle duymak istiyorsun?
-@olay final
--> SON
-
-=== kart_birak
-> Kartı onun göğsüne bırakıyorsun. Bu onun hikâyesiydi, senin değil.
-> Ama sirenler yaklaşırken bir şeyi biliyorsun: Bu gece, bir şekilde, o gemiye bineceksin.
-@olay final
--> SON
-
-# ---------------------------------------------------------------- Kapanış
-=== kalkis
-> Ertesi sabah, EMANET beş yüz yolcusuyla Dünya'dan ayrıldı.
-@if kimlik_karti_alindi -> kalkis_kart
-> Kargo bölmesinde, hiçbir kayıtta görünmeyen bir yolcu vardı.
-> Ada onu üç gün sonra, bir yedek parça kasasının arkasında buldu.
--> kalkis_son
-
-=== kalkis_kart
-> 412 numaralı yolcunun adı Deniz Arman'dı.
-> En azından kayıtlar öyle diyordu.
-> Ada abisini kalkıştan iki saat sonra, kargo koridorunda gördü.
-> Hiçbir şey söylemedi. Sadece elini tuttu.
--> kalkis_son
-
-=== kalkis_son
-@olay baslik ÖNSÖZ SONU
+=== muhafiz_tekrar
+MUHAFIZ: Geri çekil dedim!
 -> SON

@@ -1,15 +1,16 @@
 extends Control
-## Açılış ekranı: cihaz bilgisi, önceki çökme bilgisi, bölüm seçimi ve yükleme çubuğu.
+## Açılış ekranı: YENİ OYUN -> isim girişi -> yükleme.
+## Ayrıca cihaz bilgisi, önceki çökme bilgisi ve grafik kalitesi seçimi.
 
-const SCENES := {
-	"onsoz": "res://scenes/onsoz.tscn",
-	"bolum1": "res://scenes/main.tscn",
-}
+const GAME_SCENE := "res://scenes/onsoz.tscn"
+const DEFAULT_NAME := "Evren"
 
 var _loading: String = ""
 var _bar: ProgressBar
 var _status: Label
-var _buttons: HBoxContainer
+var _menu: VBoxContainer
+var _name_box: VBoxContainer
+var _name_edit: LineEdit
 
 
 func _ready() -> void:
@@ -30,8 +31,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 18)
 	add_child(box)
 
-	var title := _label("EMANET", 96, Color(0.92, 0.55, 0.22))
-	box.add_child(title)
+	box.add_child(_label("EMANET", 96, Color(0.92, 0.55, 0.22)))
 	box.add_child(_label("Bir hikâye. Beş yüz isim. Tek bir soru.", 26, Color(0.75, 0.78, 0.85)))
 
 	if not crash.is_empty():
@@ -40,21 +40,40 @@ func _ready() -> void:
 		warn.custom_minimum_size = Vector2(900, 0)
 		box.add_child(_centered(warn))
 
-	_buttons = HBoxContainer.new()
-	_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	_buttons.add_theme_constant_override("separation", 30)
-	box.add_child(_buttons)
-	_buttons.add_child(_button("ÖNSÖZ: Seçim Gecesi", "onsoz"))
-	_buttons.add_child(_button("BÖLÜM 1: İlk İniş", "bolum1"))
-	var q := Button.new()
-	q.text = ToonStyle.quality_label()
-	q.add_theme_font_size_override("font_size", 20)
-	q.custom_minimum_size = Vector2(320, 56)
+	# Ana menü
+	_menu = VBoxContainer.new()
+	_menu.alignment = BoxContainer.ALIGNMENT_CENTER
+	_menu.add_theme_constant_override("separation", 16)
+	box.add_child(_menu)
+	var start := _button("YENİ OYUN", 32, Vector2(420, 96))
+	start.pressed.connect(_show_name_entry)
+	_menu.add_child(_centered(start))
+	var q := _button(ToonStyle.quality_label(), 20, Vector2(320, 56))
 	q.pressed.connect(func() -> void:
 		var order := ["otomatik", "dusuk", "yuksek"]
 		ToonStyle.set_quality(order[(order.find(ToonStyle.quality_setting) + 1) % order.size()])
 		q.text = ToonStyle.quality_label())
-	box.add_child(_centered(q))
+	_menu.add_child(_centered(q))
+
+	# İsim girişi
+	_name_box = VBoxContainer.new()
+	_name_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_name_box.add_theme_constant_override("separation", 16)
+	_name_box.visible = false
+	box.add_child(_name_box)
+	_name_box.add_child(_label("Adın ne?", 34, Color(0.95, 0.92, 0.85)))
+	_name_edit = LineEdit.new()
+	_name_edit.text = DEFAULT_NAME
+	_name_edit.max_length = 16
+	_name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name_edit.custom_minimum_size = Vector2(420, 70)
+	_name_edit.add_theme_font_size_override("font_size", 32)
+	_name_edit.text_submitted.connect(func(_t: String) -> void: _start())
+	_name_box.add_child(_centered(_name_edit))
+	_name_box.add_child(_label("Bu gece bu isimle başlayacaksın. Sonra başka bir isim taşıyacaksın.", 20, Color(0.6, 0.65, 0.75)))
+	var go := _button("BAŞLA", 30, Vector2(320, 86))
+	go.pressed.connect(_start)
+	_name_box.add_child(_centered(go))
 
 	_bar = ProgressBar.new()
 	_bar.custom_minimum_size = Vector2(600, 14)
@@ -65,10 +84,33 @@ func _ready() -> void:
 	_status = _label("", 20, Color(0.6, 0.65, 0.75))
 	box.add_child(_status)
 
-	var foot := _label("v" + str(ProjectSettings.get_setting("application/config/version", "0.2.0")) + "   " + info, 16, Color(0.4, 0.42, 0.5))
+	var foot := _label("v" + str(ProjectSettings.get_setting("application/config/version", "")) + "   " + info, 16, Color(0.4, 0.42, 0.5))
 	foot.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	foot.position.y -= 34
 	add_child(foot)
+
+
+func _show_name_entry() -> void:
+	_menu.visible = false
+	_name_box.visible = true
+	_name_edit.grab_focus()
+	_name_edit.select_all()
+
+
+func _start() -> void:
+	if not _loading.is_empty():
+		return
+	var name := _name_edit.text.strip_edges()
+	if name.is_empty():
+		name = DEFAULT_NAME
+	Story.vars.clear()
+	Story.set_var("oyuncu_adi", name.substr(0, 1).to_upper() + name.substr(1))
+	_name_box.visible = false
+	_loading = GAME_SCENE
+	Game.boot_log("yükleniyor: oyun")
+	_bar.visible = true
+	_status.text = "Yükleniyor..."
+	ResourceLoader.load_threaded_request(_loading)
 
 
 func _process(_delta: float) -> void:
@@ -92,17 +134,6 @@ func _process(_delta: float) -> void:
 			_loading = ""
 
 
-func _start(key: String) -> void:
-	if not _loading.is_empty():
-		return
-	_loading = SCENES[key]
-	Game.boot_log("yükleniyor: " + key)
-	_buttons.visible = false
-	_bar.visible = true
-	_status.text = "Yükleniyor..."
-	ResourceLoader.load_threaded_request(_loading)
-
-
 func _label(text: String, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -112,12 +143,11 @@ func _label(text: String, size: int, color: Color) -> Label:
 	return l
 
 
-func _button(text: String, key: String) -> Button:
+func _button(text: String, font_size: int, min_size: Vector2) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(380, 90)
-	b.add_theme_font_size_override("font_size", 26)
-	b.pressed.connect(_start.bind(key))
+	b.custom_minimum_size = min_size
+	b.add_theme_font_size_override("font_size", font_size)
 	return b
 
 

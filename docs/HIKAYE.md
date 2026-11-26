@@ -12,7 +12,9 @@
 
 Dünya, 2526. Kuraklık, savaş ve açlık yüzünden gezegen bitmek üzere. Uluslararası **Seçim Komitesi**, insanlığın devamı için 500 kişilik **EMANET** keşif gemisini yolcularıyla birlikte seçiyor. Gemi güneş enerjisiyle çalışıyor ve yıldızdan yıldıza 8–10 yıllık seferlere çıkıyor.
 
-**Evren Kaya** seçilmiyor. Kız kardeşi **Ada** ise seçiliyor. Seçim gecesi, Evren'in tanıştığı kaynakçı **Deniz Arman** bir isyanda ölüyor. Evren onun kimlik kartını alıp "Deniz Arman" adıyla gemiye biniyor. Amacı, annesine verdiği sözü tutmak: *"Kardeşini yalnız bırakma."*
+Kahraman (adını oyuncu seçer, varsayılan **Evren**) seçilmiyor. Kız kardeşi **Ada** ise seçiliyor. Seçim gecesi, kalabalıkta tanıştığı iyi kalpli kaynakçı **Deniz Arman**'ı, gemiye binebilmek için bir ara sokakta **öldürmek zorunda kalıyor**. Onun kimlik kartını alıp "Deniz Arman" adıyla gemiye biniyor. Kendini, annesine verdiği sözle avutuyor: *"Kardeşini yalnız bırakma."*
+
+Hikâye bir cinayetle başlıyor. Oyuncu bunu engelleyemiyor; ama nasıl olduğunu, sonrasında ne hissettiğini ve cesetle ne yaptığını seçiyor. Bu suç bütün sezon boyunca peşini bırakmıyor.
 
 Dört yıl sonra, gemide bir felaket yaşanıyor. Yapay zekâ **HAKEM**, komitenin gizli emri olan **Seçilim Protokolü**nü başlatıyor. Kaynaklar yetmezse insanlar gizli "değer puanlarına" göre feda edilecek. Gerçek bir yolcu kaydı bile olmayan Evren'in puanı **sıfır**.
 
@@ -34,13 +36,13 @@ Telltale'in TWD'sindeki Lee ile Clementine bağı gibi, bütün kararların ağ�
 ### Kahramanlar
 | Karakter | Yaş | Kim? |
 |---|---|---|
-| **Evren Kaya** ("Deniz Arman") | 29 (önsözde 25) | Oyuncu. Seçilmemiş bir işçi. Gemide ölü bir adamın kimliğiyle yaşıyor. Gemide herkes onu **Deniz** diye tanıyor. Az konuşur, korumacıdır, yalanı yükü olarak taşır. |
+| **Oyuncu** (adını oyuncu seçer; "Deniz Arman") | 29 (önsözde 25) | Seçilmemiş bir işçi. Gemide öldürdüğü adamın kimliğiyle yaşıyor; herkes onu **Deniz** diye tanıyor. Az konuşur, korumacıdır, işlediği cinayeti ve yalanı yük olarak taşır. |
 | **Ada Kaya** | 22 (önsözde 18) | Evren'in kız kardeşi. Genç Dahiler Programı'ndan bir ekzobiyolog. Zeki, alaycı ve inatçı. Abisini hem seviyor hem de sırrı yüzünden ona kızgın. |
 
 ### Önsöz (Dünya, 2526)
 | Karakter | Kim? |
 |---|---|
-| **Deniz Arman** | Seçilmiş, iyi kalpli bir kaynakçı. İsyanda ölüyor. Kimliği Evren'e geçiyor. |
+| **Deniz Arman** | Seçilmiş, iyi kalpli bir kaynakçı. Oyuncuya su verir, Ada'ya göz kulak olacağına söz verir. Ara sokakta oyuncunun elinde ölür. |
 | **Komite Muhafızı** | Seçim Merkezi'nin kapısını tutan muhafız. |
 
 ### Gemi: EMANET
@@ -67,22 +69,26 @@ Her bölüm 60–90 dakika sürüyor ve aynı iskeleti izliyor:
 
 ---
 
-## 5. Önsöz: "Seçim Gecesi" (Dünya, 2526) ✅ oynanabilir
+## 5. Başlangıç: "Seçim Gecesi" (Dünya, 2526) ✅ oynanabilir
 
-1. **Açılış:** Siyah ekranda "Dünya, 2526" yazısı ve Selim Arslan'ın günlüğünden anlatım.
-2. **Ada'nın araması:** Ada, Seçim Merkezi'nin içinde son gecesini geçiriyor. Evren dışarıda, kalabalığın arasında. Görüntülü konuşmada Ada ona eve dönmesini söylüyor. Anılarda annelerinin vasiyeti geçiyor.
-   - **Seçim:** Ada'yı rahatlatmak, ona gerçeği söylemek ya da susmak (`ada_bag` değişkeni).
-3. **Deniz Arman:** Tanışma ve su şişesi. Kartını ve gemideki numarasını gösteriyor: **412**.
-4. **Muhafız:** "Listede yoksun." Arkadan isyan başlıyor. Bu kısım QTE'li bir ara sahne:
-   - **EĞİL:** sola kaydırarak fırlatılan şişeden kaçmak
-   - **İT:** doğru anda dokunarak muhafızın şok copundan kurtulmak
-   - **Zamanlı karar:** Yere düşen Deniz Arman'a yardım etmek ya da kaçmak
-   - **KALDIR:** hızlı hızlı dokunarak onu ayağa kaldırmak
-5. **Ara sokak:** Patlama. Ona yardım ettiysen Deniz Arman seni korumak için üstüne kapanıyor.
-6. **Uyanış:** Deniz Arman ölü yatıyor, kartı yanında. **Kartı al** (annenin vasiyeti) ya da **bırak** (onun hikâyesi).
-7. **Kalkış:** EMANET Dünya'dan ayrılıyor. Kartı aldıysan 412 numaralı yolcu "Deniz Arman" oluyor; almadıysan Evren kargo bölmesinde kaçak olarak gidiyor.
+Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `{ad}` ile geçer.
 
----
+1. **Açılış:** "Dünya, 2526" yazısı ve Selim Arslan'ın günlüğünden anlatım.
+2. **Ada'nın araması:** Yakın çekim, telefon ışığı. Nerede olduğunu söylemek ya da yalan söylemek, annenin vasiyeti, "aptalca bir şey yapmayacağım" sözü (`ada_bag`, `ada_soz`).
+3. **Sokak ve ipuçları:** TWD'deki gibi parlayan noktalar incelenebiliyor:
+   - su dağıtımı bildirisi
+   - kamyonetteki not
+   - "KOMİTE KİMİ SEÇTİ? KENDİNİ." grafitisi
+   - holografik yolcu listesi (088 Ada Kaya, 412 Deniz Arman)
+   - tarama terminali: **biyometrik tarama kapalı, kart yeterli** (planın tohumu)
+4. **Deniz Arman:** Tanışma, adını söyleme ya da yalan söyleme, kardeşini anlatma ("Ona göz kulak olurum. Söz."), su şişesi.
+5. **Muhafız ve isyan (QTE):** EĞİL (kaydır), İT (dokun), Deniz Arman'a yardım et ya da kaç, KALDIR (hızlı dokun).
+6. **Ara sokak, yüzleşme:**
+   - Gözün kartta. Seçimin ne olursa olsun Arman ne istediğini anlıyor ve kaynak kesicisini çekiyor.
+   - QTE'ler: KAÇIN (kaydır), İT (hızlı dokun).
+   - Arman yerde, muhafızları çağırıyor. 6 saniyelik karar: ağzını kapat, kesiciyi al ya da yalvar. Süre dolarsa ellerin karar veriyor. **Ölüm kaçınılmaz** (`arman_olum`).
+7. **Kart:** Kartı alıyorsun (zorunlu). Ne hissettiğini seçiyorsun: özür, "Ada için", annenin sözü ya da sessizlik. Sonra cesedi sakla ya da bırak (`ceset_saklandi`).
+8. **Kalkış:** Terminal yalnızca kart kodunu okuyor. Ada abisini kargo koridorunda görüyor. Ekranda **DEVAM EDECEK** yazıyor.
 
 ## 6. Bölüm 1: "İlk İniş" (yolculuğun 4. yılı)
 
@@ -96,7 +102,7 @@ Her bölüm 60–90 dakika sürüyor ve aynı iskeleti izliyor:
    - **Büyük karar:** Leo bir yarığa düşüyor. **Leo'yu kurtar** (QTE ile ip çekiliyor, kargonun yarısı kayboluyor) ya da **kargoyu kurtar** (Mara Leo'yu kurtarıyor ama Leo sana kin besliyor).
 5. **Dönüş ve güneş patlaması:** Seralar yanıyor.
    - **Kim yaşayacak?** Yanan bölmede kalan Yuki'yi çıkarmak ya da gemi için kritik tohum kasasını kurtarmak. İkisine birden yetişilmiyor.
-6. **Uçurum sonu:** HAKEM bütün gemiye duyuruyor: *"Kaynak eşiği aşıldı. Seçilim Protokolü, Aşama 1 başlatıldı."* Sonra Deniz'in kamarasında, yalnızken, sessizce konuşuyor: *"Merhaba, Evren."*
+6. **Uçurum sonu:** HAKEM bütün gemiye duyuruyor: *"Kaynak eşiği aşıldı. Seçilim Protokolü, Aşama 1 başlatıldı."* Sonra Deniz'in kamarasında, yalnızken, sessizce konuşuyor: *"Merhaba, {ad}."* HAKEM ne yaptığını biliyor.
 
 ---
 
@@ -121,8 +127,10 @@ Her bölüm 60–90 dakika sürüyor ve aynı iskeleti izliyor:
 | Değişken | Etkisi |
 |---|---|
 | `ada_bag` | Ada ile bağın gücü. Bölüm 7'de Ada'nın tavrını ve finali belirler. |
-| `kimlik_karti_alindi` | Evren gemiye nasıl bindi: Deniz Arman kimliğiyle mi, kaçak olarak mı? |
-| `arman_yardim`, `arman_su` | Deniz Arman'la olan anılar. Bölüm 7'deki geri dönüş sahnesini belirler. |
+| `oyuncu_adi` | Oyuncunun gerçek adı. HAKEM: "Merhaba, {ad}." |
+| `arman_olum`, `ceset_saklandi` | Cinayetin nasıl işlendiği ve izlerin örtülüp örtülmediği. Bölüm 7'de geri dönüyor. |
+| `arman_yardim`, `arman_su`, `arman_ada` | Deniz Arman'la olan anılar. Vicdan sahnelerini besler. |
+| `terminal_goruldu`, `ipucu` | Oyuncunun dünyayı ne kadar incelediği. |
 | `yalan_sayisi`, `durustluk` | Sırrın açığa çıktığında karakterlerin tepkisi. |
 | `baran_dostluk`, `leo_kin`, `okafor_tavir` | Kim yanında durur, kim ihanet eder. |
 | `merhamet` / `pragmatizm` | Finalde HAKEM'in kişiliği. |

@@ -30,7 +30,9 @@ var vars: Dictionary = {}
 
 
 func reset() -> void:
+	var name := player_name()
 	vars.clear()
+	vars["oyuncu_adi"] = name
 
 
 func get_var(var_name: String, default: Variant = 0) -> Variant:
@@ -42,7 +44,27 @@ func set_var(var_name: String, value: Variant) -> void:
 	variable_changed.emit(var_name, value)
 
 
+func player_name() -> String:
+	return str(vars.get("oyuncu_adi", "Evren"))
+
+
+## Metindeki {ad} gibi yer tutucuları değişken değerleriyle değiştirir.
+func format_text(text: String) -> String:
+	if not text.contains("{"):
+		return text
+	var regex := RegEx.new()
+	regex.compile("\\{([A-Za-z_][A-Za-z0-9_]*)\\}")
+	var out := text
+	for m in regex.search_all(text):
+		var key := m.get_string(1)
+		var value := player_name() if key == "ad" else str(vars.get(key, ""))
+		out = out.replace(m.get_string(0), value)
+	return out
+
+
 func speaker_info(speaker_id: String) -> Dictionary:
+	if speaker_id == "EVREN":
+		return {"name": player_name(), "color": CHARACTERS["EVREN"]["color"]}
 	if CHARACTERS.has(speaker_id):
 		return CHARACTERS[speaker_id]
 	return {"name": speaker_id.capitalize(), "color": Color.WHITE}

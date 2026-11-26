@@ -136,7 +136,7 @@ func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
 
 
 func show_notification(text: String) -> void:
-	_toast_label.text = text
+	_toast_label.text = Story.format_text(text)
 	if _toast_tween:
 		_toast_tween.kill()
 	_toast.modulate.a = 0.0
@@ -216,7 +216,7 @@ func _on_narration(text: String) -> void:
 func _show_text(text: String) -> void:
 	_panel.visible = true
 	_set_panel_raised(false)
-	_text_label.text = text
+	_text_label.text = Story.format_text(text)
 	_text_label.visible_characters = 0
 	_chars = 0.0
 	_typing = true
@@ -234,7 +234,7 @@ func _on_choices(options: PackedStringArray, timeout: float) -> void:
 	_grid.columns = 2 if options.size() > 1 else 1
 	for i in options.size():
 		var btn := Button.new()
-		btn.text = options[i]
+		btn.text = Story.format_text(options[i])
 		btn.custom_minimum_size = Vector2(0, 78)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.add_theme_font_size_override("font_size", 24)

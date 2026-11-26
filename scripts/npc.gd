@@ -18,6 +18,9 @@ signal player_nearby(npc: Npc, is_near: bool)
 @export var interactable: bool = true
 
 var model: CharacterModel
+var _marker: Node3D
+var _marker_t: float = 0.0
+var _player_ref: Node3D
 
 @onready var _visual: Node3D = $Visual
 
@@ -28,10 +31,59 @@ func _ready() -> void:
 		model = model_scene.instantiate()
 		model.start_animation = idle_animation
 		_visual.add_child(model)
+	_build_marker()
 	$TalkArea.body_entered.connect(func(b: Node3D) -> void:
 		if b is Player: player_nearby.emit(self, true))
 	$TalkArea.body_exited.connect(func(b: Node3D) -> void:
 		if b is Player: player_nearby.emit(self, false))
+
+
+## Konuşulabilen karakterlerin başında "• • •", incelenebilir noktalarda parlayan küre.
+func _build_marker() -> void:
+	if model:
+		var l := Label3D.new()
+		l.text = "• • •"
+		l.font_size = 64
+		l.outline_size = 10
+		l.pixel_size = 0.006
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		l.no_depth_test = true
+		l.modulate = Color(1, 1, 1, 0.9)
+		l.position = Vector3(0, 2.15, 0)
+		_marker = l
+	else:
+		var m := MeshInstance3D.new()
+		var s := SphereMesh.new()
+		s.radius = 0.07
+		s.height = 0.14
+		m.mesh = s
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = Color(1.0, 0.85, 0.45)
+		mat.no_depth_test = true
+		m.material_override = mat
+		m.position = Vector3(0, focus_height, 0)
+		var halo := OmniLight3D.new()
+		halo.light_color = Color(1.0, 0.8, 0.45)
+		halo.light_energy = 0.6
+		halo.omni_range = 1.2
+		m.add_child(halo)
+		_marker = m
+	_marker.visible = false
+	add_child(_marker)
+
+
+func _process(delta: float) -> void:
+	if _marker == null:
+		return
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		_player_ref = get_tree().get_first_node_in_group("player")
+		return
+	var near := global_position.distance_to(_player_ref.global_position) < 12.0
+	_marker.visible = interactable and near and visible
+	if _marker.visible:
+		_marker_t += delta
+		_marker.scale = Vector3.ONE * (1.0 + sin(_marker_t * 4.0) * 0.12)
 
 
 func head_position() -> Vector3:

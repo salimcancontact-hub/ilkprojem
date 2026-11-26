@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/onsoz.gd" id="1_r"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_r"]
@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c7_model.tscn" id="18_r"]
 [ext_resource type="PackedScene" path="res://scenes/characters/kalabalik/c8_model.tscn" id="19_r"]
 
+[ext_resource type="PackedScene" path="res://assets/megakit/S_PropComputer.gltf" id="99_pc"]
+
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.015, 0.015, 0.03, 1)
 sky_horizon_color = Color(0.3, 0.15, 0.07, 1)
@@ -36,15 +38,15 @@ background_mode = 2
 sky = SubResource("Sky")
 ambient_light_source = 2
 ambient_light_color = Color(0.35, 0.32, 0.38, 1)
-ambient_light_energy = 0.35
+ambient_light_energy = 0.75
 tonemap_mode = 3
-tonemap_exposure = 1.0
+tonemap_exposure = 1.25
 glow_enabled = true
 glow_intensity = 0.8
 glow_bloom = 0.08
 fog_enabled = true
 fog_light_color = Color(0.3, 0.19, 0.11, 1)
-fog_density = 0.022
+fog_density = 0.016
 fog_sky_affect = 0.7
 adjustment_enabled = true
 adjustment_contrast = 1.12
@@ -73,9 +75,7 @@ environment = SubResource("Env")
 [node name="Moon" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-38, -150, 0)
 light_color = Color(0.55, 0.62, 0.85, 1)
-light_energy = 0.22
-shadow_enabled = true
-directional_shadow_max_distance = 40.0
+light_energy = 0.5
 
 [node name="Level" parent="." instance=ExtResource("6_r")]
 
@@ -234,6 +234,106 @@ omni_range = 16.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 2.5, 10)
 light_color = Color(1, 0.6, 0.3, 1)
 omni_range = 22.0
+
+[node name="Hotspots" type="Node3D" parent="."]
+
+[node name="Su" parent="Hotspots" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, -7.4, 0, 2.0)
+collision_layer = 0
+npc_id = "IPUCU"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "ipucu_su"
+prompt = "İNCELE"
+focus_height = 1.5
+
+[node name="Araba" parent="Hotspots" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, 3.3, -0.15, 8.0)
+collision_layer = 0
+npc_id = "IPUCU"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "ipucu_araba"
+prompt = "İNCELE"
+focus_height = 1.2
+
+[node name="Grafiti" parent="Hotspots" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, 7.4, 0, 20.5)
+collision_layer = 0
+npc_id = "IPUCU"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "ipucu_grafiti"
+prompt = "İNCELE"
+focus_height = 1.6
+
+[node name="Liste" parent="Hotspots" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, -5.5, -0.15, 55.8)
+collision_layer = 0
+npc_id = "IPUCU"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "ipucu_liste"
+prompt = "İNCELE"
+focus_height = 1.6
+
+[node name="Terminal" parent="Hotspots" instance=ExtResource("4_r")]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, 1.0000, 3.6, -0.15, 55.3)
+collision_layer = 0
+npc_id = "IPUCU"
+dialog_path = "res://dialogs/onsoz.dlg"
+start_node = "ipucu_terminal"
+prompt = "İNCELE"
+focus_height = 1.25
+
+[node name="Clues" type="Node3D" parent="."]
+
+[node name="SuIlani" type="Label3D" parent="Clues"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1, 0, 1.0000, 0, 0.0000, -8.85, 1.7, 2.0)
+pixel_size = 0.006
+modulate = Color(0.95, 0.92, 0.82, 1)
+outline_modulate = Color(0, 0, 0, 0.6)
+text = "SU DAĞITIMI\nSÜRESİZ ERTELENDİ\n— Komite Tedarik Ofisi —"
+font_size = 64
+outline_size = 6
+
+[node name="Grafiti" type="Label3D" parent="Clues"]
+transform = Transform3D(0.0000, 0, 1.0000, 0, 1, 0, -1.0000, 0, 0.0000, 8.85, 2.3, 20.5)
+pixel_size = 0.012
+modulate = Color(0.9, 0.12, 0.1, 1)
+outline_modulate = Color(0.2, 0, 0, 0.4)
+text = "KOMİTE KİMİ SEÇTİ?\nKENDİNİ."
+font_size = 96
+outline_size = 6
+
+[node name="Liste" type="Label3D" parent="Clues"]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, -5.5, 2.0, 57.8)
+pixel_size = 0.006
+modulate = Color(0.5, 0.95, 1, 1)
+outline_modulate = Color(0, 0.15, 0.25, 0.6)
+text = "SON LİSTE — 500 / 500\n· · ·\n087  JANSEN, M. — TIP\n088  KAYA, ADA — GENÇ DAHİLER\n089  KIM, S. — TARIM\n· · ·\n411  ARDA, N. — İŞÇİ / TESİSAT\n412  ARMAN, DENİZ — İŞÇİ / KAYNAK\n413  ASLAN, B. — İŞÇİ / ELEKTRİK"
+font_size = 64
+outline_size = 6
+
+[node name="TerminalYazi" type="Label3D" parent="Clues"]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, 3.6, 1.95, 56.0)
+pixel_size = 0.004
+modulate = Color(1, 0.75, 0.3, 1)
+outline_modulate = Color(0, 0, 0, 0.6)
+text = "TARAMA TERMİNALİ\n! BİYOMETRİK TARAMA DEVRE DIŞI"
+font_size = 64
+outline_size = 6
+
+[node name="Terminal" parent="Clues" instance=ExtResource("99_pc")]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1, 0, 0.0000, 0, -1.0000, 3.6, -0.15, 56.2)
+
+[node name="TerminalLight" type="OmniLight3D" parent="Clues"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 1.6, 55.6)
+light_color = Color(1, 0.7, 0.3, 1)
+light_energy = 1.2
+omni_range = 3.0
+
+[node name="ListeLight" type="OmniLight3D" parent="Clues"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 2.0, 57.0)
+light_color = Color(0.4, 0.85, 1, 1)
+light_energy = 1.2
+omni_range = 4.0
 
 [node name="HUD" parent="." instance=ExtResource("3_r")]
 
