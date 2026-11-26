@@ -1,20 +1,35 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/gem.gd" id="1_gem"]
 
 [sub_resource type="SphereShape3D" id="Shape_gem"]
 radius = 0.7
 
-[sub_resource type="PrismMesh" id="Mesh_gem"]
-size = Vector3(0.5, 0.7, 0.5)
+[sub_resource type="CylinderMesh" id="Mesh_core"]
+top_radius = 0.1
+bottom_radius = 0.1
+height = 0.42
 
-[sub_resource type="StandardMaterial3D" id="Mat_gem"]
+[sub_resource type="StandardMaterial3D" id="Mat_core"]
 albedo_color = Color(0.3, 1, 0.9, 1)
-metallic = 0.6
-roughness = 0.2
 emission_enabled = true
-emission = Color(0.1, 0.8, 0.7, 1)
-emission_energy_multiplier = 0.8
+emission = Color(0.2, 1, 0.85, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="CylinderMesh" id="Mesh_cap"]
+top_radius = 0.16
+bottom_radius = 0.16
+height = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Mat_cap"]
+albedo_color = Color(0.2, 0.22, 0.26, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="Mesh_glass"]
+top_radius = 0.14
+bottom_radius = 0.14
+height = 0.4
 
 [node name="Gem" type="Area3D"]
 collision_layer = 0
@@ -24,6 +39,23 @@ script = ExtResource("1_gem")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Shape_gem")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("Mesh_gem")
-material_override = SubResource("Mat_gem")
+[node name="Mesh" type="Node3D" parent="."]
+
+[node name="Core" type="MeshInstance3D" parent="Mesh"]
+mesh = SubResource("Mesh_core")
+material_override = SubResource("Mat_core")
+
+[node name="CapTop" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
+mesh = SubResource("Mesh_cap")
+material_override = SubResource("Mat_cap")
+
+[node name="CapBottom" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0)
+mesh = SubResource("Mesh_cap")
+material_override = SubResource("Mat_cap")
+
+[node name="Glow" type="OmniLight3D" parent="Mesh"]
+light_color = Color(0.3, 1, 0.9, 1)
+light_energy = 0.8
+omni_range = 2.0

@@ -37,6 +37,7 @@ func _ready() -> void:
 	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
 		npc.player_nearby.connect(_on_npc_nearby)
 	_dialog.speaker_changed.connect(_on_speaker_changed)
+	_dialog.event_fired.connect(_on_dialog_event)
 	_dialog.dialog_finished.connect(_on_dialog_finished)
 
 
@@ -55,7 +56,11 @@ func _start_dialog(npc: Npc) -> void:
 	_talking_to = npc
 	get_tree().paused = true
 	_hud.set_gameplay_visible(false)
-	_player.move_input = Vector2.ZERO
+	_player.stand_idle()
+	# Oyun duraklasa da karakterler diyalogda hareket etmeye devam etsin.
+	_player.model.process_mode = Node.PROCESS_MODE_ALWAYS
+	if npc.model:
+		npc.model.process_mode = Node.PROCESS_MODE_ALWAYS
 	_player.face_point(npc.global_position)
 	npc.face_point(_player.global_position)
 	_dialog_cam.make_current()
@@ -63,6 +68,11 @@ func _start_dialog(npc: Npc) -> void:
 
 
 func _on_dialog_finished() -> void:
+	_player.model.process_mode = Node.PROCESS_MODE_INHERIT
+	_player.model.play("Idle")
+	if _talking_to and _talking_to.model:
+		_talking_to.model.process_mode = Node.PROCESS_MODE_INHERIT
+		_talking_to.model.play("Idle")
 	_talking_to = null
 	_player_cam.make_current()
 	_hud.set_gameplay_visible(true)
@@ -73,6 +83,10 @@ func _on_dialog_finished() -> void:
 func _on_speaker_changed(speaker_id: String) -> void:
 	if _talking_to == null:
 		return
+	# Konuşan el kol hareketi yapar, diğeri dinler.
+	_player.model.play("Idle_Talking" if speaker_id == "DENIZ" else "Idle", 0.3)
+	if _talking_to.model:
+		_talking_to.model.play("Idle_Talking" if speaker_id == _talking_to.npc_id else "Idle", 0.3)
 	var a: Vector3 = _player.head_position()
 	var b: Vector3 = _talking_to.head_position()
 	var dir: Vector3 = (b - a).normalized()
@@ -87,6 +101,18 @@ func _on_speaker_changed(speaker_id: String) -> void:
 	else:
 		# Karşıdakinin omzunun üstünden Deniz'e bak (konuşan kadrajın solunda)
 		_place_cam(b + dir * 1.9 - right * 1.25 + Vector3.UP * 0.3, a + right * 0.35 - Vector3.UP * 0.1)
+
+
+## Diyalog dosyasındaki @olay satırları. Örnek: "@olay anim ADA Idle_No"
+func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
+	if event_name == "anim" and args.size() >= 2:
+		var model: CharacterModel = null
+		if args[0] == "DENIZ":
+			model = _player.model
+		elif _talking_to and args[0] == _talking_to.npc_id:
+			model = _talking_to.model
+		if model:
+			model.play_once(args[1], "Idle")
 
 
 func _place_cam(from: Vector3, target: Vector3) -> void:
@@ -105,7 +131,7 @@ func _on_npc_nearby(npc: Npc, is_near: bool) -> void:
 func _on_gems_changed(collected: int, total: int) -> void:
 	_hud.set_gems(collected, total)
 	if total > 0 and collected >= total:
-		_hud.show_message("Kazandın!")
+		_hud.show_message("Hücreler toplandı!")
 		get_tree().paused = true
 
 

@@ -3,7 +3,7 @@
 Godot 4 ile geliştirilen 3D mobil, tek oyunculu aksiyon/macera oyunu.
 
 ## Oynanış (prototip)
-Haritadaki tüm kristalleri topla; düşmanlar seni kovalar, kılıcınla onları yen.
+EMANET gemisinin hangarında Deniz'i yönet: Ada ile konuş, HAKEM'in güvenlik dronlarını etkisiz hale getir ve enerji hücrelerini topla.
 
 ## Kontroller
 | Eylem   | Mobil                     | Klavye (test)        |
@@ -32,3 +32,8 @@ Haritadaki tüm kristalleri topla; düşmanlar seni kovalar, kılıcınla onlar�
 - `scripts/` – GDScript kodları (`scripts/dialog/` diyalog sistemi)
 - `dialogs/` – diyalog metinleri
 - `docs/` – hikâye ve rehber belgeleri
+- `assets/` – karakter modelleri, animasyonlar, üniforma dokuları
+- `addons/quaternius-modular-scifi-pack/` – gemi iç mekânı parçaları
+- `tools/` – yardımcı araçlar (ör. üniforma boyayıcı)
+
+Kullanılan hazır varlıkların lisansları: [`CREDITS.md`](CREDITS.md)

@@ -1,14 +1,14 @@
 extends CharacterBody3D
-## Basit düşman: oyuncuyu görünce kovalar, yakındaysa saldırır.
+## HAKEM güvenlik dronu: oyuncuyu görünce kovalar, yakındaysa elektrik şokuyla saldırır.
 
 signal died
 
 @export var speed: float = 3.5
 @export var max_health: int = 50
-@export var damage: int = 15
-@export var detect_range: float = 12.0
+@export var damage: int = 10
+@export var detect_range: float = 7.5
 @export var attack_range: float = 1.6
-@export var attack_cooldown: float = 1.0
+@export var attack_cooldown: float = 1.3
 
 var health: int = 0
 
@@ -22,7 +22,9 @@ var _base_color: Color
 var _dead: bool = false
 
 @onready var _visual: Node3D = $Visual
-@onready var _body_mesh: MeshInstance3D = $Visual/Body
+@onready var _body_mesh: MeshInstance3D = $Visual/Hover/Body
+@onready var _hover: Node3D = $Visual/Hover
+var _time: float = 0.0
 
 
 func _ready() -> void:
@@ -41,6 +43,8 @@ func _physics_process(delta: float) -> void:
 	if _dead:
 		return
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_time += delta
+	_hover.position.y = 1.25 + sin(_time * 2.5) * 0.08
 	_flash_timer = maxf(_flash_timer - delta, 0.0)
 	_material.albedo_color = Color.WHITE if _flash_timer > 0.0 else _base_color
 

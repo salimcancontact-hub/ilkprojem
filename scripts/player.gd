@@ -12,6 +12,8 @@ signal died
 @export var attack_damage: int = 25
 @export var attack_cooldown: float = 0.45
 @export var camera_sensitivity: float = 0.006
+## Kameranın başlangıçta baktığı yön (derece).
+@export var camera_yaw_deg: float = 0.0
 
 var health: int = 0
 var is_dead: bool = false
@@ -23,8 +25,7 @@ var _attack_timer: float = 0.0
 var _invuln_timer: float = 0.0
 
 @onready var _visual: Node3D = $Visual
-@onready var _body_mesh: MeshInstance3D = $Visual/Body
-@onready var _sword_pivot: Node3D = $Visual/SwordPivot
+@onready var model: CharacterModel = $Visual/DenizModel
 @onready var _attack_area: Area3D = $Visual/AttackArea
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
@@ -33,7 +34,8 @@ var _invuln_timer: float = 0.0
 func _ready() -> void:
 	_gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	health = max_health
-	_camera_pivot.rotation.x = deg_to_rad(-20.0)
+	_camera_pivot.rotation.x = deg_to_rad(-15.0)
+	_camera_pivot.rotation.y = deg_to_rad(camera_yaw_deg)
 	_spring_arm.add_excluded_object(get_rid())
 
 
@@ -81,8 +83,36 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < -15.0:
 		_die()
 
+	_update_animation(input_vec.length())
+
 	# Hasar aldıktan sonra kısa süre yanıp sön.
-	_body_mesh.visible = _invuln_timer <= 0.0 or fmod(_invuln_timer, 0.2) > 0.1
+	model.visible = _invuln_timer <= 0.0 or fmod(_invuln_timer, 0.2) > 0.1
+
+
+var _punch_left: bool = false
+var _action_lock: float = 0.0
+
+
+func _update_animation(input_strength: float) -> void:
+	_action_lock = maxf(_action_lock - get_physics_process_delta_time(), 0.0)
+	if _action_lock > 0.0:
+		return
+	var horizontal := Vector2(velocity.x, velocity.z).length()
+	if not is_on_floor():
+		model.play("Jump", 0.15)
+	elif horizontal > speed * 0.6:
+		model.play("Jog_Fwd", 0.2, horizontal / speed * 1.1)
+	elif horizontal > 0.3:
+		model.play("Walk", 0.2, maxf(horizontal / (speed * 0.45), 0.6))
+	else:
+		model.play("Idle", 0.25)
+
+
+## Diyalog başlarken karakteri sakin duruşa al.
+func stand_idle() -> void:
+	velocity = Vector3.ZERO
+	move_input = Vector2.ZERO
+	model.play("Idle", 0.2)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -100,10 +130,9 @@ func attack() -> void:
 		return
 	_attack_timer = attack_cooldown
 
-	_sword_pivot.rotation.y = deg_to_rad(70.0)
-	var tween := create_tween()
-	tween.tween_property(_sword_pivot, "rotation:y", deg_to_rad(-70.0), 0.12)
-	tween.tween_property(_sword_pivot, "rotation:y", 0.0, 0.15)
+	_punch_left = not _punch_left
+	_action_lock = 0.4
+	model.play_once("Punch_Jab" if _punch_left else "Punch_Cross", "Idle", 0.08)
 
 	for body in _attack_area.get_overlapping_bodies():
 		if body != self and body.has_method("take_damage"):
@@ -141,6 +170,8 @@ func _die() -> void:
 		return
 	is_dead = true
 	health = 0
-	_body_mesh.visible = true
+	model.visible = true
+	_action_lock = 99.0
+	model.play("Death01", 0.15)
 	health_changed.emit(health, max_health)
 	died.emit()

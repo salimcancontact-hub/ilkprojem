@@ -80,7 +80,7 @@ func set_health(current: int, maximum: int) -> void:
 
 
 func set_gems(collected: int, total: int) -> void:
-	_gem_label.text = "Kristal: %d / %d" % [collected, total]
+	_gem_label.text = "Enerji hücresi: %d / %d" % [collected, total]
 	_layout()
 
 
