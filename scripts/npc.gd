@@ -82,7 +82,9 @@ func _process(delta: float) -> void:
 		_player_ref = get_tree().get_first_node_in_group("player")
 		return
 	var near := global_position.distance_to(_player_ref.global_position) < 12.0
-	_marker.visible = interactable and near and visible
+	var lvl := get_tree().get_first_node_in_group("level")
+	var in_dialog: bool = lvl != null and lvl.get("_dialog") != null and lvl._dialog.active
+	_marker.visible = interactable and near and visible and not in_dialog
 	if _marker.visible:
 		_marker_t += delta
 		_marker.scale = Vector3.ONE * (1.0 + sin(_marker_t * 4.0) * 0.12)

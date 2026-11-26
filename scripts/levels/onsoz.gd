@@ -169,8 +169,9 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_player.model.reach("r", neck, 0.6)
 		"arman_oldu":
 			_player.model.release_all(0.3)
-			_arman.model.hold_last_frame("Death01")
-			_arman.get_node("CollisionShape3D").disabled = true
+			if _arman.model.ragdoll == null:
+				_arman.get_node("CollisionShape3D").disabled = true
+				_arman.model.go_ragdoll()
 			if _arman_card:
 				var at := _arman_card.global_position
 				_arman.model.detach(_arman_card)
@@ -190,6 +191,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			await get_tree().create_timer(0.7, true, false, true).timeout
 			_card.get_node("CardMesh").visible = false
 			_card.get_node("CardLight").visible = false
+			_card.interactable = false
 			var held := Props.card()
 			_player.model.attach(held, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
 			_player.model.release("r", 0.4)
@@ -208,15 +210,13 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			tw2.tween_property(_player, "global_position", away, 2.4)
 			tw2.tween_callback(func() -> void: _player.model.play("Idle", 0.3))
 		"arman_yerde":
-			_arman.model.play("Hit_Knockback", 0.05)
-			await get_tree().create_timer(0.6, true, false, true).timeout
-			_arman.model.hold_last_frame("Death01")
-		"arman_oldu":
-			_player.model.release_all(0.3)
-			_arman.model.hold_last_frame("Death01")
+			# Başını betona vurarak düşer: fizik iskeleti
 			_arman.get_node("CollisionShape3D").disabled = true
-			_card.global_position = _arman.global_position + Vector3(-0.7, 0, 0.6)
-			_card.visible = true
+			var fall := (_arman.global_position - _player.global_position)
+			fall.y = 0
+			_arman.model.play("Hit_Knockback", 0.05)
+			await get_tree().create_timer(0.2, true, false, true).timeout
+			_arman.model.go_ragdoll("spine_03", fall.normalized() * 40.0 + Vector3(0, 5, 0))
 		"telefon":
 			_player.face_point(Vector3(0, 0, 60))
 			_player.model.play("Idle_TalkingPhone", 0.3)
@@ -251,10 +251,10 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_guard.model.play("Hit_Knockback", 0.05)
 			var push := (_guard.global_position - _player.global_position)
 			push.y = 0
-			create_tween().tween_property(_guard, "global_position", _guard.global_position + push.normalized() * 1.2, 0.35)
-			await get_tree().create_timer(0.7).timeout
-			_guard.model.hold_last_frame("Death01")  # kilitli: konuşma bitince kalkmaz
-			_guard.get_node("CollisionShape3D").set_deferred("disabled", true)
+			_guard.get_node("CollisionShape3D").disabled = true
+			await get_tree().create_timer(0.25).timeout
+			# Yumruğun etkisiyle fizik iskeletine bırak: savrulur ve yerde kalır
+			_guard.model.go_ragdoll("spine_03", push.normalized() * 55.0 + Vector3(0, 8, 0))
 
 
 ## Oyuncuyu bir noktanın yanına (aradaki mesafe kadar) yerleştirip ona baktırır.
@@ -269,61 +269,83 @@ func _beside(point: Vector3, distance: float) -> void:
 	_player.face_point(point)
 
 
-## Cesedi konteynerin arkasına sürükleme ara sahnesi:
-## oyuncu çömelip cesedin bileklerinden tutar, geri geri çeker; cesedin kolları ellerine uzanır.
+## Cesedi konteynerin arkasına sürükleme ara sahnesi (gerçek fizik):
+## oyuncu çömelip bileklerinden tutar ve geri geri yürür; ceset ragdoll olarak sürüklenir.
+var _drag_grips: Array = []
+var _drag_cam_offset := Vector3.ZERO
+
+
 func _drag_body() -> void:
-	var body_start := _arman.global_position
-	var dir := (HIDE_SPOT - body_start)
+	var rd := _arman.model.ragdoll
+	if rd == null:
+		_arman.model.go_ragdoll()
+		rd = _arman.model.ragdoll
+	var hands := (rd.bone("hand_l").global_position + rd.bone("hand_r").global_position) / 2.0
+	var dir := (HIDE_SPOT - hands)
 	dir.y = 0
 	dir = dir.normalized()
-	# Ceset başı çekilen yöne bakacak şekilde döner
-	var head := _arman.model.bone_position("Head")
-	var pelvis := _arman.model.bone_position("pelvis")
-	var body_dir := head - pelvis
-	body_dir.y = 0
-	if body_dir.length() > 0.05:
-		var cur := atan2(body_dir.x, body_dir.z)
-		var want := atan2(dir.x, dir.z)
-		_arman.rotation.y += want - cur
-	head = _arman.model.bone_position("Head")
-	# Oyuncu cesedin başının önünde, ona dönük
-	var start := head + dir * 0.75
+	# Kamera yandan
+	var mid := (hands + HIDE_SPOT) / 2.0
+	var side := dir.cross(Vector3.UP).normalized()
+	if (mid + side).distance_to(Vector3(19.0, 0, 18.0)) > (mid - side).distance_to(Vector3(19.0, 0, 18.0)):
+		side = -side
+	camera_shots["surukle"] = [mid + side * 3.8 + Vector3(0, 1.7, 0), mid + Vector3(0, 0.35, 0)]
+	_set_camera("surukle")
+	if _cam_tween:
+		_cam_tween.kill()
+	_drag_cam_offset = side * 3.4 + Vector3(0, 1.5, 0)
+	# Oyuncu ellerin önünde, cesede dönük
+	var start := hands + dir * 0.55
 	start.y = _player.global_position.y
 	_player.global_position = start
-	_player.face_point(head)
+	_player.face_point(hands)
 	var grip_l := Node3D.new()
 	var grip_r := Node3D.new()
 	_player.get_node("Visual").add_child(grip_l)
 	_player.get_node("Visual").add_child(grip_r)
-	grip_l.position = Vector3(-0.16, 0.5, -0.42)
-	grip_r.position = Vector3(0.16, 0.5, -0.42)
-	# Kamera yandan, hareketi takip eder
-	var mid := (body_start + HIDE_SPOT) / 2.0
-	var side := dir.cross(Vector3.UP).normalized()
-	if (mid + side).distance_to(Vector3(19.0, 0, 18.0)) > (mid - side).distance_to(Vector3(19.0, 0, 18.0)):
-		side = -side
-	camera_shots["surukle"] = [mid + side * 3.6 + Vector3(0, 1.6, 0), mid + Vector3(0, 0.35, 0)]
-	_set_camera("surukle")
-	_player.model.play("Crouch_Fwd", 0.2, -0.7)
+	grip_l.position = Vector3(-0.14, 0.45, -0.4)
+	grip_r.position = Vector3(0.14, 0.45, -0.4)
+	_drag_grips = [grip_l, grip_r]
+	_player.model.play("Crouch_Idle", 0.2)
 	_player.model.reach("l", grip_l, 0.4)
 	_player.model.reach("r", grip_r, 0.4)
-	_arman.model.reach("l", grip_l, 0.5)
-	_arman.model.reach("r", grip_r, 0.5)
-	await get_tree().create_timer(0.5, true, false, true).timeout
-	var travel := HIDE_SPOT - body_start
+	await get_tree().create_timer(0.6, true, false, true).timeout
+	_player.model.play("Crouch_Fwd", 0.2, -0.7)
+	var travel := HIDE_SPOT - hands
 	travel.y = 0
-	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
-	tw.tween_property(_player, "global_position", _player.global_position + travel, 4.0)
-	tw.tween_property(_arman, "global_position", _arman.global_position + travel, 4.0)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(_player, "global_position", _player.global_position + travel, 4.2)
 	await tw.finished
+	_drag_grips = []
+	_drag_cam_offset = Vector3.ZERO
 	_player.model.release_all(0.4)
-	_arman.model.release_all(0.4)
 	_player.model.play("Idle", 0.4)
-	await get_tree().create_timer(0.5, true, false, true).timeout
+	await get_tree().create_timer(0.6, true, false, true).timeout
 	_arman.visible = false
+	for b in rd.bones.values():
+		(b as PhysicalBone3D).collision_layer = 0
 	grip_l.queue_free()
 	grip_r.queue_free()
 	Story.set_var("ceset_yeri", "konteyner")
+
+
+func _physics_process(_delta: float) -> void:
+	if _drag_grips.size() == 2 and _arman.model.ragdoll:
+		var rd := _arman.model.ragdoll
+		var gl: Vector3 = (_drag_grips[0] as Node3D).global_position
+		var gr: Vector3 = (_drag_grips[1] as Node3D).global_position
+		rd.pull("hand_l", gl)
+		rd.pull("hand_r", gr)
+		# Göğüs kolların arkasından gelir (kollar gergin, sırt yerde)
+		var back := -(_player.get_node("Visual") as Node3D).global_basis.z
+		var chest := (gl + gr) / 2.0 + back * 0.62
+		chest.y = 0.12
+		rd.pull("spine_03", chest, 6.0, 2.5)
+		# Kamera yandan izler
+		if _drag_cam_offset != Vector3.ZERO:
+			var focus := (rd.bone("pelvis").global_position + _player.global_position) / 2.0
+			_dialog_cam.global_position = _dialog_cam.global_position.lerp(focus + _drag_cam_offset, 0.08)
+			_dialog_cam.look_at(focus + Vector3(0, 0.3, 0), Vector3.UP)
 
 
 ## Dünyada sabit bir hedef noktası (IK için).
@@ -543,6 +565,7 @@ func _on_alley_entered(body: Node3D) -> void:
 	if to_arman.length() > 2.6:
 		_player.global_position = _arman.global_position - to_arman.normalized() * 2.2
 	_arman.start_node = "ara_sokak"
+	live_world = true  # boğuşma, ragdoll ve sürükleme diyalog sırasında fizikle oynar
 	_start_dialog(_arman)
 	await _dialog.dialog_finished
 	_arman.model.hold_last_frame("Death01")  # diyalog sonu bekleme duruşunu geri al	_crowd.visible = false

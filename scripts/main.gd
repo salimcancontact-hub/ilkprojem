@@ -20,6 +20,8 @@ var _player_cam: Camera3D
 var camera_shots: Dictionary = {}
 var _camera_locked: bool = false
 var _cutscene_live: bool = false
+## true iken diyaloglar dünyayı (fizik, ragdoll) durdurmaz; oyuncu hareket edemez.
+var live_world: bool = false
 ## Boğuşma: oyuncu ile karşısındaki karakter itişir (QTE gücüne göre öne/geri).
 var _struggle_npc: Npc = null
 var _struggle_mid: Vector3
@@ -111,6 +113,8 @@ func _enter_dialog_mode() -> void:
 	_player.stand_idle()
 	# Oyun duraklasa da karakterler diyalogda hareket etmeye devam etsin.
 	_player.model.process_mode = Node.PROCESS_MODE_ALWAYS
+	if live_world:
+		keep_world_running()
 
 
 ## Diyalog sürerken dünyanın donmamasını sağlar (ara sahnede kalabalık koşsun, ışıklar yansın).

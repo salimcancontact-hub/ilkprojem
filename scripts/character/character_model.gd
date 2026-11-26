@@ -99,6 +99,19 @@ func hold_last_frame(anim_name: String, lock: bool = true) -> void:
 	animation_player.pause()
 
 
+var ragdoll: Ragdoll
+
+
+## Karakteri fizik iskeletine bırakır (ölüm, bayılma, yere savrulma).
+func go_ragdoll(impulse_bone: String = "", impulse := Vector3.ZERO) -> void:
+	release_all(0.05)
+	if ragdoll == null:
+		ragdoll = Ragdoll.new(skeleton)
+	pose_locked = true
+	animation_player.pause()
+	ragdoll.start(impulse_bone, impulse)
+
+
 ## Kilitli duruşu bırakır (ör. yerden kalkarken).
 func unlock_pose() -> void:
 	pose_locked = false
