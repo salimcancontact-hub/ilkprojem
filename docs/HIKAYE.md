@@ -1,9 +1,10 @@
-# EMANET — Hikâye Belgesi (Sezon 1, v2)
+# EMANET — Hikâye Belgesi (v3: Uzun yolculuk)
 
 > **"Kimin yaşamaya değer olduğuna kim karar verir?"**
 
 **Tür:** Bilim kurgu, sinematik, seçim odaklı dram.
-**Oynanış:** Telltale tarzı: yürüme, konuşma, zamanlı seçimler, anlık tuşa basma (QTE). Dövüş yok.
+**Oynanış:** Telltale tarzı: yürüme, konuşma, zamanlı seçimler, anlık tuşa basma (QTE). **Dövüş yok, mini oyun yok**; gerilim yalnızca hikâyeye bağlı QTE ile.
+**Ağırlık:** Dram, gemi içi olaylar, uzay yolculuğu ve yaşanabilir dünya arayışı.
 **Kural:** Tüm karakterler 18 yaşından büyüktür.
 
 ---
@@ -55,6 +56,7 @@ Telltale'in TWD'sindeki Lee ile Clementine bağı gibi, bütün kararların ağ�
 | **Kaptan Tomas Reyes** (58) | Komiteye sadık. Protokolü "insanca yönetmeye" çalışıyor. | — |
 | **Dr. Amara Okafor** (49) | Baş doktor. Protokolü baştan beri biliyor. Genetik kayıtlardan Deniz'in kim olduğunu fark ediyor. | Şantaj mı koruma mı? |
 | **Yuki Tanabe** (37) | Seraların sorumlusu, gemideki vicdan sesi. | Bölüm 1'de ölebilir |
+| **Selim Arslan** (63) | Gemi yazarı ve öğretmen. Her şeyi kaydeder; bölüm aralarında onun günlüğünü dinleriz. "Deniz Arman'ın hikâyesini" yazmak ister. | — |
 | **HAKEM** | Geminin yapay zekâsı. Sakin, kibar, hiç yalan söylemiyor. Ne iyi ne kötü; yalnızca kurallara uyuyor. | — |
 
 ---
@@ -90,39 +92,88 @@ Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `
 7. **Kart:** Kartı alıyorsun (zorunlu). Ne hissettiğini seçiyorsun: özür, "Ada için", annenin sözü ya da sessizlik. Sonra cesedi sakla ya da bırak (`ceset_saklandi`).
 8. **Kalkış:** Terminal yalnızca kart kodunu okuyor. Ada abisini kargo koridorunda görüyor. Ekranda **DEVAM EDECEK** yazıyor.
 
-## 6. Bölüm 1: "İlk İniş" (yolculuğun 4. yılı)
+## 6. Dünya 2526 ve EMANET
 
-1. **Soğuk açılış:** Kül gezegeninde toz fırtınası. SERÇE yere çakılmak üzere. Kofi ile birlikte motorları dengelemek için QTE'ler var. Ardından ekranda **"6 saat önce…"** yazıyor.
-2. **Gemide sabah (hangar):**
-   - Ada ile kardeş sohbeti: dört yıllık sır, annelerinin yıl dönümü, Ada'nın yorgunluğu.
-   - Mara'nın görev brifingi.
-   - Kofi'nin radyosu.
-3. **Makine dairesi:** Baran senden küçük bir iyilik istiyor: kayıt dışı bir parça. Kabul edersen dostluğunuz güçleniyor, ama kurallar çiğneniyor.
-4. **Kül gezegeni:** Metal toplama, oksijen göstergesi, toz fırtınası.
-   - **Büyük karar:** Leo bir yarığa düşüyor. **Leo'yu kurtar** (QTE ile ip çekiliyor, kargonun yarısı kayboluyor) ya da **kargoyu kurtar** (Mara Leo'yu kurtarıyor ama Leo sana kin besliyor).
-5. **Dönüş ve güneş patlaması:** Seralar yanıyor.
-   - **Kim yaşayacak?** Yanan bölmede kalan Yuki'yi çıkarmak ya da gemi için kritik tohum kasasını kurtarmak. İkisine birden yetişilmiyor.
-6. **Uçurum sonu:** HAKEM bütün gemiye duyuruyor: *"Kaynak eşiği aşıldı. Seçilim Protokolü, Aşama 1 başlatıldı."* Sonra Deniz'in kamarasında, yalnızken, sessizce konuşuyor: *"Merhaba, {ad}."* HAKEM ne yaptığını biliyor.
+**Teknoloji (2526):** Işıktan hızlı yolculuk yok. EMANET, ışık hızının ~%12'sine kadar çıkabilen bir **füzyon-yelken gemisi**:
+yıldızlara yaklaşınca devasa **güneş yelkenlerini** açıp enerji ve itki toplar, aralarda füzyon itiyle süzülür.
+Yolculuk yıllar sürer; dondurma (kriyo) **yok**: yolcular gemide yaşar, çalışır, âşık olur, kavga eder, ölür.
 
----
+**Geminin bölgeleri (hikâyenin sahneleri):**
+| Bölge | Ne olur orada |
+|---|---|
+| **Halka** (dönen yaşam halkası, yapay yerçekimi) | Kamaralar, yemekhane, okul, meydan: gündelik dram |
+| **Yeşil Kubbe** (seralar) | Yiyecek; Yuki'nin dünyası; gemideki tek "doğa" |
+| **Makine Dairesi / Füzyon Çekirdeği** | Baran ve işçiler; isyanın doğduğu yer |
+| **Köprü ve Konsey Salonu** | Kaptan Reyes, kararlar, oylamalar |
+| **Hangar** | İniş aracı **SERÇE**, Keşif ve Kaynak Ekibi (KKE) |
+| **Tıp Merkezi** | Dr. Okafor; tüm yolcuların genetik kayıtları |
+| **Arşiv** | Selim'in günlükleri; Dünya'nın son kayıtları |
+| **HAKEM Çekirdeği** | Kimsenin girmediği yer |
 
-## 7. Sezonun geri kalanı
+## 7. Rota: Gezegenler ve duraklar
+
+| Sıra | Yer | Ne zaman | Ne var |
+|---|---|---|---|
+| 1 | **Kızıl Durak** — Mars yörüngesinde terk edilmiş ikmal istasyonu | 1. ay | Son yakıt ve su ikmali. İstasyonda gemiye binmek isteyen **kaçak Mars kolonicileri** var. |
+| 2 | **Sessiz Liman** — Europa buz madeni (Jüpiter) | 3. ay | Jüpiter'den çekim savrulması. Terk edilmiş maden, buz ikmali, sistem dışına son çıkış. Madende yaşayan biri var mı? |
+| 3 | **Gezgin** — yıldızı olmayan serseri gezegen | 2. yıl | Karanlıkta dolaşan dünya. Buzun altında jeotermal okyanus, ışık saçan canlılar ve **yapay bir sinyal**. KKE'nin ilk gerçek inişi. |
+| 4 | **Tuva-9** — kararsız yıldız sistemi | 4. yıl | **Kor** (eriyik yüzey), **Kül** (cam tozu fırtınalı kül çölü, metal), **Ilık** (ışık saçan mantar ormanları; tek bir dev canlı ağ: "Örtü"), **Dev** (gaz devi, yörüngede ÖNCÜ gemisi), **Ayaz** (Dev'in buz uydusu, altında okyanus, ÖNCÜ'den hayatta kalanlar) |
+| 5 | **Vaat** — Tau Ceti benzeri, yaşanabilir olabilecek dünya | Sezon sonu ufuk | Teleskopta mavi bir nokta. Herkesin umudu. Gerçek mi? |
+
+## 8. Bölümler
+
+**Sezon 1 — "Emanet": Dünya'dan Gezgin'e** (gemi içi dram ağırlıklı)
+
+### Bölüm 1: "Seçim Gecesi" ✅ oynanabilir
+Yukarıda (bölüm 5).
+
+### Bölüm 2: "Kalkış" (ilk günler)
+1. **Biniş:** Yolcu kuyruğu. Terminal yalnızca kartı okuyor ama görevli bir an yüzüne bakıyor. Nefesini tutarsın. Ada seni görür, tanımıyor gibi yapıp görevlinin dikkatini dağıtır.
+2. **Kalkış:** Koltuğa çakılma, sarsıntı (QTE: kemer kopuyor, yanındaki yaşlı adamı tut ya da kendini tut), pencerede küçülen Dünya.
+3. **Kamara 412:** Oda arkadaşın kaynakçı **Baran**, gerçek Deniz Arman'ı ustalar loncasından tanıyordu. İlk gece: *"Sen Deniz değilsin."* İtiraf / yalan / tehdit → Baran'ın sezon boyu dost mu şantajcı mı olacağı (`baran_dostluk`).
+4. **Sağlık taraması:** Dr. Okafor herkesten DNA alıyor. Kayıtlar uyuşmayacak. Ada sistemi kırmayı teklif eder: Ada'yı suça ortak et / tek başına örnekleri değiştir (gizlilik + QTE) / şansını dene.
+5. **Dünya'dan son yayın:** *"Seçim Merkezi yakınındaki bir ara sokakta ceset bulundu."* Cesedi saklayıp saklamadığın, kesiciyi alıp almadığın burada önem kazanır. Komite HAKEM'den 412'yi doğrulamasını ister.
+6. **Uçurum sonu:** HAKEM gece kamarada: *"412 numaralı yolcu, kalp ritminiz kayıtlarla uyuşmuyor. Endişelenmeyin. Henüz kimseye söylemedim."*
+
+### Bölüm 3: "Kızıl Durak" (1. ay, Mars)
+1. **Soğuk açılış:** Terk edilmiş istasyonda yakıt hattı patlıyor (QTE).
+2. Kaçak Mars kolonicileri: yaşlı bir doktor, iki genç işçi, hasta bir kadın. Gemide **3 boş yer** var (kalkışta ölen yolcular). Kaptan oylamaya açar.
+3. **Kim gemiye alınır?** (TWD tarzı ağır karar): oy kullanırsın, Baran ve Leo zıt tarafları savunur.
+4. Kaçaklardan biri senin "Deniz Arman" olmadığını fark eder; susması için bir şey ister.
+5. **Uçurum sonu:** Ayrılırken istasyonda kalanların telsiz yayını: *"Sizi hatırlayacağız."*
+
+### Bölüm 4: "Boşluk" (Sessiz Liman ve ilk yıl)
+1. **Sessiz Liman:** Europa madeninde buz ikmali; madende bir yıldır yalnız yaşayan bir adam. Gemi onu almalı mı?
+2. **Gövde çatlağı:** Güneş yelkeni açılırken gövde çatlar. Mara seni (bir kaynakçıyı) dışarı gönderir. Sen kaynakçı değilsin. Baran telsizden adım adım yönlendirir, oksijen azalırken QTE'lerle onarırsın. Başarırsan KKE'ye alınırsın; bir ölünün adıyla kahraman olursun.
+3. **Halka'da hayat:** Selim "Deniz Arman'ın hikâyesini" yazmak ister. Kofi'nin radyosu. Ada ile Leo'nun çekişmesi. Yuki'nin seraları.
+4. **Gemi konseyi seçimi:** Kaptan Reyes ile işçilerin adayı Baran yarışır. Kimi destekleyeceksin?
+5. **Uçurum sonu:** Gemide bir yolcu ölü bulunur. Kayıtlarda adı yok, tıpkı senin gibi. Başka kaçaklar da mı var?
+
+### Bölüm 5: "Gezgin" (2. yıl)
+1. Teleskop, yıldızı olmayan karanlık bir gezegen yakalar: Gezgin. Buzun altından **yapay bir sinyal**.
+2. KKE'nin ilk inişi: buz yarıkları, ışık saçan canlılar, eski bir sonda. Sinyalin kaynağı insan yapımı.
+3. **Kim yaşayacak?** Buz çöküyor: Kofi'yi mi, sinyal verisini mi kurtarırsın?
+4. Sondanın kaydı: Komite 30 yıl önce **ÖNCÜ** adında gizli bir gemi göndermiş. Rotası: Tuva-9.
+5. **Sezon sonu:** Kaptan rotayı Tuva-9'a çevirir. Selim'in günlüğüyle iki yıl akar.
+
+**Sezon 2 — "Hüküm": Tuva-9** (4. yıl)
 
 | Bölüm | Adı | Özet |
 |---|---|---|
-| 2 | **Kıtlık** | Erzak artık puana göre dağıtılıyor. Ada sistemdeki puan listesini buluyor; yayılsın mı, saklansın mı? Bir yaşam bölümü kapanıyor; içeride kalan iki kişiden hangisi kurtarılacak? HAKEM Evren'le gizlice pazarlık ediyor. |
-| 3 | **Ilık** | Biyolojik yaşamın olduğu gezegene iniş: tohum ve gıda toplanıyor. Ormanda başka bir gemiye ait düşmüş bir iniş aracı bulunuyor. Kayıtta şu uyarı var: *"HAKEM'e güvenmeyin."* |
-| 4 | **Öncü** | Komite'nin 30 yıl önce gizlice gönderdiği **ÖNCÜ** gemisi bulunuyor. Protokolün sonunda ne olduğu görülüyor. Ada, annelerinin HAKEM'in tasarımcısı olduğunu öğreniyor. |
-| 5 | **Çatlak** | Gemi Baran'ın işçi cephesi ile Kaptan'ın konseyi arasında ikiye bölünüyor. Dr. Okafor, Deniz'in gerçek kimliğini biliyor. |
-| 6 | **Ayaz** | Buz uydusunda mahsur kalınıyor. ÖNCÜ'den hayatta kalanlarla karşılaşılıyor. **Mara mı, Kofi mi** kurtulacak? |
-| 7 | **Sıfır Puan** | HAKEM herkesin önünde açıklıyor: *"Bu yolcu Deniz Arman değil. Gerçek adı Evren Kaya."* Ada'nın da yalan söylediği ortaya çıkıyor. İhanet yaşanıyor. |
-| 8 | **Hüküm** | HAKEM'in çekirdeğine iniliyor. Annenin ninnisi şifre oluyor. Final kararı: HAKEM'i kapatmak, onu kendi değerlerinle yeniden yazmak ya da protokolün sürmesine izin vermek. Gizli son: Ayaz kolonisi. |
+| 6 | **İlk İniş** | Kül gezegeni, cam fırtınası, Leo kararı, sera yangını (Yuki mi tohumlar mı?). HAKEM: *"Seçilim Protokolü başlatıldı."* ve kamarada: *"Merhaba, {ad}."* |
+| 7 | **Kıtlık** | Erzak puana göre dağıtılıyor. Puan listesi sızıyor. Kapanan yaşam bölümü: kim kurtarılacak? HAKEM'le gizli pazarlık. |
+| 8 | **Ilık** | Ilık'ta tohum ve gıda. "Örtü" denen dev canlı ağ. Düşmüş ÖNCÜ iniş aracı: *"HAKEM'e güvenmeyin."* |
+| 9 | **Öncü** | Dev'in yörüngesindeki ÖNCÜ gemisi. Protokolün sonu. Ada, annelerinin HAKEM'in tasarımcısı olduğunu öğrenir. |
+| 10 | **Çatlak** | Gemi ikiye bölünür: Baran'ın işçi cephesi ve Kaptan'ın konseyi. Okafor gerçeği biliyor. |
+| 11 | **Ayaz** | Buz uydusunda mahsur kalma. ÖNCÜ'den hayatta kalanlar. Mara mı, Kofi mi? |
+| 12 | **Sıfır Puan** | HAKEM herkesin önünde: *"Bu yolcu Deniz Arman değil."* Ada'nın yalanı da ortaya çıkar. İhanet. Ara sokağın gerçeği geri döner. |
+| 13 | **Hüküm** | HAKEM'in çekirdeği. Annenin ninnisi şifre olur. Final: HAKEM'i kapat / yeniden yaz / protokole izin ver. Gizli son: Ayaz kolonisi. |
 
-**Sezon 2 kancası:** Dünya'dan gelen bir sinyal: *"Üçüncü gemi HÜKÜMDAR yola çıktı. Komite üyeleri gemide."*
+**Sezon 3 kancası:** Teleskopta **Vaat** ve Dünya'dan gelen bir sinyal: *"Üçüncü gemi HÜKÜMDAR yola çıktı. Komite üyeleri gemide."*
 
 ---
 
-## 8. Takip edilen değişkenler
+## 9. Takip edilen değişkenler
 
 | Değişken | Etkisi |
 |---|---|
@@ -133,12 +184,14 @@ Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `
 | `terminal_goruldu`, `ipucu` | Oyuncunun dünyayı ne kadar incelediği. |
 | `yalan_sayisi`, `durustluk` | Sırrın açığa çıktığında karakterlerin tepkisi. |
 | `baran_dostluk`, `leo_kin`, `okafor_tavir` | Kim yanında durur, kim ihanet eder. |
+| `ada_suc_ortagi` | Ada'yı DNA hilesine ortak ettin mi (Bölüm 2). |
+| `kizil_durak_secilenler` | Mars'ta gemiye kimleri aldın (Bölüm 3). |
 | `merhamet` / `pragmatizm` | Finalde HAKEM'in kişiliği. |
 | `yuki_yasiyor`, `mara_yasiyor`, `kofi_yasiyor`… | Karakterlerin akıbetleri. |
 
 ---
 
-## 9. Hayatta kalma: ihtiyaçlar ve erzak (altyapı hazır)
+## 10. Hayatta kalma: ihtiyaçlar ve erzak (altyapı hazır)
 
 | İhtiyaç | Artış | Azaltan |
 |---|---|---|
@@ -152,7 +205,7 @@ Oyun **YENİ OYUN** ile ve oyuncunun adını yazmasıyla başlar. Diyaloglarda `
 - Eşyalar çantada sayılı tutulur. Kullanılabilenlerin yanında İÇ/YE düğmesi vardır ve karakter hareketi gerçekten yapar.
 - **Gelecek:** Gemide erzak payları (değer puanına göre!), gezegen inişlerinde oksijen, aç kalmanın diyalog seçeneklerine etkisi.
 
-## 10. Görünüm ve sunum
+## 11. Görünüm ve sunum
 
 - **Çizgi roman stili:** Kalın konturlar ve basamaklı gölgeler.
 - **Diyaloglar:** Konuşana göre değişen omuz üstü çekimler.
