@@ -101,7 +101,7 @@ func _process(_d):
 		return
 	if plan.is_empty():
 		# Son nokta kaçırıldıysa (yakın nokta henüz güncellenmemişti) tekrar dene
-		if level._nearby_npc and stage in ["iskele", "meydan", "guverte8"] and f % 2 == 0:
+		if level._nearby_npc and stage in ["iskele", "meydan", "guverte8"]:
 			level._start_dialog(level._nearby_npc)
 		next_at = f + 30
 		return
