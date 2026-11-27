@@ -17,7 +17,10 @@ Kız kardeşi Ada gemidedir. Ayrıntılı hikâye: `docs/HIKAYE.md`.
 4. **Hikâye ile mekanik birebir uyumlu olmalı.** Bir anlatım satırı fiziksel bir eylem anlatıyorsa
    (uzatmak, tutmak, düşmek, sürüklemek, içmek…) bu **ekranda canlandırılır** (`@olay` + gerekirse `@bekle`).
    Ara sahne de olsa, QTE olmasa da. **QTE'ler de canlandırılır:** dokunuş/güç ekrandaki eylemi sürer
-   (`GameLevel._on_qte_tap/_on_qte_fill`: kolçağı sıkmak, yerdekini kaldırmak, itişmek); QTE sırasında ekran hareketsiz kalmaz. `python3 tools/lint_dialog.py` temiz geçmeden sahne bitmiş sayılmaz.
+   (`GameLevel._on_qte_tap/_on_qte_fill`: kolçağı sıkmak, yerdekini kaldırmak, itişmek); QTE sırasında ekran hareketsiz kalmaz.
+   Kaydırma QTE'leri: ağır çekim + ok/yön yazısı; kaydırıldığı an `_dodge` (eğilme/kaçış), kaybedince `_stagger`.
+   Her QTE anında **iki taraf da kadrajda** olur (tehlike ve oyuncu). Yeni QTE eklenince `tests_tmp/qte_film.gd` ile
+   kare kare çekilip gözle kontrol edilir (kazanma ve FAIL=1 kaybetme yolları). `python3 tools/lint_dialog.py` temiz geçmeden sahne bitmiş sayılmaz.
    Muafiyet yalnızca hatıra/geçmiş zaman veya sahnede zaten kalıcı durum için: önceki satıra `#fiz: <neden>`.
 5. **TWD sunumu:** sinema bantları, yavaş kayan kamera, konuşana göre omuz üstü çekim, aksiyon anlarında
    yazı gizlenir ve sahne oynar; parlayan inceleme noktaları (ipuçları), konuşulabilenlerin üstünde "• • •".

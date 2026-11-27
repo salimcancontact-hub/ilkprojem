@@ -6,6 +6,8 @@ signal finished(success: bool)
 ## Hızlı dokunmada güç değiştikçe (0..1) — boğuşma animasyonu için.
 signal progress_changed(fill: float)
 signal tapped
+## Sonuç belli olduğu an (kaydırma/son dokunuş): ekrandaki eylem beklemeden oynasın.
+signal resolved(success: bool)
 
 const RADIUS := 78.0
 const DIRS := {"sol": Vector2.LEFT, "sag": Vector2.RIGHT, "yukari": Vector2.UP, "asagi": Vector2.DOWN}
@@ -27,6 +29,9 @@ var _pulse: float = 0.0
 var _vignette: ColorRect
 ## 0..1 arası tehlike: süre azaldıkça ve güç düşük kaldıkça artar.
 var danger: float = 0.0
+## Kaydırma yerine dokunulursa ok bir an büyüyüp "KAYDIR!" uyarısı verir.
+var _hint_t: float = 0.0
+const DIR_TEXT := {"sol": "SOLA KAYDIR", "sag": "SAĞA KAYDIR", "yukari": "YUKARI KAYDIR", "asagi": "AŞAĞI KAYDIR"}
 
 
 func _ready() -> void:
@@ -61,7 +66,7 @@ func start(step: Dictionary) -> void:
 func _process(delta: float) -> void:
 	_pulse += delta
 	if _result_t > 0.0:
-		_result_t -= delta
+		_result_t -= delta / maxf(Engine.time_scale, 0.05)
 		if _result_t <= 0.0:
 			visible = false
 			finished.emit(_result_ok)
@@ -71,10 +76,12 @@ func _process(delta: float) -> void:
 		return
 	# Telefonda bir anlık takılma (ilk çizim, gölgelendirici derleme) QTE süresini yemesin:
 	# tek karede en fazla 1/20 sn düşülür.
-	_left -= minf(delta, 0.05)
+	var real := delta / maxf(Engine.time_scale, 0.05)  # ağır çekimde süre gerçek zamanla akar
+	_hint_t = maxf(_hint_t - real, 0.0)
+	_left -= minf(real, 0.05)
 	if _kind == "vur":
 		var before := _fill
-		_fill = maxf(_fill - minf(delta, 0.05) * 0.18, 0.0)
+		_fill = maxf(_fill - minf(real, 0.05) * 0.18, 0.0)
 		if before != _fill:
 			progress_changed.emit(_fill)
 		var time_pressure := 1.0 - clampf(_left / _time, 0.0, 1.0)
@@ -131,13 +138,15 @@ func _hit() -> void:
 
 func _check_swipe(v: Vector2) -> void:
 	if v.length() < 60.0:
-		return  # kaydırma değil, dokunma
+		_hint_t = 0.6  # dokunuldu ama kaydırılmadı: yönü hatırlat
+		return
 	var want: Vector2 = DIRS.get(_dir, Vector2.LEFT)
 	_end(v.normalized().dot(want) > 0.6)
 
 
 func _end(ok: bool) -> void:
 	active = false
+	resolved.emit(ok)
 	danger = 0.0
 	_update_vignette()
 	_result_ok = ok
@@ -167,12 +176,23 @@ func _draw() -> void:
 	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
 	if _kind == "kaydir":
 		var d: Vector2 = DIRS.get(_dir, Vector2.LEFT)
+		var big := 1.0 + _hint_t * 0.9
 		var shift := d * (sin(_pulse * 6.0) * 0.5 + 0.5) * 16.0
-		var tip := c + d * 44.0 + shift
+		# Ekran boyunca kayan iz: parmağın gideceği yolu gösterir
+		var k := fmod(_pulse * 1.6, 1.0)
+		var trail_from := c - d * 160.0
+		draw_line(trail_from, trail_from + d * 320.0 * k, Color(col, 0.35), 18.0, true)
+		draw_circle(trail_from + d * 320.0 * k, 16.0, Color(col, 0.8))
+		var tip := c + d * 44.0 * big + shift
 		var side := Vector2(-d.y, d.x)
 		draw_colored_polygon(PackedVector2Array([tip, tip - d * 34.0 + side * 26.0, tip - d * 34.0 - side * 26.0]), col)
 		draw_line(c - d * 40.0 + shift, tip - d * 20.0, col, 10.0, true)
 		draw_string(font, c + Vector2(-tw / 2.0, RADIUS + 58), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+		var sub: String = DIR_TEXT.get(_dir, "KAYDIR")
+		if _hint_t > 0.0:
+			sub = "KAYDIR!  " + sub
+		var sw := font.get_string_size(sub, HORIZONTAL_ALIGNMENT_CENTER, -1, 22).x
+		draw_string(font, c + Vector2(-sw / 2.0, RADIUS + 92), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1.0, 0.85, 0.4) if _hint_t <= 0.0 else Color(1, 0.4, 0.3))
 	else:
 		draw_string(font, c + Vector2(-tw / 2.0, 11), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 		if _kind == "vur":

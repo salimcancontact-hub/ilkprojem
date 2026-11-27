@@ -143,13 +143,25 @@ func set_letterbox(on: bool, time: float = 0.4) -> void:
 	tw.tween_property(_bottom_bar, "offset_top", -BAR_HEIGHT if on else 0.0, time)
 
 
+signal qte_began(step: Dictionary)
+signal qte_ended(step: Dictionary, success: bool)
+signal qte_resolved(step: Dictionary, success: bool)
+
+
 func _on_qte(step: Dictionary) -> void:
+	qte_began.emit(step)
+	if not _qte.resolved.is_connected(_on_qte_resolved):
+		_qte.resolved.connect(_on_qte_resolved)
 	_finish_typing()
 	_in_qte = true
 	_qte_step = step.duplicate()
 	_choice_box.visible = false
 	_panel.visible = false  # TWD'deki gibi QTE sırasında yazı yok, sadece sahne
 	_qte.start(_qte_step)
+
+
+func _on_qte_resolved(success: bool) -> void:
+	qte_resolved.emit(_qte_step, success)
 
 
 func _on_qte_finished(success: bool) -> void:
@@ -162,6 +174,7 @@ func _on_qte_finished(success: bool) -> void:
 	# QTE'de hızlı hızlı dokunan parmak, ardından gelen yazıları atlatmasın
 	_block_input = maxf(_block_input, 1.2)
 	_after_qte = true
+	qte_ended.emit(_qte_step, success)
 	runner.finish_qte(success)
 
 

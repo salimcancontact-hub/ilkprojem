@@ -71,6 +71,9 @@ func _ready() -> void:
 			shake(0.06, 0.12)
 		_on_qte_tap())
 	_dialog.qte_death.connect(_on_qte_death)
+	_dialog.qte_began.connect(_on_qte_began)
+	_dialog.qte_ended.connect(_on_qte_ended)
+	_dialog.qte_resolved.connect(_on_qte_resolved)
 	_dialog.qte_retry.connect(_on_qte_retry)
 
 
@@ -420,6 +423,65 @@ func cinematic(on: bool) -> void:
 	_dialog.set_letterbox(on)
 
 
+## Her QTE ekranda oynar (TWD): kaydırmada ağır çekim ve kaçış/eğilme, kaybedince darbe.
+## Seviyeler _qte_begin/_qte_end ile kendi eylemini ekler.
+func _on_qte_began(step: Dictionary) -> void:
+	if step.get("kind", "") == "kaydir":
+		Engine.time_scale = 0.35  # TWD ağır çekimi: tehlike yavaşlar, oyuncu tepki verebilir
+	_qte_begin(step)
+
+
+## Kaydırıldığı an: ağır çekim biter, karakter hemen eğilir/kaçar (ya da darbeyi yer).
+func _on_qte_resolved(step: Dictionary, ok: bool) -> void:
+	Engine.time_scale = 1.0
+	if step.get("kind", "") == "kaydir":
+		if ok:
+			_dodge(step.get("dir", "sol"))
+		elif not step.get("lethal", false):
+			_stagger()
+
+
+func _on_qte_ended(step: Dictionary, ok: bool) -> void:
+	Engine.time_scale = 1.0
+	_qte_end(step, ok)
+
+
+func _qte_begin(_step: Dictionary) -> void:
+	pass
+
+
+func _qte_end(_step: Dictionary, _ok: bool) -> void:
+	pass
+
+
+## Yana eğilip kaçma: çömelerek yön tarafına hızla kayar, sonra doğrulur.
+func _dodge(dir: String) -> void:
+	var vis: Node3D = _player.get_node("Visual")
+	var right := vis.global_basis.x.normalized()
+	var side := -right if dir == "sol" else right
+	if dir == "yukari" or dir == "asagi":
+		side = vis.global_basis.z.normalized()  # geri çekil
+	side.y = 0
+	_player.model.play("Crouch_Idle", 0.08)
+	var lean := 0.35 if side.dot(right) < 0 else -0.35
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	tw.tween_property(_player, "global_position", _player.global_position + side * 0.75, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(vis, "rotation:z", lean, 0.15)
+	tw.chain().tween_interval(0.45)
+	tw.chain().tween_property(vis, "rotation:z", 0.0, 0.3)
+	tw.chain().tween_callback(func() -> void: _player.model.play("Idle", 0.3))
+
+
+## Darbe alma: geriye sendeler.
+func _stagger() -> void:
+	var vis: Node3D = _player.get_node("Visual")
+	var back := vis.global_basis.z.normalized()
+	back.y = 0
+	shake(0.3, 0.4)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(_player, "global_position", _player.global_position + back * 0.45, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
 ## QTE'de her dokunuşun ve gücün (0..1) ekrandaki karşılığı: seviyeler kendi fiziksel eylemini oynatır
 ## (ör. koltuğa tutunma, yerdekini kaldırma). Fiziksel bir QTE ekranda hareketsiz kalmamalı.
 func _on_qte_fill(_fill: float) -> void:
@@ -458,7 +520,7 @@ func _set_camera(shot: String) -> void:
 ## Kamerayı yerleştirir: araya duvar/barikat giriyorsa önüne çeker,
 ## sonra TWD'deki gibi yavaşça kaydırıp hedefe yaklaştırır.
 func _place_cam(from: Vector3, target: Vector3) -> void:
-	from = _unblocked(target, from)
+	from = _clear_view(from, target)
 	if _cam_tween:
 		_cam_tween.kill()
 	var dir := (target - from).normalized()
@@ -486,6 +548,37 @@ func _set_cam(pos: Vector3, target: Vector3) -> void:
 	_dialog_cam.global_position = pos
 	if not pos.is_equal_approx(target):
 		_dialog_cam.look_at(target, Vector3.UP)
+
+
+## İstenen açı duvar/barikat arkasında kalıyorsa hedefin etrafında döndürerek, önü açık ve
+## duvara yapışık olmayan en yakın açıyı bulur (ara sahnede duvarın içi/arkası görünmesin).
+func _clear_view(from: Vector3, target: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state
+	var exclude: Array[RID] = [_player.get_rid()]
+	if _talking_to:
+		exclude.append(_talking_to.get_rid())
+	if _struggle_npc:
+		exclude.append(_struggle_npc.get_rid())
+	var off := from - target
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.35
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = sphere
+	sq.collision_mask = 1
+	sq.exclude = exclude
+	for ang in [0, 25, -25, 50, -50, 80, -80, 115, -115, 150, -150, 180]:
+		for h in [0.0, 0.6]:
+			for scale in [1.0, 0.75]:
+				var cand: Vector3 = target + off.rotated(Vector3.UP, deg_to_rad(ang)) * scale + Vector3(0, h, 0)
+				var q := PhysicsRayQueryParameters3D.create(target, cand, 1)
+				q.exclude = exclude
+				if not space.intersect_ray(q).is_empty():
+					continue
+				sq.transform = Transform3D(Basis(), cand)
+				if not space.intersect_shape(sq, 1).is_empty():
+					continue
+				return cand
+	return _unblocked(target, from)
 
 
 ## Hedef ile kamera arasında çarpışan bir şey varsa kamerayı onun önüne alır.

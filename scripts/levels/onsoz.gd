@@ -279,9 +279,18 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_player.model.reach("r", _arman_card, 0.45)
 		"bilek_tut":
 			_arman.model.release("r", 0.2)
+			var head := _player.head_position()
+			var ah := _arman.model.bone_position("hand_l")
+			_cut_far = ah.lerp(_arman.head_position(), 0.2)
+			_cut_near = head.lerp(ah, 0.25)
+			_cut_point = _point(_cut_far.lerp(_cut_near, 0.5))
+			_arman.model.reach("l", _cut_point, 0.3)
+			_wrist_fight = true
 			_player.model.reach("r", _arman.model.bone_marker("hand_l"), 0.3)
 			_player.model.reach("l", _arman.model.bone_marker("lowerarm_l"), 0.3)
 		"bilek_birak":
+			_wrist_fight = false
+			_arman.model.release("l", 0.3)
 			_player.model.release_all(0.2)
 		"telsize_uzan":
 			_radio_reach = true
@@ -299,6 +308,26 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_cutter = Props.cutter()
 			_arman.model.attach(_cutter, "hand_l", Vector3(0, 0.05, 0.06), Vector3(-1.2, 0, 0))
 			_arman.model.play_once("Interact", "Idle")
+			# İkisi birden kadrajda: kesicinin savrulduğu an görünsün
+			var a := _arman.global_position
+			var pp := _player.global_position
+			var dir := a - pp
+			dir.y = 0
+			dir = dir.normalized()
+			var right := dir.cross(Vector3.UP).normalized()
+			var mid := (a + pp) / 2.0
+			# Kesiciyle üstüne yürür: savuruş oyuncuya yetişecek mesafeye gelir
+			var a2 := pp + dir * 1.35
+			a2.y = a.y
+			if a.distance_to(a2) > 0.2:
+				_arman.model.play("Walk", 0.15)
+				var twa := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+				twa.tween_property(_arman, "global_position", a2, 0.7)
+				twa.tween_callback(func() -> void: _arman.model.play("Idle", 0.2))
+			_arman.face_point(pp)
+			# Oyuncunun omzunun arkasından Arman'a: ikisinin arasındaki boşluk (sokak duvarlarına girmez)
+			camera_shots["kesici_yan"] = [pp - dir * 1.6 + right * 0.7 + Vector3(0, 1.7, 0), a2 + Vector3(0, 1.1, 0), true]
+			_set_camera("kesici_yan")
 		"kesici_dus":
 			if _cutter:
 				_arman.model.detach(_cutter, self)
@@ -630,6 +659,25 @@ func _prewarm() -> void:
 	for k in 6:
 		await get_tree().process_frame
 	holder.queue_free()
+	# İsyan anını önceden çiz (alarm ışıkları yanık, kalabalık koşuyor): o an telefonda takılma olmasın
+	var saved := cam.global_transform
+	var shot: Array = camera_shots["kalabalik"]
+	cam.global_transform = Transform3D(Basis.looking_at((shot[1] - shot[0]).normalized()), shot[0])
+	for l: Light3D in _alarm.get_children():
+		l.light_energy = 4.0
+	_blast.light_energy = 4.0
+	var prev := {}
+	for person: CharacterModel in _crowd.get_children():
+		prev[person] = person.current_animation()
+		person.play("Sprint", 0.0)
+	for k in 5:
+		await get_tree().process_frame
+	for l: Light3D in _alarm.get_children():
+		l.light_energy = 0.0
+	_blast.light_energy = 0.0
+	for person: CharacterModel in prev:
+		person.play(prev[person] if prev[person] != "" else "Idle", 0.0)
+	cam.global_transform = saved
 
 
 # --- Görüntülü arama ---------------------------------------------------------
@@ -704,6 +752,11 @@ func _throw_bottle() -> void:
 	var head := _player.head_position()
 	var from := head + Vector3(-3.0, 2.6, -9.0)
 	_bottle.global_position = from
+	# Oyuncunun omzunun arkasından şişenin geldiği yöne bakan yakın açı (TWD): tehlike görünsün
+	var d := (from - head).normalized()
+	var side := d.cross(Vector3.UP).normalized()
+	camera_shots["sise_gelis"] = [head - d * 1.5 + side * 0.75 + Vector3(0, 0.25, 0), head + d * 3.0, true]
+	_set_camera("sise_gelis")
 	_bottle_tween = create_tween().set_parallel(true)
 	_bottle_tween.tween_property(_bottle, "global_position", head + Vector3(0, 0.05, 0), 2.2)
 	_bottle_tween.tween_property(_bottle, "rotation", Vector3(TAU * 3.0, 0, TAU), 2.2)
@@ -820,7 +873,7 @@ func _start_riot() -> void:
 	if _phase != "sokak":
 		return
 	_phase = "isyan"
-	shake(0.12, 3.0)
+	shake(0.06, 1.2)
 	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
 		if npc != _card:
 			npc.interactable = false
@@ -860,7 +913,16 @@ var _lifting: bool = false
 
 
 ## KALDIR: dokundukça el ele tutuşan eller yukarı çekilir, Arman'ın kolu ve gövdesi kalkar.
+var _wrist_fight: bool = false
+var _cut_point: Node3D
+var _cut_far: Vector3
+var _cut_near: Vector3
+
+
 func _on_qte_fill(fill: float) -> void:
+	if _wrist_fight and _cut_point:
+		# Güç azsa alev yüzüne yaklaşır, dokundukça geri itilir
+		_cut_point.global_position = _cut_near.lerp(_cut_far, clampf(fill, 0.0, 1.0))
 	if _lifting and _lift_point:
 		var p := _lift_point.global_position
 		p.y = _lift_base + fill * 0.55
@@ -868,6 +930,8 @@ func _on_qte_fill(fill: float) -> void:
 
 
 func _on_qte_tap() -> void:
+	if _wrist_fight:
+		shake(0.05, 0.1)
 	if _lifting:
 		shake(0.04, 0.1)
 
@@ -882,16 +946,25 @@ func _arman_escape() -> void:
 		_arman.model.play("Idle", 0.3)
 		_arman.face_point(_player.global_position)
 		await get_tree().process_frame
+	if _phase != "isyan":
+		return  # oyuncu ara sokağa çoktan vardı
 	_run_to(_arman.model, _arman, [Vector3(5.0, -0.15, 40.0), Vector3(6.5, -0.15, 13.0), Vector3(12.5, -0.15, 10.6), ALLEY_SPOT], 9.0, "Sprint", false)
 	await get_tree().create_timer(9.1).timeout
-	_arman.model.play("Idle", 0.3)
+	if _phase == "isyan":
+		_arman.model.play("Idle", 0.3)
+
+
+var _run_tweens: Dictionary = {}
 
 
 func _run_to(model: CharacterModel, mover: Node3D, points: Array, duration: float, anim: String, hide_at_end: bool) -> void:
 	if model == null:
 		return
 	model.play(anim, 0.15)
+	if _run_tweens.has(mover) and _run_tweens[mover]:
+		(_run_tweens[mover] as Tween).kill()
 	var tw := create_tween()
+	_run_tweens[mover] = tw
 	var prev: Vector3 = mover.position
 	var seg := duration / points.size()
 	for p: Vector3 in points:
@@ -921,7 +994,10 @@ func _on_alley_entered(body: Node3D) -> void:
 	_blast.light_energy = 10.0
 	create_tween().tween_property(_blast, "light_energy", 0.0, 1.0)
 	shake(0.35, 0.8)
-	# Deniz Arman ara sokakta, nefes nefese
+	# Deniz Arman ara sokakta, nefes nefese (hâlâ koşuyorsa koşusu burada biter)
+	if _run_tweens.has(_arman) and _run_tweens[_arman]:
+		(_run_tweens[_arman] as Tween).kill()
+	_arman_waits_to_run = false
 	_arman.visible = true
 	_arman.rotation = Vector3.ZERO
 	_arman.position = ALLEY_SPOT

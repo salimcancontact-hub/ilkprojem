@@ -316,7 +316,6 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 
 === sise_kurtul
 @olay sise_kacti
-@olay anim EVREN Roll
 @bekle 1.3
 > Şişe kulağının dibinden geçip muhafızın kaskında patlıyor.
 -> isyan_cop
@@ -480,7 +479,6 @@ ARMAN: Geri çekil!
 @qte kaydir sag 1.5 "KAÇIN" -> bogus1_ok | bogus1_fail
 
 === bogus1_ok
-@olay anim EVREN Roll
 > Alev yüzünün birkaç santim önünden geçiyor.
 -> bogus2
 
