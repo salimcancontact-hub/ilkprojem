@@ -30,6 +30,7 @@ var _block_input := 0.0
 const MIN_READ := 0.45
 var _after_qte: bool = false
 var _holding_for_title: bool = false
+var _reveal_frames: int = 0
 var _toast_tween: Tween
 
 var _root: Control
@@ -231,6 +232,10 @@ func _process(delta: float) -> void:
 	if not active:
 		return
 	_block_input = maxf(_block_input - delta, 0.0)
+	if _reveal_frames > 0:
+		_reveal_frames -= 1
+		if _reveal_frames == 0:
+			_text_label.self_modulate.a = 1.0
 	if _typing:
 		_chars += TYPE_SPEED * minf(delta, 0.05)  # takılmada yazı bir anda tamamlanmasın
 		_text_label.visible_characters = int(_chars)
@@ -307,8 +312,13 @@ func _show_text(text: String) -> void:
 	if _after_qte:
 		_after_qte = false
 		_block_input = maxf(_block_input, 1.0)
+	# Yeni satır ilk iki karede gizli: telefonda motor, metin değiştiği ilk çizimde eski "tamamı görünür"
+	# durumunu bir kare gösterebiliyor (videoda yakalandı). Harf harf yazma başlayınca görünür olur.
+	_text_label.self_modulate.a = 0.0
+	_reveal_frames = 2
 	_panel.visible = true
 	_set_panel_raised(false)
+	_text_label.visible_characters = 0
 	_text_label.text = Story.format_text(text)
 	_text_label.visible_characters = 0
 	_chars = 0.0
@@ -317,6 +327,9 @@ func _show_text(text: String) -> void:
 
 func _finish_typing() -> void:
 	_typing = false
+	if _reveal_frames > 0:
+		_reveal_frames = 0
+	_text_label.self_modulate.a = 1.0
 	_text_label.visible_characters = -1
 
 

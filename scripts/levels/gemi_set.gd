@@ -537,6 +537,13 @@ static func build_zone2(root: Node3D) -> Dictionary:
 	z2.add_child(out)
 	refs["outside"] = out
 	clouds(out, Vector3(500, -60, 7), Vector3(300, 60, 500), 14, 160.0, 7)
+	# Kalkışta camın önünden aşağı akan bulut katmanları
+	var asc: Array[Node3D] = []
+	for i in 3:
+		var c := clouds(z2, Vector3(520, 120 + i * 420, 7), Vector3(420, 70, 650), 16, 170.0, 60 + i)
+		c.visible = false
+		asc.append(c)
+	refs["ascent_clouds"] = asc
 	# Dünya (kalkıştan sonra görünür)
 	# Yörüngeden Dünya: aşağıda küçük bir top
 	var e := earth(z2, Vector3(2600, -130, 7), 400.0)

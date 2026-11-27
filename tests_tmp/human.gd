@@ -39,12 +39,31 @@ func _watch(d) -> void:
 		last_txt = t; last_txt_f = f
 	if d._panel.visible and d._title.visible and d._title.modulate.a > 0.3:
 		problems.append("BAŞLIK+YAZI çakışması: " + d._text_label.text.substr(0, 30))
+var drawn_txt := ""
+var drawn_vis := 0
+var drawn_full := false
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	RenderingServer.frame_pre_draw.connect(_pre_draw)
 	ToonStyle.set_quality("dusuk")
 	var boot = load("res://scenes/boot.tscn").instantiate()
 	get_tree().root.add_child.call_deferred(boot)
 	(func(): get_tree().current_scene = boot).call_deferred()
+## Ekrana tam çizilmeden önce yazı panelinin durumu: tam görünüp sonra baştan yazılan yazıyı yakalar.
+func _pre_draw() -> void:
+	var cs = get_tree().current_scene
+	if cs == null or not cs.has_node("DialogUI"): return
+	var d = cs.get_node("DialogUI")
+	if not d._panel.visible or not d.active:
+		drawn_txt = ""; return
+	var t: String = d._text_label.text
+	var vis: int = d._text_label.visible_characters
+	var full: bool = (vis == -1 or vis >= t.length()) and d._text_label.self_modulate.a > 0.5
+	if t == drawn_txt and drawn_full and not full:
+		problems.append("ÇİZİMDE FLAŞ (tam göründü, sonra baştan): '%s' vis=%d" % [t.substr(0, 40), vis])
+	if t != drawn_txt and full and t.length() > 6 and d._text_label.self_modulate.a > 0.5:
+		problems.append("ÇİZİMDE TAM BELİRDİ: '%s'" % t.substr(0, 40))
+	drawn_txt = t; drawn_vis = vis; drawn_full = full
 func note(s): print("[", f, "] ", s); log_steps.append(s)
 func _process(_d):
 	f += 1

@@ -38,8 +38,6 @@ func _ready() -> void:
 	_z1 = GemiSet.build_zone1(self)
 	_z2 = GemiSet.build_zone2(self)
 	_z3 = GemiSet.build_bridge(self)
-	_z4 = GemiSet.build_exterior(self)
-	_z5 = GemiSet.build_ascent(self)
 	var t1 := Time.get_ticks_msec()
 	_spawn_people()
 	_spawn_hotspots()
@@ -51,7 +49,7 @@ func _ready() -> void:
 	camera_shots = {
 		"iskele": [Vector3(15.0, 3.4, -0.6), Vector3(6.5, 1.4, 8.5), true],
 		"koltuk": [Z2 + Vector3(6.9, 1.45, 6.1), Z2 + Vector3(5.0, 1.0, 7.05), true],
-		"pencere": [Z2 + Vector3(4.2, 1.55, 7.35), Z2 + Vector3(7.7, 1.35, 6.9), true],
+		"pencere": [Z2 + Vector3(5.3, 1.35, 8.65), Z2 + Vector3(6.4, 1.2, 6.9), true],
 		"yuz": [Z2 + Vector3(6.0, 1.3, 7.25), Z2 + Vector3(5.0, 1.15, 7.0), true],
 		# Köprü ve dış çekim
 		"kopru": [GemiSet.ZONE3 + Vector3(3.6, 2.5, -3.4), GemiSet.ZONE3 + Vector3(0, 1.3, 2.2), true],
@@ -83,20 +81,14 @@ func _ready() -> void:
 	_dialog.fade_to(1.0, 0.0)
 	_set_zone(2, true)
 	_set_zone(3, true)
-	_set_zone(4, true)
-	_set_zone(5, true)
 	(_z2["earth"] as Node3D).visible = true
-	(_z5["earth"] as Node3D).visible = true
 	await get_tree().process_frame
 	await _prewarm()
 	if _loading:
 		_loading.queue_free()  # ilk çizim ve gölgelendirici derlemesi bitti
 	(_z2["earth"] as Node3D).visible = false
-	(_z5["earth"] as Node3D).visible = false
 	_set_zone(2, false)
 	_set_zone(3, false)
-	_set_zone(4, false)
-	_set_zone(5, false)
 	Story.set_var("bolum", "binis")
 	cinematic_hold = false
 	await play_dialog(DLG, "giris")
@@ -105,7 +97,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	super(delta)
-	if _z5.is_empty():
+	if _z3.is_empty():
 		return  # set henüz kuruluyor
 	var holo: Node3D = _z1.get("ship_holo")
 	if holo and _z1["root"].visible:
@@ -261,7 +253,7 @@ func _trigger(pos: Vector3, size: Vector3, cb: Callable) -> void:
 
 
 func _set_zone(zone: int, on: bool) -> void:
-	var r: Node3D = [_z1, _z2, _z3, _z4, _z5][zone - 1]["root"]
+	var r: Node3D = [_z1, _z2, _z3][zone - 1]["root"]
 	r.visible = on
 
 
@@ -325,20 +317,13 @@ func _prewarm() -> void:
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(0, -0.1, 1)), Z2 + Vector3(0, 1.6, 0))
 	for k in 3:
 		await get_tree().process_frame
-	# Köprü, dış çekim (alevler) ve Dünya
-	for f: MeshInstance3D in _z4["flames"]:
-		f.scale = Vector3.ONE
+	# Köprü ve kamara penceresindeki Dünya / kalkış bulutları
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(0, -0.1, 1)), GemiSet.ZONE3 + Vector3(0, 1.8, -3.0))
 	for k in 3:
 		await get_tree().process_frame
-	cam.global_transform = Transform3D(Basis.looking_at(Vector3(-1, -0.1, -0.6)), GemiSet.ZONE4 + Vector3(330, 18, 300))
-	for k in 3:
-		await get_tree().process_frame
-	for f: MeshInstance3D in _z4["flames"]:
-		f.scale = Vector3.ONE * 0.05
-	cam.global_transform = Transform3D(Basis.looking_at(Vector3(-0.4, -0.3, -0.6)), GemiSet.ZONE5 + Vector3(700, 120, 900))
-	for k in 3:
-		await get_tree().process_frame
+	for c: Node3D in _z2["ascent_clouds"]:
+		c.visible = true
+	(_z2["earth"] as Node3D).visible = true
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(1, -0.4, 0)), Z2 + Vector3(5.0, 1.2, 7.0))
 	for k in 3:
 		await get_tree().process_frame
@@ -549,43 +534,42 @@ func _on_story_event(event_name: String, args: PackedStringArray) -> void:
 			for l: OmniLight3D in _z2["cabin_lights"]:
 				var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 				tw.tween_property(l, "light_energy", l.light_energy * 0.35, 2.0)
-		"kalkis_basla":
-			shake(0.15, 6.0)
-		"tutun":
+		"atesleme_kamara":
+			# Köprüden kamaraya: gürleme, sarsıntı, titreyen ışıklar; pencerede bulutlar aşağı kaymaya başlar
+			_set_zone(3, false)
+			_set_zone(2, true)
+			shake(0.2, 5.0)
+			for l: OmniLight3D in _z2["cabin_lights"]:
+				var twl := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_loops(6)
+				twl.tween_property(l, "light_color", Color(1.0, 0.5, 0.25), 0.15)
+				twl.tween_property(l, "light_color", Color(1.0, 0.86, 0.7), 0.25)
+			var out: Node3D = _z2["outside"]
+			var tw0 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw0.tween_property(out, "position:y", -160.0, 8.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		"tutun_basla":
+			# Eller kolçaklara kenetlenir; QTE'de her dokunuş sıkar, güç arttıkça gövde koltuğa gömülür
 			var g: Array = _z2["seat_grips"]
-			_player.model.reach("l", g[1] if _left_is_pos_z() else g[0], 0.3)
-			_player.model.reach("r", g[0] if _left_is_pos_z() else g[1], 0.3)
+			_player.model.reach("l", g[0], 0.2)
+			_player.model.reach("r", g[1], 0.2)
+			_grip_base = [(g[0] as Node3D).position, (g[1] as Node3D).position]
+			_gripping = true
+			camera_shots["tutun"] = [Z2 + Vector3(6.25, 1.25, 7.75), Z2 + Vector3(5.05, 0.85, 7.0), true]
+			_set_camera("tutun")
+			shake(0.15, 5.0)
+		"tutun":
+			_gripping = false
 			shake(0.25, 3.0)
 		"bayil":
+			_gripping = false
+			_player.model.release_all(1.2)  # eller kolçaklardan kayar
+			_lean(-0.12)  # baş öne düşer
 			shake(0.3, 1.5)
 			await _dialog.fade_to(1.0, 1.6)
+		"yukselis_pencere":
+			_window_ascent()
 		"kopru":
 			_set_zone(2, false)
 			_set_zone(3, true)
-		"dis_cekim":
-			_set_zone(3, false)
-			_set_zone(4, true)
-		"atesleme":
-			_ignite()
-		"yukselis":
-			_ascent()
-		"kamara_yorunge":
-			cinematic_hold = false
-			_set_zone(5, false)
-			_set_zone(2, true)
-			_sky_to_space(0.0)
-			(_z2["outside"] as Node3D).visible = false
-			(_z2["earth"] as Node3D).visible = true
-			_dialog_cam.far = 4000.0
-			_dialog_cam.near = 0.05
-			_dialog_cam.fov = 45.0
-		"kamara_don":
-			_set_zone(4, false)
-			_set_zone(2, true)
-			shake(0.18, 9.0)
-			var out: Node3D = _z2["outside"]
-			var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-			tw.tween_property(out, "position:y", -120.0, 6.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		"gokyuzu_karar":
 			_sky_to_space(6.0)
 			var out2: Node3D = _z2["outside"]
@@ -888,6 +872,16 @@ func _sit() -> void:
 	await _wait(1.5)
 	_player.model.play("Sitting_Idle", 0.3)
 	_player.model.pose_locked = true  # konuşma satırları duruşu bozmasın
+	await _wait(0.3)
+	# Pencere çekimi oturan oyuncunun gerçek baş konumundan: omzun arkası-yanı, sırtlığın dışı
+	var head: Vector3 = _player.model.bone_position("Head")
+	var win := Z2 + Vector3(7.7, 1.45, 7.0)
+	var f := (win - head)
+	f.y = 0
+	f = f.normalized()
+	var side := f.cross(Vector3.UP).normalized()
+	# Sırtlık oturan başı kapatmasın: kamera sırtlığın üstünden, omzun arkasından aşağı pencereye bakar
+	camera_shots["pencere"] = [head - f * 0.7 + side * 0.55 + Vector3(0, 0.8, 0), head + f * 1.5 + Vector3(0, 0.08, 0), true]
 	_seat_cam_target = _player.head_position()
 
 
@@ -1055,7 +1049,6 @@ func _loading_screen() -> CanvasLayer:
 func _ascent() -> void:
 	cinematic_hold = true  # 20 sn yazısız bekleme; gözetçi "takıldı" sanmasın
 	_set_zone(2, false)
-	_set_zone(5, true)
 	var m: ShaderMaterial = ($WorldEnvironment.environment as Environment).sky.sky_material
 	m.set_shader_parameter("space", 0.0)
 	var Z5 := GemiSet.ZONE5
@@ -1103,3 +1096,75 @@ func _ascent() -> void:
 			look = Vector3.ZERO.lerp(Vector3(0, -2000, -600), k)
 		cam.global_position = Z5 + pos
 		cam.look_at(Z5 + look, Vector3.UP), 0.0, 1.0, 20.0)
+
+
+
+# --- Kalkış: TUTUN ve pencereden yükseliş -------------------------------------------
+
+var _gripping: bool = false
+var _grip_base: Array = []
+
+
+## Oturan oyuncunun gövdesini koltuğa doğru yatırır (+) ya da öne düşürür (-).
+func _lean(amount: float) -> void:
+	var vis: Node3D = _player.get_node("Visual")
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(vis, "rotation:x", amount, 0.5).set_trans(Tween.TRANS_SINE)
+
+
+func _on_qte_fill(fill: float) -> void:
+	if _gripping:
+		# Güç arttıkça kamera sıkışır (ağırlık hissi); eller kolçakta
+		_dialog_cam.fov = 45.0 - fill * 7.0
+
+
+func _on_qte_tap() -> void:
+	if not _gripping:
+		return
+	shake(0.08, 0.12)
+	# Kolçakları sık: eller bir an aşağı bastırır
+	var g: Array = _z2["seat_grips"]
+	for i in 2:
+		var mk: Node3D = g[i]
+		var base: Vector3 = _grip_base[i]
+		mk.position = base + Vector3(-0.02, -0.035, 0)
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(mk, "position", base, 0.12)
+
+
+## ~20 sn: kamara içinden pencereye. Bulutlar camdan aşağı akar, gök maviden siyaha döner,
+## Dünya'nın kıvrımı belirir ve gemi uzaklaştıkça küçük bir topa dönüşür.
+func _window_ascent() -> void:
+	cinematic_hold = true  # yazısız uzun sahne; gözetçi "takıldı" sanmasın
+	var fainted: bool = Story.get_var("kalkis_bayildi", false)
+	var m: ShaderMaterial = ($WorldEnvironment.environment as Environment).sky.sky_material
+	var cam := _dialog_cam
+	cam.far = 12000.0
+	_set_camera("pencere")
+	shake(0.22, 8.0)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	var layers: Array = _z2["ascent_clouds"]
+	for i in layers.size():
+		var c: Node3D = layers[i]
+		c.visible = true
+		c.position.y = 120.0 + i * 420.0
+		tw.tween_property(c, "position:y", -2600.0, 6.5 + i * 1.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(c.hide).set_delay(6.6 + i * 1.3)
+	tw.tween_callback((_z2["outside"] as Node3D).hide).set_delay(5.0)
+	tw.tween_method(func(v: float) -> void: m.set_shader_parameter("space", v), 0.0, 1.0, 9.0).set_delay(3.0)
+	tw.tween_callback(func() -> void: _set_camera("yuz")).set_delay(6.0)
+	tw.tween_callback(func() -> void: _set_camera("pencere")).set_delay(9.0)
+	var e: Node3D = _z2["earth"]
+	var final_pos := e.position
+	tw.tween_callback(func() -> void:
+		e.visible = true
+		e.position = Vector3(1700, -2440, 7)
+		e.scale = Vector3.ONE * 6.0).set_delay(9.0)
+	tw.tween_property(e, "position", final_pos, 11.0).set_delay(9.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(e, "scale", Vector3.ONE, 11.0).set_delay(9.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if fainted:
+		tw.tween_callback(func() -> void: _dialog.fade_to(0.0, 2.0)).set_delay(10.0)
+	tw.tween_callback(func() -> void:
+		cinematic_hold = false
+		cam.far = 4000.0
+		cam.fov = 45.0).set_delay(20.6)

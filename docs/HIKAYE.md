@@ -144,8 +144,8 @@ holografik ekranlar, kol ekranı (kimlik + kamara anahtarı), kamarada yerden y�
    duvardaki **erzak bölmesi** (haftalık tahsisat: su paketi, besin paketi → ihtiyaç sistemi).
 7. **Anons ve kalkış:** HAKEM "kalkışa on dakika". Zeminden kalkış koltuğu yükselir, oyuncu oturur, kemerler iner.
    Son düşünce seçimi (`kalkis_dusunce`). **Köprü:** Kaptan Reyes ve Pilot Irmak geri sayım, "Ateşle."
-   **Dış çekim:** gövdenin altından mavi füzyon ateşi, gemi beşiğinden kalkar. **Kamara:** sarsıntı, QTE **TUTUN**
-   (başaramazsan bayılırsın: `kalkis_bayildi`). **Yörüngeye tırmanış (~20 sn, yazısız dış çekim):** bulutların arasından
+   **Kalkış kamaranın içinden izlenir (dış çekim yok):** gürleme, sarsıntı; QTE **TUTUN**: eller kolçaklara kenetlenir, her dokunuşta sıkar
+   (başaramazsan eller kayar, bayılırsın: `kalkis_bayildi`). **Yörüngeye tırmanış (~20 sn, yazısız, omuz üstünden pencereden):** bulutlar camdan akar,
    yükseliş, gök kararır, Dünya'nın kıvrımı, gemi uzaklaştıkça Dünya aşağıda küçük bir top. Kamara penceresinde Dünya.
 
 **Sonraki kısımlar (yazılacak):**

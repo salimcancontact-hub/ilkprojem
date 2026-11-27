@@ -63,10 +63,13 @@ func _ready() -> void:
 	_dialog.speaker_changed.connect(_on_speaker_changed)
 	_dialog.event_fired.connect(_on_dialog_event)
 	_dialog.dialog_finished.connect(_on_dialog_finished)
-	_dialog.qte_progress.connect(_on_struggle_progress)
+	_dialog.qte_progress.connect(func(fill: float) -> void:
+		_on_struggle_progress(fill)
+		_on_qte_fill(fill))
 	_dialog.qte_tapped.connect(func() -> void:
 		if _struggle_npc:
-			shake(0.06, 0.12))
+			shake(0.06, 0.12)
+		_on_qte_tap())
 	_dialog.qte_death.connect(_on_qte_death)
 	_dialog.qte_retry.connect(_on_qte_retry)
 
@@ -415,6 +418,16 @@ func cinematic(on: bool) -> void:
 	_player.input_enabled = not on
 	_hud.set_gameplay_visible(not on)
 	_dialog.set_letterbox(on)
+
+
+## QTE'de her dokunuşun ve gücün (0..1) ekrandaki karşılığı: seviyeler kendi fiziksel eylemini oynatır
+## (ör. koltuğa tutunma, yerdekini kaldırma). Fiziksel bir QTE ekranda hareketsiz kalmamalı.
+func _on_qte_fill(_fill: float) -> void:
+	pass
+
+
+func _on_qte_tap() -> void:
+	pass
 
 
 ## Alt sınıfların hikâye olaylarını işlediği yer.

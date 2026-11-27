@@ -522,39 +522,34 @@ PILOT: Ateşleme. On. Dokuz. Sekiz.
 @olay geri_sayim
 @bekle 1.4
 PILOT: Üç. İki. Bir.
-@olay dis_cekim
-@olay kamera dis
-@bekle 1.0
-@olay atesleme
-@bekle 3.2
-> Limanın ortasında, bir kilometrelik gövdenin altından mavi bir ateş yükseliyor. EMANET beşiğinden kalkıyor.
-@olay kamara_don
+@olay atesleme_kamara
 @olay kamera yuz
-@bekle 0.6
-> Kamara titriyor. Önce hafifçe, sonra bütün gövdesiyle. Ağırlık seni koltuğa bastırıyor.
+@bekle 1.8
+> Bir gürleme, önce ayaklarının altından, sonra her yerden. Kamara titriyor. Ağırlık seni koltuğa bastırıyor.
+@olay tutun_basla
+@bekle 0.5
 @qte vur 4.5 10 "TUTUN" -> kalkis_tutundu | kalkis_bayildi
 
 === kalkis_tutundu
 @olay tutun
-@bekle 1.2
-> Koltuğun kollarına tutunuyorsun. Ağırlık göğsüne bir taş gibi oturuyor. Nefes al. Nefes ver.
+@bekle 0.8
+> Koltuğun kollarına kenetleniyorsun. Ağırlık göğsüne bir taş gibi oturuyor. Nefes al. Nefes ver.
 ~ kalkis_bayildi = false
 -> yukselis
 
 === kalkis_bayildi
 @olay bayil
 @bekle 2.0
-> Ağırlık seni koltuğa gömüyor. Görüntü kararıyor, kenarlardan içe doğru.
+> Ağırlık seni koltuğa gömüyor. Ellerin kolçaklardan kayıyor. Görüntü kenarlardan içe doğru kararıyor.
 ~ kalkis_bayildi = true
 -> yukselis
 
-# Yörüngeye tırmanış: ~20 saniyelik, yazısız dış çekim (TWD gibi sahne oynar)
+# Yörüngeye tırmanış: ~20 saniye, kamaranın içinden ve pencereden (yazısız, sahne oynar)
 === yukselis
-@olay yukselis
-@bekle 20.5
-@olay kamara_yorunge
+@olay yukselis_pencere
+@bekle 21.0
 @olay kamera pencere
-@bekle 1.6
+@bekle 0.6
 @if kalkis_bayildi -> yorunge_bayildi
 > Pencerede Dünya. Mavi, kahverengi, küçücük bir top. Avucunun içine sığacak kadar.
 -> kalkis_son

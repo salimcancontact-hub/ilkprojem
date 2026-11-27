@@ -101,25 +101,44 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			dir = dir.normalized()
 			var right := dir.cross(Vector3.UP).normalized()
 			var mid := (a + pp) / 2.0
-			# Kalabalıktan kimse kameranın önüne geçmesin: kişilere en uzak tarafı seç
-			var best := mid + right * 4.2 + Vector3(0, 2.6, 0) - dir * 0.5
-			var best_d := -1.0
-			for sgn in [1.0, -1.0]:
-				for back in [-0.5, 1.5]:
-					var cand: Vector3 = mid + right * 4.2 * sgn + Vector3(0, 2.6, 0) - dir * back
-					var nearest := 99.0
-					for person: Node3D in _crowd.get_children():
-						if person.visible:
-							for k in 5:  # kamera-hedef doğrusu boyunca
-								var q: Vector3 = cand.lerp(mid, k / 5.0)
-								nearest = minf(nearest, Vector2(person.global_position.x - q.x, person.global_position.z - q.z).length())
-					if nearest > best_d:
-						best_d = nearest
-						best = cand
-			camera_shots["arman"] = [best, mid + Vector3(0, 0.4, 0)]
+			# Yüksekten, engelsiz ve kalabalıktan uzak açıyı seç (barikat/tabela önüne geçmesin)
+			var space := get_world_3d().direct_space_state
+			var best := mid + Vector3(0, 4.5, 0) - dir * 2.5
+			var best_d := -1e9
+			for ang in range(0, 360, 30):
+				var off := Vector3(sin(deg_to_rad(ang)), 0, cos(deg_to_rad(ang)))
+				var cand: Vector3 = mid + off * 3.8 + Vector3(0, 3.0, 0)
+				var q := PhysicsRayQueryParameters3D.create(cand, mid + Vector3(0, 0.4, 0), 0xFFFFFFFF)
+				q.exclude = [_arman.get_rid(), _player.get_rid()]
+				var score := 0.0
+				if not space.intersect_ray(q).is_empty():
+					score -= 100.0
+				var nearest := 99.0
+				for person: Node3D in _crowd.get_children():
+					if person.visible:
+						for k in 5:
+							var qp: Vector3 = cand.lerp(mid, k / 5.0)
+							nearest = minf(nearest, Vector2(person.global_position.x - qp.x, person.global_position.z - qp.z).length())
+				score += minf(nearest, 3.0)
+				# yan açı tercih: oyuncu-Arman doğrusuna dik olan
+				score += absf(off.dot(right)) * 1.5
+				for lbl: Node3D in $Clues.get_children():
+					if lbl is Label3D:
+						for k in 5:
+							var ql: Vector3 = cand.lerp(mid, k / 5.0)
+							if ql.distance_to(lbl.global_position) < 3.5:
+								score -= 20.0
+				if score > best_d:
+					best_d = score
+					best = cand
+			camera_shots["arman"] = [best, a.lerp(pp, 0.2) - Vector3(0, 0.35, 0), true]
 		"arman_kos":
 			_arman_waits_to_run = false
 		"arman_kalkti":
+			_lifting = false
+			if _lift_point and _dialog.runner.current_node == "arman_kalkti":
+				# Kalkarken eli onun elinde kalır
+				_player.model.reach("r", _arman.model.bone_marker("hand_r"), 0.3)
 			_arman_waits_to_run = _dialog.runner.current_node == "arman_kalkti"
 			_arman_escape()
 			if _dialog.runner.current_node == "arman_kalkti":
@@ -129,20 +148,28 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_player.model.release_all(0.3)
 			_player.model.play("Idle", 0.2)
 		"kaldir_hazirlik":
-			# Kalabalığı yararak yanına yürür (ışınlanma yok), çömelip bileğine uzanır
-			var target := _arman.model.bone_marker("hand_r").global_position
-			var from := _player.global_position - target
+			# Kalabalığı yararak yanına yürür (ışınlanma yok), göğsünün yanında çömelir;
+			# ikisinin sağ eli aradaki noktada buluşur. QTE'de dokundukça bu nokta yukarı çekilir.
+			var chest := _arman.model.bone_position("spine_03")
+			var from := _player.global_position - chest
 			from.y = 0
-			var stand := target + from.normalized() * 0.55
+			from = from.normalized()
+			var stand := chest + from * 0.8
 			stand.y = _player.global_position.y
 			_player.face_point(stand)
 			_player.model.play("Walk", 0.15)
 			var twk := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			twk.tween_property(_player, "global_position", stand, clampf(_player.global_position.distance_to(stand) / 1.8, 0.3, 1.6))
 			await twk.finished
-			_player.face_point(target)
+			_player.face_point(chest)
 			_player.model.play("Crouch_Idle", 0.2)
-			_player.model.reach("r", _arman.model.bone_marker("hand_r"), 0.4)
+			var meet := chest + from * 0.38
+			meet.y = chest.y + 0.18
+			_lift_point = _point(meet)
+			_lift_base = meet.y
+			_player.model.reach("r", _lift_point, 0.4)
+			_arman.model.reach("r", _lift_point, 0.5)
+			_lifting = true
 		# --- Su şişesi
 		"su_cikar":
 			_water = Props.water_bottle()
@@ -209,6 +236,8 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_guard.model.play_once("Melee_Hook", "Idle_Shield", 0.1)
 		"el_kaydi":
 			# Tuttuğun bilek elinden kayar, kalabalık onu çeker
+			_lifting = false
+			_arman.model.release("r", 0.3)
 			_player.model.release("r", 0.25)
 			_player.model.play("Idle", 0.2)
 			var away := (_arman.global_position - _player.global_position)
@@ -825,6 +854,22 @@ func _start_riot() -> void:
 
 ## Deniz Arman yerden kalkıp ara sokağa koşar ve orada nefeslenir.
 var _arman_waits_to_run: bool = false
+var _lift_point: Node3D
+var _lift_base: float = 0.0
+var _lifting: bool = false
+
+
+## KALDIR: dokundukça el ele tutuşan eller yukarı çekilir, Arman'ın kolu ve gövdesi kalkar.
+func _on_qte_fill(fill: float) -> void:
+	if _lifting and _lift_point:
+		var p := _lift_point.global_position
+		p.y = _lift_base + fill * 0.55
+		_lift_point.global_position = p
+
+
+func _on_qte_tap() -> void:
+	if _lifting:
+		shake(0.04, 0.1)
 
 
 func _arman_escape() -> void:
