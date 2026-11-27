@@ -15,7 +15,8 @@ signal qte_retry
 
 const TYPE_SPEED := 45.0
 const BAR_HEIGHT := 86.0
-const SIDE_MARGIN := 60.0
+## Mobilde gezinme çubuğunun altında kalmasın diye geniş yan pay.
+var SIDE_MARGIN: float = 116.0 if OS.has_feature("mobile") else 60.0
 
 var active: bool = false
 var runner := DialogRunner.new()
@@ -406,17 +407,21 @@ func _on_finished() -> void:
 var _panel_tween: Tween
 
 
+## Seçim anında yazı kutusu ekranın ÜSTÜNE (sinema bandının altına) çıkar, seçenekler altta kalır:
+## ortadaki bant sahneye kalır (TWD düzeni). Seçim bitince yazı yine altta.
 func _set_panel_raised(raised: bool) -> void:
-	var bottom := BAR_HEIGHT + (230.0 if raised else 16.0)
+	var h := get_viewport().get_visible_rect().size.y
+	var height := 118.0 if raised else 150.0
+	var bottom := (h - BAR_HEIGHT - 10.0 - height) if raised else BAR_HEIGHT + 16.0
 	if _panel_tween:
 		_panel_tween.kill()
 	if not _panel.visible or _panel.offset_bottom == 0.0:
 		_panel.offset_bottom = -bottom
-		_panel.offset_top = -bottom - 150.0
+		_panel.offset_top = -bottom - height
 		return
 	_panel_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_panel_tween.tween_property(_panel, "offset_bottom", -bottom, 0.18)
-	_panel_tween.tween_property(_panel, "offset_top", -bottom - 150.0, 0.18)
+	_panel_tween.tween_property(_panel, "offset_top", -bottom - height, 0.18)
 
 
 func _build_ui() -> void:

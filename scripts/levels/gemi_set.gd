@@ -909,12 +909,19 @@ static var _cloud_mat: StandardMaterial3D
 ## Yumuşak kenarlı, kameraya dönük bulut kümeleri (kalkışta aşağı akar).
 static func clouds(parent: Node3D, center: Vector3, spread: Vector3, count: int, size: float, seed_no: int) -> Node3D:
 	if _cloud_mat == null:
-		var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
-		for y in 64:
-			for x in 64:
-				var d := Vector2(x - 31.5, y - 31.5).length() / 32.0
-				var a := clampf(1.0 - d, 0.0, 1.0)
-				img.set_pixel(x, y, Color(1, 1, 1, a * a * (3.0 - 2.0 * a) * 0.85))
+		# Gerçek bulut gibi kabarık, düzensiz kenarlı doku (gürültü x yumuşak kenar)
+		var noise := FastNoiseLite.new()
+		noise.seed = 7
+		noise.frequency = 0.045
+		noise.fractal_octaves = 4
+		var img := Image.create(128, 128, false, Image.FORMAT_RGBA8)
+		for y in 128:
+			for x in 128:
+				var d := Vector2((x - 63.5) / 64.0, (y - 63.5) / 52.0).length()
+				var n := noise.get_noise_2d(x, y) * 0.5 + 0.5
+				var a := clampf((1.0 - d) * 1.6 - (1.0 - n) * 0.9, 0.0, 1.0)
+				var shade := lerpf(0.78, 1.0, clampf(n * 1.2 - (y / 128.0) * 0.3, 0.0, 1.0))
+				img.set_pixel(x, y, Color(shade, shade, shade, a * a * 0.95))
 		_cloud_mat = StandardMaterial3D.new()
 		_cloud_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_cloud_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

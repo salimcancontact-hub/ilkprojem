@@ -286,7 +286,9 @@ func _layout() -> void:
 	var full: Vector2 = get_viewport().get_visible_rect().size
 	var ins := _safe_insets()
 	# Gezinme çubuğunu her zaman hesaba katmak için mobilde en az 24 px ek pay
-	var extra := 24.0 if OS.has_feature("mobile") else 0.0
+	# Bazı telefonlarda (ör. G510) gezinme çubuğu oyunun üstünde kalıyor ve güvenli alan bunu bildirmiyor:
+	# yatayda iki yana da çubuk genişliği kadar pay bırak.
+	var extra := 104.0 if OS.has_feature("mobile") else 0.0
 	var off := Vector2(ins.position.x + extra, ins.position.y)
 	var vp: Vector2 = full - Vector2(ins.position.x + ins.size.x + extra * 2.0, ins.position.y + ins.size.y)
 	_gem_label.position = off + Vector2(vp.x - _gem_label.get_minimum_size().x - 24, 18)

@@ -22,5 +22,8 @@ void sky() {
 	vec3 night = vec3(0.006, 0.008, 0.016) + vec3(star) * vec3(0.9, 0.95, 1.0);
 	// Geçişte önce tepe kararır, ufuk en son
 	float s = clamp(space * 1.4 - (1.0 - up) * 0.4, 0.0, 1.0);
-	COLOR = mix(dawn, night, s);
+	// Gri ara ton olmasın: şafak -> koyu gök mavisi -> uzay siyahı
+	vec3 deep = mix(vec3(0.05, 0.12, 0.32), vec3(0.02, 0.04, 0.12), up) + vec3(0.25, 0.12, 0.05) * pow(1.0 - up, 6.0);
+	vec3 col = s < 0.5 ? mix(dawn, deep, s * 2.0) : mix(deep, night, (s - 0.5) * 2.0);
+	COLOR = col;
 }

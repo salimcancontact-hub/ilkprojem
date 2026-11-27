@@ -874,14 +874,16 @@ func _sit() -> void:
 	_player.model.pose_locked = true  # konuşma satırları duruşu bozmasın
 	await _wait(0.3)
 	# Pencere çekimi oturan oyuncunun gerçek baş konumundan: omzun arkası-yanı, sırtlığın dışı
-	var head: Vector3 = _player.model.bone_position("Head")
+	# Oturan başın konumu koltuktan sabit (kemik okumaya bağlı kalmasın: telefonda farklı okunabiliyor)
+	var head: Vector3 = Z2 + Vector3(4.93, 1.17, 7.0)
 	var win := Z2 + Vector3(7.7, 1.45, 7.0)
 	var f := (win - head)
 	f.y = 0
 	f = f.normalized()
 	var side := f.cross(Vector3.UP).normalized()
 	# Sırtlık oturan başı kapatmasın: kamera sırtlığın üstünden, omzun arkasından aşağı pencereye bakar
-	camera_shots["pencere"] = [head - f * 0.7 + side * 0.55 + Vector3(0, 0.8, 0), head + f * 1.5 + Vector3(0, 0.08, 0), true]
+	# Yandan, sırtlığın önünden: oyuncunun yüzü (profil) ve pencere birlikte
+	camera_shots["pencere"] = [head - f * 0.35 + side * 1.25 + Vector3(0, 0.28, 0), head + f * 1.2 - side * 0.2 + Vector3(0, 0.1, 0), true]
 	_seat_cam_target = _player.head_position()
 
 

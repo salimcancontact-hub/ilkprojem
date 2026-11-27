@@ -266,7 +266,10 @@ func _on_dialog_event(event_name: String, args: PackedStringArray) -> void:
 		"bogusma":
 			_start_struggle()
 		"bogusma_bitti":
+			if _struggle_npc and _struggle_npc.model:
+				_struggle_npc.model.play("Idle", 0.3)
 			_struggle_npc = null
+			_player.model.play("Idle", 0.3)
 		"kamera":
 			_set_camera(args[0] if args.size() > 0 else "otomatik")
 		"sarsinti":

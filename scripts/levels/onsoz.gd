@@ -347,20 +347,27 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				var light: OmniLight3D = _cutter.get_node("Uc/Isik")
 				light.light_energy = 4.0
 		"oldur_cok":
-			var nk := _arman.model.bone_position("neck_01")
-			var away := (_player.global_position - nk)
-			away.y = 0
-			away = away.normalized()
-			# Kamera cesedin karşı tarafında: oyuncunun yüzü ve elleri kadrajda
-			camera_shots["oldurme_yakin"] = [nk - away * 1.15 + away.cross(Vector3.UP) * 0.7 + Vector3(0, 1.35, 0), nk + away * 0.2 + Vector3(0, 0.15, 0)]
-			var neck := _arman.model.bone_marker("neck_01")
-			var head := _arman.model.bone_marker("Head")
-			_beside(neck.global_position, 0.55)
+			# Başının yanında diz çöker (gövdenin üstüne değil); kamera bedenin karşı tarafından ikisini çeker
+			var neck := _arman.model.body_point("Head")
+			var head := neck
+			var hp := head.global_position
+			var along := _arman.model.body_position("spine_03") - hp
+			along.y = 0
+			along = along.normalized()
+			var perp := along.cross(Vector3.UP).normalized()
+			var to_pl := _player.global_position - hp
+			if perp.dot(to_pl) < 0:
+				perp = -perp
+			var kneel := hp + perp * 0.55 - along * 0.05
+			kneel.y = _player.global_position.y
+			_player.global_position = kneel
+			_player.face_point(hp)
+			camera_shots["oldurme_yakin"] = [hp - perp * 1.6 + along * 0.7 + Vector3(0, 1.15, 0), hp + perp * 0.25 + Vector3(0, 0.3, 0), true]
 			_player.model.play("Crouch_Idle", 0.3)
 			if _cutter and _cutter.get_parent() is BoneAttachment3D:
 				# Kesici sağ elde boynuna, sol el göğsüne bastırır
 				_player.model.reach("r", neck, 0.6)
-				_player.model.reach("l", _arman.model.bone_marker("spine_03"), 0.6)
+				_player.model.reach("l", _arman.model.body_point("spine_03"), 0.6)
 			else:
 				# Avuçlar ağzına
 				_player.model.reach("r", head, 0.6)
@@ -432,7 +439,9 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			var to_p := _player.global_position - body
 			to_p.y = 0
 			var side2 := to_p.normalized().cross(Vector3.UP).normalized()
-			camera_shots["arman_yerde"] = [body + side2 * 2.6 - to_p.normalized() * 0.8 + Vector3(0, 1.9, 0), (body + _player.global_position) / 2.0 + Vector3(0, 0.5, 0)]
+			# Hedef yerin biraz altında: yerdeki beden kadrajın üst yarısında kalır, yazı kutusu kapatmaz
+			# Yerdeki beden ve ayaktaki oyuncu birlikte, ekranın ortasında (seçim anında yazı üstte, seçenekler altta)
+			camera_shots["arman_yerde"] = [body + side2 * 4.4 - to_p.normalized() * 0.6 + Vector3(0, 1.9, 0), body.lerp(_player.global_position, 0.45) + Vector3(0, 0.2, 0), true]
 		"telefon":
 			_start_call()
 		"telefon_kapat":
@@ -527,8 +536,8 @@ func _drag_body() -> void:
 	_drag_grips = [grip_l, grip_r]
 	_player.model.play("Crouch_Idle", 0.2)
 	# Eller cesedin bileklerine kilitlenir (sağ el onun sol bileğine, sol el sağ bileğine)
-	_player.model.reach("l", _arman.model.bone_marker("hand_r"), 0.4)
-	_player.model.reach("r", _arman.model.bone_marker("hand_l"), 0.4)
+	_player.model.reach("l", _arman.model.body_point("hand_r"), 0.4)
+	_player.model.reach("r", _arman.model.body_point("hand_l"), 0.4)
 	await get_tree().create_timer(0.6, true, false, true).timeout
 	_player.model.play("Crouch_Fwd", 0.2, -0.7)
 	var travel := HIDE_SPOT - hands

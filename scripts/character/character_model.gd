@@ -210,6 +210,22 @@ func bone_marker(bone: String) -> Node3D:
 	return ba
 
 
+## Bedenin o anki gerçek noktası: fizik iskeletindeyse (yerde, ragdoll) fizik kemiği, değilse kemik işareti.
+## Ragdoll'da animasyon pozundan okunan kemik konumu bedenin yattığı yerle uyuşmaz.
+func body_point(bone: String) -> Node3D:
+	if ragdoll and pose_locked:
+		var pb: Node3D = ragdoll.bone(bone)
+		if pb == null and bone in ["neck_01", "neck_02"]:
+			pb = ragdoll.bone("Head")
+		if pb:
+			return pb
+	return bone_marker(bone)
+
+
+func body_position(bone: String) -> Vector3:
+	return body_point(bone).global_position
+
+
 func bone_position(bone: String) -> Vector3:
 	var idx := skeleton.find_bone(bone)
 	if idx < 0:
