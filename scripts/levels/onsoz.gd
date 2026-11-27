@@ -88,19 +88,61 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_start_riot()
 		"arman_dustu":
 			_arman.visible = true
-			_arman.position = Vector3(1.8, -0.15, 55.0)
+			_arman.position = _free_ground_spot()
 			_arman.rotation = Vector3(0, 2.4, 0)
 			_arman.get_node("Visual").rotation = Vector3.ZERO
 			_arman.model.hold_last_frame("Death01")
 			_arman.model.reach("r", _arman.model.bone_marker("spine_03"), 0.4)
+			# Oyuncu ile yerdeki Arman'ı birlikte gösteren yan açı
+			var a := _arman.global_position
+			var pp := _player.global_position
+			var dir := pp - a
+			dir.y = 0
+			dir = dir.normalized()
+			var right := dir.cross(Vector3.UP).normalized()
+			var mid := (a + pp) / 2.0
+			# Kalabalıktan kimse kameranın önüne geçmesin: kişilere en uzak tarafı seç
+			var best := mid + right * 4.2 + Vector3(0, 2.6, 0) - dir * 0.5
+			var best_d := -1.0
+			for sgn in [1.0, -1.0]:
+				for back in [-0.5, 1.5]:
+					var cand: Vector3 = mid + right * 4.2 * sgn + Vector3(0, 2.6, 0) - dir * back
+					var nearest := 99.0
+					for person: Node3D in _crowd.get_children():
+						if person.visible:
+							for k in 5:  # kamera-hedef doğrusu boyunca
+								var q: Vector3 = cand.lerp(mid, k / 5.0)
+								nearest = minf(nearest, Vector2(person.global_position.x - q.x, person.global_position.z - q.z).length())
+					if nearest > best_d:
+						best_d = nearest
+						best = cand
+			camera_shots["arman"] = [best, mid + Vector3(0, 0.4, 0)]
+		"arman_kos":
+			_arman_waits_to_run = false
 		"arman_kalkti":
+			_arman_waits_to_run = _dialog.runner.current_node == "arman_kalkti"
+			_arman_escape()
+			if _dialog.runner.current_node == "arman_kalkti":
+				# Bileğinden tutup ayağa çeker: el, Arman kalkarken onun elinde kalır
+				_player.model.play("Idle", 0.5)
+				await get_tree().create_timer(1.3, true, false, true).timeout
 			_player.model.release_all(0.3)
 			_player.model.play("Idle", 0.2)
-			_arman_escape()
 		"kaldir_hazirlik":
-			_beside(_arman.global_position, 0.75)
+			# Kalabalığı yararak yanına yürür (ışınlanma yok), çömelip bileğine uzanır
+			var target := _arman.model.bone_marker("hand_r").global_position
+			var from := _player.global_position - target
+			from.y = 0
+			var stand := target + from.normalized() * 0.55
+			stand.y = _player.global_position.y
+			_player.face_point(stand)
+			_player.model.play("Walk", 0.15)
+			var twk := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			twk.tween_property(_player, "global_position", stand, clampf(_player.global_position.distance_to(stand) / 1.8, 0.3, 1.6))
+			await twk.finished
+			_player.face_point(target)
 			_player.model.play("Crouch_Idle", 0.2)
-			_player.model.reach("r", _arman.model.bone_marker("hand_r"), 0.5)
+			_player.model.reach("r", _arman.model.bone_marker("hand_r"), 0.4)
 		# --- Su şişesi
 		"su_cikar":
 			_water = Props.water_bottle()
@@ -173,15 +215,19 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			away.y = 0
 			create_tween().tween_property(_arman, "global_position", _arman.global_position + away.normalized() * 1.4, 0.6)
 		"kac":
-			# Arkasını dönüp kalabalığın içine koşar
+			# Arkasını dönüp kalabalığın içine koşar (kamera onu izler)
 			_player.model.release_all(0.2)
 			var dir := (_player.global_position - _arman.global_position)
 			dir.y = 0
 			dir = dir.normalized()
-			_player.face_point(_player.global_position + dir)
+			var run_to := _player.global_position + dir * 4.5
+			var side := dir.cross(Vector3.UP).normalized()
+			camera_shots["kacis"] = [_player.global_position + side * 3.5 - dir * 1.5 + Vector3(0, 2.0, 0), run_to + Vector3(0, 1.0, 0)]
+			_set_camera("kacis")
+			_player.face_point(run_to)
 			_player.model.play("Sprint", 0.15)
-			var tw2 := create_tween()
-			tw2.tween_property(_player, "global_position", _player.global_position + dir * 2.5, 0.9)
+			var tw2 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw2.tween_property(_player, "global_position", run_to, 1.3)
 			tw2.tween_callback(func() -> void: _player.model.play("Idle", 0.2))
 		"kart_goster":
 			_show_point = _point((_arman.global_position + _player.global_position) / 2.0 + Vector3(0, 1.25, 0))
@@ -349,6 +395,27 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			await get_tree().create_timer(0.25).timeout
 			# Yumruğun etkisiyle fizik iskeletine bırak: savrulur ve yerde kalır
 			_guard.model.go_ragdoll("spine_03", push.normalized() * 55.0 + Vector3(0, 8, 0))
+
+
+## Arman'ın yere düşeceği, duba/bariyer/varil içinde olmayan boş bir nokta (oyuncunun 2-3 m ötesi).
+func _free_ground_spot() -> Vector3:
+	var space := get_world_3d().direct_space_state
+	var base := _player.global_position
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(2.2, 0.5, 2.2)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = 1
+	q.exclude = [_arman.get_rid(), _player.get_rid(), _guard.get_rid()]
+	for r in [2.6, 3.2, 2.2, 3.8]:
+		for k in 12:
+			var ang: float = k * TAU / 12.0 + 0.6
+			var p: Vector3 = base + Vector3(sin(ang), 0, cos(ang)) * r
+			p.y = -0.15
+			q.transform = Transform3D(Basis(), p + Vector3(0, 0.55, 0))
+			if space.intersect_shape(q, 1).is_empty():
+				return p
+	return Vector3(1.8, -0.15, 55.0)
 
 
 ## Oyuncuyu bir noktanın yanına (aradaki mesafe kadar) yerleştirip ona baktırır.
@@ -757,11 +824,19 @@ func _start_riot() -> void:
 
 
 ## Deniz Arman yerden kalkıp ara sokağa koşar ve orada nefeslenir.
+var _arman_waits_to_run: bool = false
+
+
 func _arman_escape() -> void:
 	_arman.model.release("r", 0.3)
 	_arman.model.unlock_pose()
 	_arman.model.play("LayToIdle", 0.1)
-	await get_tree().create_timer(1.6).timeout
+	await get_tree().create_timer(1.6, true, false, true).timeout
+	# Ayağa kaldırıldıysa önce teşekkür eder ("arman_kos" olayıyla koşar)
+	while _arman_waits_to_run and _dialog.active:
+		_arman.model.play("Idle", 0.3)
+		_arman.face_point(_player.global_position)
+		await get_tree().process_frame
 	_run_to(_arman.model, _arman, [Vector3(5.0, -0.15, 40.0), Vector3(6.5, -0.15, 13.0), Vector3(12.5, -0.15, 10.6), ALLEY_SPOT], 9.0, "Sprint", false)
 	await get_tree().create_timer(9.1).timeout
 	_arman.model.play("Idle", 0.3)

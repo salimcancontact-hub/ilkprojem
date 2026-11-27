@@ -382,6 +382,7 @@ ARMAN: Yardım et!
 @bekle 1.4
 > Onu bileğinden yakalayıp ayağa çekiyorsun.
 ARMAN: Sana bir can borçluyum, yabancı! Ara sokağa, hadi!
+@olay arman_kos
 ! Deniz Arman bunu hatırlayacak.
 @olay kamera oyuncu
 @olay gorev Deniz Arman'ın peşinden ara sokağa kaç!
