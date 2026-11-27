@@ -69,10 +69,12 @@ func _process(delta: float) -> void:
 		return
 	if not active:
 		return
-	_left -= delta
+	# Telefonda bir anlık takılma (ilk çizim, gölgelendirici derleme) QTE süresini yemesin:
+	# tek karede en fazla 1/20 sn düşülür.
+	_left -= minf(delta, 0.05)
 	if _kind == "vur":
 		var before := _fill
-		_fill = maxf(_fill - delta * 0.18, 0.0)
+		_fill = maxf(_fill - minf(delta, 0.05) * 0.18, 0.0)
 		if before != _fill:
 			progress_changed.emit(_fill)
 		var time_pressure := 1.0 - clampf(_left / _time, 0.0, 1.0)
@@ -184,3 +186,17 @@ func _draw() -> void:
 			var sub := "x%d" % _count
 			var sw := font.get_string_size(sub, HORIZONTAL_ALIGNMENT_CENTER, -1, 20).x
 			draw_string(font, c + Vector2(-sw / 2.0, 40), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 1, 0.7))
+
+
+
+## İlk QTE'de gölgelendirici derlenip oyun takılmasın: sahne başında neredeyse görünmez birkaç kare çizdirilir.
+func prewarm() -> void:
+	if active:
+		return
+	modulate.a = 0.02
+	visible = true
+	for k in 4:
+		await get_tree().process_frame
+	if not active:
+		visible = false
+	modulate.a = 1.0

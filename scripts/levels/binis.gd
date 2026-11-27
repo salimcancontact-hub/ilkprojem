@@ -9,6 +9,7 @@ var _z1: Dictionary
 var _z2: Dictionary
 var _z3: Dictionary  # köprü
 var _z4: Dictionary  # dış çekim
+var _z5: Dictionary  # yörüngeye tırmanış
 var _phase: String = "baslangic"
 var _loading: CanvasLayer
 var _npcs: Dictionary = {}
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_z2 = GemiSet.build_zone2(self)
 	_z3 = GemiSet.build_bridge(self)
 	_z4 = GemiSet.build_exterior(self)
+	_z5 = GemiSet.build_ascent(self)
 	var t1 := Time.get_ticks_msec()
 	_spawn_people()
 	_spawn_hotspots()
@@ -82,15 +84,19 @@ func _ready() -> void:
 	_set_zone(2, true)
 	_set_zone(3, true)
 	_set_zone(4, true)
+	_set_zone(5, true)
 	(_z2["earth"] as Node3D).visible = true
+	(_z5["earth"] as Node3D).visible = true
 	await get_tree().process_frame
 	await _prewarm()
 	if _loading:
 		_loading.queue_free()  # ilk çizim ve gölgelendirici derlemesi bitti
 	(_z2["earth"] as Node3D).visible = false
+	(_z5["earth"] as Node3D).visible = false
 	_set_zone(2, false)
 	_set_zone(3, false)
 	_set_zone(4, false)
+	_set_zone(5, false)
 	Story.set_var("bolum", "binis")
 	cinematic_hold = false
 	await play_dialog(DLG, "giris")
@@ -99,7 +105,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	super(delta)
-	if _z4.is_empty():
+	if _z5.is_empty():
 		return  # set henüz kuruluyor
 	var holo: Node3D = _z1.get("ship_holo")
 	if holo and _z1["root"].visible:
@@ -142,7 +148,6 @@ func _spawn_people() -> void:
 	_npcs["gorevli"] = _npc("GOREVLI", C + "muhafiz_model.tscn", Vector3(10.2, 0, 8.6), 0.0, "kapi")
 	_npcs["gorevli"].prompt = "KARTI OKUT"
 	_npcs["yolcu"] = _npc("YOLCU", C + "kalabalik/c3_model.tscn", Vector3(2.2, 0, 5.2), -PI / 2, "yolcu")
-	_npcs["kadin"] = _npc("KADIN", C + "kadin_model.tscn", Vector3(-0.35, 0, 19.6), PI / 2, "kadin", "Idle_Rail")
 	_npcs["selim"] = _npc("SELIM", C + "yasli_model.tscn", Vector3(9.9, 0, 26.2), PI, "asansor", "Idle_FoldArms", false)
 	# Köprüde uçuş ekibi (kalkışta görünür)
 	var Z3 := GemiSet.ZONE3
@@ -217,7 +222,6 @@ func _hotspot(id: String, pos: Vector3, start: String, prompt: String = "İNCELE
 
 
 func _spawn_hotspots() -> void:
-	_hotspot("dunya", Vector3(-0.5, 0, 3.5), "ipucu_liman", "BAK", 1.6, 1.4)
 	_hotspot("ekran", Vector3(16.7, 0, 4.5), "ipucu_ekran", "İNCELE", 2.0, 1.5)
 	_hotspot("hologram", Vector3(8, 0, 17.6), "ipucu_hologram", "İNCELE", 2.4, 1.4)
 	_hotspot("bahce", Vector3(16.6, 0, 17.0), "ipucu_bahce", "İNCELE", 1.2, 1.4)
@@ -257,7 +261,7 @@ func _trigger(pos: Vector3, size: Vector3, cb: Callable) -> void:
 
 
 func _set_zone(zone: int, on: bool) -> void:
-	var r: Node3D = [_z1, _z2, _z3, _z4][zone - 1]["root"]
+	var r: Node3D = [_z1, _z2, _z3, _z4, _z5][zone - 1]["root"]
 	r.visible = on
 
 
@@ -332,6 +336,9 @@ func _prewarm() -> void:
 		await get_tree().process_frame
 	for f: MeshInstance3D in _z4["flames"]:
 		f.scale = Vector3.ONE * 0.05
+	cam.global_transform = Transform3D(Basis.looking_at(Vector3(-0.4, -0.3, -0.6)), GemiSet.ZONE5 + Vector3(700, 120, 900))
+	for k in 3:
+		await get_tree().process_frame
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(1, -0.4, 0)), Z2 + Vector3(5.0, 1.2, 7.0))
 	for k in 3:
 		await get_tree().process_frame
@@ -560,6 +567,18 @@ func _on_story_event(event_name: String, args: PackedStringArray) -> void:
 			_set_zone(4, true)
 		"atesleme":
 			_ignite()
+		"yukselis":
+			_ascent()
+		"kamara_yorunge":
+			cinematic_hold = false
+			_set_zone(5, false)
+			_set_zone(2, true)
+			_sky_to_space(0.0)
+			(_z2["outside"] as Node3D).visible = false
+			(_z2["earth"] as Node3D).visible = true
+			_dialog_cam.far = 4000.0
+			_dialog_cam.near = 0.05
+			_dialog_cam.fov = 45.0
 		"kamara_don":
 			_set_zone(4, false)
 			_set_zone(2, true)
@@ -1022,8 +1041,65 @@ func _loading_screen() -> CanvasLayer:
 	l.text = "Yükleniyor..."
 	l.add_theme_font_size_override("font_size", 28)
 	l.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
-	l.set_anchors_preset(Control.PRESET_CENTER)
+	l.set_anchors_preset(Control.PRESET_FULL_RECT)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	layer.add_child(l)
 	add_child(layer)
 	return layer
+
+
+
+## Yörüngeye tırmanış: ~20 sn. Gemi kadrajda kalır; bulutlar aşağı akar, yer düşer, gök kararır,
+## sonra Dünya'nın kıvrımı belirir ve gemi uzaklaştıkça Dünya aşağıda küçük bir topa dönüşür.
+func _ascent() -> void:
+	cinematic_hold = true  # 20 sn yazısız bekleme; gözetçi "takıldı" sanmasın
+	_set_zone(2, false)
+	_set_zone(5, true)
+	var m: ShaderMaterial = ($WorldEnvironment.environment as Environment).sky.sky_material
+	m.set_shader_parameter("space", 0.0)
+	var Z5 := GemiSet.ZONE5
+	var cam := _dialog_cam
+	_camera_locked = true
+	if _cam_tween:
+		_cam_tween.kill()
+	cam.make_current()
+	cam.far = 120000.0
+	cam.near = 0.5
+	cam.fov = 55.0
+	var ground: Node3D = _z5["ground"]
+	var earth: Node3D = _z5["earth"]
+	earth.visible = false
+	ground.visible = true
+	ground.position.y = -900.0
+	shake(0.12, 8.0)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	var layers: Array = _z5["clouds"]
+	for i in layers.size():
+		var c: Node3D = layers[i]
+		c.position.y = 400.0 + i * 450.0
+		c.visible = true
+		tw.tween_property(c, "position:y", -9000.0, 7.5 + i * 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(c.hide).set_delay(7.6 + i * 1.0)  # geçen bulut katmanı uzayda asılı kalmasın
+	tw.tween_property(ground, "position:y", -80000.0, 9.0).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.tween_method(func(v: float) -> void: m.set_shader_parameter("space", v), 0.0, 1.0, 9.0).set_delay(2.0)
+	tw.tween_callback(func() -> void:
+		ground.visible = false
+		earth.visible = true
+		earth.position = Vector3(0, -6250, 0)).set_delay(8.0)
+	tw.tween_property(earth, "position", Vector3(0, -62000, -12000), 11.5).set_delay(8.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(func(p: float) -> void:
+		var a := Vector3(420, -170, 560)
+		var b := Vector3(760, 160, 980)
+		var c2 := Vector3(260, 900, 720)
+		var pos: Vector3
+		var look: Vector3
+		if p < 0.45:
+			pos = a.lerp(b, p / 0.45)
+			look = Vector3.ZERO
+		else:
+			var k := smoothstep(0.45, 1.0, p)
+			pos = b.lerp(c2, k)
+			look = Vector3.ZERO.lerp(Vector3(0, -2000, -600), k)
+		cam.global_position = Z5 + pos
+		cam.look_at(Z5 + look, Vector3.UP), 0.0, 1.0, 20.0)

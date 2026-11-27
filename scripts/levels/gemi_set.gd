@@ -10,10 +10,11 @@ const KIT := "res://assets/megakit/%s.gltf"
 const ZONE2 := Vector3(300, 0, 0)
 const ZONE3 := Vector3(600, 0, 0)  # köprü
 const ZONE4 := Vector3(3000, 0, 0)  # dış çekim: limandaki gemi
+const ZONE5 := Vector3(-30000, 0, 0)  # yörüngeye tırmanış
 
 static var _mats: Dictionary = {}
 static var _kit_cache: Dictionary = {}
-static var _glass_mat: StandardMaterial3D
+static var _glass_mat: Material
 
 
 # --- Malzemeler ----------------------------------------------------------------
@@ -40,6 +41,10 @@ static func mat(key: String) -> Material:
 		"domates": m.albedo_color = Color(0.85, 0.2, 0.12)
 		"kirmizi_serit": m.albedo_color = Color(0.75, 0.12, 0.1)
 		"yer": m.albedo_color = Color(0.24, 0.19, 0.15)
+		"kepenk":
+			m.albedo_color = Color(0.2, 0.22, 0.25)
+			m.metallic = 0.6
+			m.roughness = 0.45
 		"alev":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -194,9 +199,8 @@ static func omni(parent: Node3D, pos: Vector3, color: Color, energy: float, rang
 
 
 ## MegaKit'in opak gelen camlarını gerçek şeffaf cama çevirir.
-static func glassify(root: Node) -> void:
-	if _glass_mat == null:
-		_glass_mat = mat("cam")
+static func glassify(root: Node, mat_key: String = "cam") -> void:
+	_glass_mat = mat(mat_key)
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
 		if mi.mesh == null:
 			continue
@@ -315,8 +319,8 @@ static func build_zone1(root: Node3D) -> Dictionary:
 	omni(L, Vector3(8, 8.5, 25.0), Color(1.0, 0.93, 0.82), 1.4, 13.0)
 	omni(L, Vector3(16, 3.6, 17.0), Color(0.9, 1.0, 0.8), 0.9, 6.0)
 	omni(L, Vector3(16, 3.6, 24.0), Color(0.5, 0.8, 1.0), 0.8, 6.0)
-	_build_spaceport(z1, refs)
-	glassify(z1)
+	# Kalkıştan önce bütün dış pencerelerin kepenkleri kapalı (dış manzara gösterilmez)
+	glassify(z1, "kepenk")
 	return refs
 
 
@@ -532,12 +536,10 @@ static func build_zone2(root: Node3D) -> Dictionary:
 	out.name = "Disari"
 	z2.add_child(out)
 	refs["outside"] = out
-	_ground(out, Vector3(300, -60, 7), 3000.0)
-	for i in 4:
-		_tower(out, Vector3(170 + i * 70, -60, -120 + i * 80), 70.0 + (i % 2) * 20.0)
-	_skyline(out, Vector3(700, -60, 7), 900.0, 18)
+	clouds(out, Vector3(500, -60, 7), Vector3(300, 60, 500), 14, 160.0, 7)
 	# Dünya (kalkıştan sonra görünür)
-	var e := earth(z2, Vector3(350, -388, 7), 400.0)
+	# Yörüngeden Dünya: aşağıda küçük bir top
+	var e := earth(z2, Vector3(2600, -130, 7), 400.0)
 	e.visible = false
 	refs["earth"] = e
 	return refs
@@ -849,10 +851,7 @@ static func build_bridge(root: Node3D) -> Dictionary:
 	out.name = "Disari"
 	b.add_child(out)
 	refs["outside"] = out
-	_ground(out, Vector3(0, -70, 600), 3000.0)
-	for i in 4:
-		_tower(out, Vector3(-60 + i * 40, -70, 80 + i * 25), 80.0)
-	_skyline(out, Vector3(0, -70, 900), 900.0, 16)
+	clouds(out, Vector3(0, -50, 700), Vector3(500, 60, 300), 14, 180.0, 11)
 	return refs
 
 
@@ -868,43 +867,16 @@ static func build_exterior(root: Node3D) -> Dictionary:
 	root.add_child(x)
 	refs["root"] = x
 	_ground(x, Vector3(0, 0, 0), 4000.0)
-	var ship := Node3D.new()
-	ship.position = Vector3(0, 40, 0)
-	x.add_child(ship)
-	refs["ship"] = ship
-	var body := cyl(ship, Vector3.ZERO, 34, 34, 560, "beyaz", false, 32)
-	body.rotation = Vector3(PI / 2, 0, 0)
-	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 52
-	tm.outer_radius = 62
-	tm.rings = 48
-	tm.ring_segments = 12
-	ring.mesh = tm
-	ring.material_override = mat("gri")
-	ring.rotation = Vector3(PI / 2, 0, 0)
-	ring.position = Vector3(0, 0, 60)
-	ship.add_child(ring)
-	for k in 9:
-		box(ship, Vector3(34.5, 0, -240 + k * 60.0), Vector3(1, 3, 18), "isik_mavi", false)
-	# Alt yüzeydeki füzyon iticileri ve alevler (ateşlemede büyür)
-	var flames: Array[MeshInstance3D] = []
-	for k in 4:
-		var z := -180 + k * 120.0
-		cyl(ship, Vector3(0, -36, z), 10, 14, 8, "koyu")
-		var f := cyl(ship, Vector3(0, -36 - 30, z), 12, 2, 60, "alev", false)
-		f.rotation = Vector3(PI, 0, 0)
-		f.scale = Vector3(0.05, 0.05, 0.05)
-		flames.append(f)
-	refs["flames"] = flames
-	var glow := omni(ship, Vector3(0, -60, 0), Color(0.5, 0.75, 1.0), 0.0, 400.0)
-	refs["flame_light"] = glow
+	var sh := _ship(x, Vector3(0, 40, 0))
+	refs["ship"] = sh["node"]
+	refs["flames"] = sh["flames"]
+	refs["flame_light"] = sh["light"]
 	# Beşik ve kuleler
 	for k in 4:
 		box(x, Vector3(0, 3, -180 + k * 120.0), Vector3(60, 6, 16), "koyu", false)
 	for i in 5:
 		_tower(x, Vector3(70, 0, -240 + i * 120.0), 110.0)
-	_skyline(x, Vector3(-1200, 0, 0), 1200.0, 22)
+	clouds(x, Vector3(0, 350, 0), Vector3(1600, 120, 1600), 18, 320.0, 3)
 	return refs
 
 
@@ -919,3 +891,121 @@ static func _col(parent: Node3D, pos: Vector3, size: Vector3) -> void:
 	body.add_child(cs)
 	body.position = pos
 	parent.add_child(body)
+
+
+
+# --- Bulutlar ------------------------------------------------------------------
+
+static var _cloud_mat: StandardMaterial3D
+
+
+## Yumuşak kenarlı, kameraya dönük bulut kümeleri (kalkışta aşağı akar).
+static func clouds(parent: Node3D, center: Vector3, spread: Vector3, count: int, size: float, seed_no: int) -> Node3D:
+	if _cloud_mat == null:
+		var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		for y in 64:
+			for x in 64:
+				var d := Vector2(x - 31.5, y - 31.5).length() / 32.0
+				var a := clampf(1.0 - d, 0.0, 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, a * a * (3.0 - 2.0 * a) * 0.85))
+		_cloud_mat = StandardMaterial3D.new()
+		_cloud_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_cloud_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_cloud_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		_cloud_mat.billboard_keep_scale = true
+		_cloud_mat.albedo_texture = ImageTexture.create_from_image(img)
+		_cloud_mat.albedo_color = Color(1.0, 0.93, 0.88)
+		_cloud_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var root := Node3D.new()
+	root.name = "Bulutlar"
+	root.position = center
+	parent.add_child(root)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_no
+	var q := QuadMesh.new()
+	q.size = Vector2(1, 1)
+	for i in count:
+		var mi := MeshInstance3D.new()
+		mi.mesh = q
+		mi.material_override = _cloud_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var sc := size * rng.randf_range(0.6, 1.4)
+		mi.scale = Vector3(sc * 1.6, sc, 1)
+		mi.position = Vector3(rng.randf_range(-spread.x, spread.x), rng.randf_range(-spread.y, spread.y), rng.randf_range(-spread.z, spread.z))
+		root.add_child(mi)
+	return root
+
+
+
+## EMANET'in dış gövdesi: halka, ışık şeritleri, alttaki füzyon iticileri ve alevler.
+static func _ship(parent: Node3D, pos: Vector3) -> Dictionary:
+	var ship := Node3D.new()
+	ship.position = pos
+	parent.add_child(ship)
+	var body := cyl(ship, Vector3.ZERO, 34, 34, 560, "beyaz", false, 32)
+	body.rotation = Vector3(PI / 2, 0, 0)
+	for zc in [-280.0, 280.0]:
+		var cap := ball(ship, Vector3(0, 0, zc), 34, "beyaz")
+		cap.scale = Vector3(1, 1, 0.5)
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 52
+	tm.outer_radius = 62
+	tm.rings = 48
+	tm.ring_segments = 12
+	ring.mesh = tm
+	ring.material_override = mat("gri")
+	ring.rotation = Vector3(PI / 2, 0, 0)
+	ring.position = Vector3(0, 0, 60)
+	ship.add_child(ring)
+	for k in 4:
+		var spoke := box(ship, Vector3(0, 0, 60), Vector3(110, 5, 5), "gri", false)
+		spoke.rotation = Vector3(0, 0, k * PI / 4)
+	for k in 9:
+		box(ship, Vector3(34.5, 0, -240 + k * 60.0), Vector3(1, 3, 18), "isik_mavi", false)
+		box(ship, Vector3(-34.5, 0, -240 + k * 60.0), Vector3(1, 3, 18), "isik_mavi", false)
+	var flames: Array[MeshInstance3D] = []
+	for k in 4:
+		var z := -180 + k * 120.0
+		cyl(ship, Vector3(0, -36, z), 10, 14, 8, "koyu")
+		var f := cyl(ship, Vector3(0, -36 - 30, z), 12, 2, 60, "alev", false)
+		f.rotation = Vector3(PI, 0, 0)
+		f.scale = Vector3(0.05, 0.05, 0.05)
+		flames.append(f)
+	var glow := omni(ship, Vector3(0, -60, 0), Color(0.5, 0.75, 1.0), 0.0, 400.0)
+	return {"node": ship, "flames": flames, "light": glow}
+
+
+# =============================================================================
+# Bölge 5: Yörüngeye tırmanış (20 sn'lik dış çekim)
+# =============================================================================
+# Gemi yerinde durur; bulutlar, yer ve Dünya hareket eder (sayısal hassasiyet için).
+
+static func build_ascent(root: Node3D) -> Dictionary:
+	var refs := {}
+	var a := Node3D.new()
+	a.name = "Yukselis"
+	a.position = ZONE5
+	root.add_child(a)
+	refs["root"] = a
+	var sh := _ship(a, Vector3.ZERO)
+	refs["ship"] = sh["node"]
+	for f: MeshInstance3D in sh["flames"]:
+		f.scale = Vector3(1, 1.6, 1)
+	(sh["light"] as OmniLight3D).light_energy = 5.0
+	# Yer: geminin altında, hızla aşağı düşer
+	var ground := Node3D.new()
+	a.add_child(ground)
+	ground.position = Vector3(0, -900, 0)
+	_ground(ground, Vector3.ZERO, 20000.0)
+	refs["ground"] = ground
+	# Bulut katmanları: geminin üstünde başlar, tırmanırken aşağı akar
+	var layers: Array[Node3D] = []
+	for i in 3:
+		layers.append(clouds(a, Vector3(0, 400 + i * 450, 0), Vector3(2200, 60, 2200), 22, 380.0, 40 + i))
+	refs["clouds"] = layers
+	# Dünya: büyük küre; önce ufuk kıvrımı, sonra uzaklaşıp topa dönüşür
+	var e := earth(a, Vector3(0, -6200, 0), 6000.0)
+	e.visible = false
+	refs["earth"] = e
+	return refs

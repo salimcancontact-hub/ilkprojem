@@ -311,7 +311,8 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 @bekle 1.8
 > Kalabalık bir dalga gibi barikatlara yükleniyor. Biri sana doğru bir şişe fırlatıyor.
 @olay sise_at
-@qte kaydir sol 1.6 "EĞİL" -> sise_kurtul | sise_vurdu
+@bekle 0.3
+@qte kaydir sol 1.9 "EĞİL" -> sise_kurtul | sise_vurdu
 
 === sise_kurtul
 @olay sise_kacti

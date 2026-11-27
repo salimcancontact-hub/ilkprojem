@@ -232,7 +232,7 @@ func _process(delta: float) -> void:
 		return
 	_block_input = maxf(_block_input - delta, 0.0)
 	if _typing:
-		_chars += TYPE_SPEED * delta
+		_chars += TYPE_SPEED * minf(delta, 0.05)  # takılmada yazı bir anda tamamlanmasın
 		_text_label.visible_characters = int(_chars)
 		if _chars >= _text_label.get_total_character_count():
 			_finish_typing()

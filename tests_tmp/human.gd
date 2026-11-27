@@ -20,8 +20,15 @@ func swipe(a: Vector2, b: Vector2) -> void:
 	var m := InputEventMouseMotion.new(); m.position = b; m.global_position = b; m.relative = b - a; m.button_mask = MOUSE_BUTTON_MASK_LEFT
 	Input.parse_input_event(m); _mouse(b, false)
 ## Her yazının ekranda kalış süresini ölç; dokunmadan ya da 0.8 sn'den kısa sürede değişenleri kaydet.
+var last_vis := 0
 func _watch(d) -> void:
 	var t: String = d._text_label.text if d._panel.visible else ""
+	var vis: int = d._text_label.visible_characters
+	if t != "" and t == last_txt and last_vis == -1 and vis >= 0 and vis < 4:
+		problems.append("FLAŞ (tam göründü, sonra baştan yazıldı): '%s'" % t.substr(0, 40))
+	if t != "" and t != last_txt and vis == -1:
+		problems.append("TAM BELİRDİ (harf harf değil): '%s'" % t.substr(0, 40))
+	last_vis = vis if t != "" else 0
 	if t != last_txt:
 		var dur := (f - last_txt_f) / 30.0
 		if last_txt != "" and t != "" and dur < 0.8:

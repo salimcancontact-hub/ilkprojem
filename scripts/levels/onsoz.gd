@@ -314,8 +314,21 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			var fall := (_arman.global_position - _player.global_position)
 			fall.y = 0
 			_arman.model.play("Hit_Knockback", 0.05)
+			# Düşüşü yandan gören açı: ikisi de kadrajda (oyuncu önünü kapatmasın)
+			var fdir := fall.normalized()
+			var side := fdir.cross(Vector3.UP).normalized()
+			var mid := (_arman.global_position + _player.global_position) / 2.0 + fdir * 0.6
+			camera_shots["dusus"] = [mid + side * 3.2 + Vector3(0, 1.6, 0), mid + Vector3(0, 0.6, 0)]
+			_set_camera("dusus")
 			await get_tree().create_timer(0.2, true, false, true).timeout
 			_arman.model.go_ragdoll("spine_03", fall.normalized() * 16.0 + Vector3(0, 3, 0))
+			# Yere düştükten sonra karar anı açısı yerdeki bedene göre kurulur
+			await get_tree().create_timer(1.0, true, false, true).timeout
+			var body: Vector3 = _arman.model.ragdoll.bone("spine_03").global_position
+			var to_p := _player.global_position - body
+			to_p.y = 0
+			var side2 := to_p.normalized().cross(Vector3.UP).normalized()
+			camera_shots["arman_yerde"] = [body + side2 * 2.6 - to_p.normalized() * 0.8 + Vector3(0, 1.9, 0), (body + _player.global_position) / 2.0 + Vector3(0, 0.5, 0)]
 		"telefon":
 			_start_call()
 		"telefon_kapat":
@@ -512,6 +525,10 @@ func _prewarm() -> void:
 	holo.position = Vector3(0.6, 0, 0)
 	var fire: Node3D = load("res://scenes/props/fire_barrel.tscn").instantiate()
 	holder.add_child(fire)
+	var bottle := _make_bottle()
+	holder.add_child(bottle)
+	bottle.position = Vector3(-0.3, 0.3, 0)
+	_dialog._qte.prewarm()
 	fire.position = Vector3(0, -1.2, -1.0)
 	_shatter(holder.global_position + holder.global_basis * Vector3(0.3, 0.2, 0))
 	for k in 6:
@@ -586,25 +603,37 @@ var _bottle_tween: Tween
 
 
 func _throw_bottle() -> void:
-	_bottle = MeshInstance3D.new()
+	_bottle = _make_bottle()
+	add_child(_bottle)
+	var head := _player.head_position()
+	var from := head + Vector3(-3.0, 2.6, -9.0)
+	_bottle.global_position = from
+	_bottle_tween = create_tween().set_parallel(true)
+	_bottle_tween.tween_property(_bottle, "global_position", head + Vector3(0, 0.05, 0), 2.2)
+	_bottle_tween.tween_property(_bottle, "rotation", Vector3(TAU * 3.0, 0, TAU), 2.2)
+
+
+## Fırlatılan cam şişe (parlak, arkasında iz bırakır).
+func _make_bottle() -> MeshInstance3D:
+	var bottle := MeshInstance3D.new()
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = 0.025
 	mesh.bottom_radius = 0.045
 	mesh.height = 0.28
-	_bottle.mesh = mesh
+	bottle.mesh = mesh
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.25, 0.55, 0.3)
 	mat.emission_enabled = true
 	mat.emission = Color(0.15, 0.35, 0.15)
 	mat.emission = Color(0.4, 0.9, 0.45)
 	mat.emission_energy_multiplier = 2.5
-	_bottle.material_override = mat
-	_bottle.scale = Vector3.ONE * 1.8
+	bottle.material_override = mat
+	bottle.scale = Vector3.ONE * 1.8
 	var glow := OmniLight3D.new()
 	glow.light_color = Color(0.6, 1.0, 0.6)
 	glow.light_energy = 1.5
 	glow.omni_range = 2.0
-	_bottle.add_child(glow)
+	bottle.add_child(glow)
 	var trail := CPUParticles3D.new()
 	var dot := SphereMesh.new()
 	dot.radius = 0.03
@@ -622,14 +651,8 @@ func _throw_bottle() -> void:
 	trail.initial_velocity_min = 0.0
 	trail.initial_velocity_max = 0.1
 	trail.scale_amount_min = 0.6
-	_bottle.add_child(trail)
-	add_child(_bottle)
-	var head := _player.head_position()
-	var from := head + Vector3(-3.0, 2.6, -9.0)
-	_bottle.global_position = from
-	_bottle_tween = create_tween().set_parallel(true)
-	_bottle_tween.tween_property(_bottle, "global_position", head + Vector3(0, 0.05, 0), 1.35)
-	_bottle_tween.tween_property(_bottle, "rotation", Vector3(TAU * 3.0, 0, TAU), 1.35)
+	bottle.add_child(trail)
+	return bottle
 
 
 func _bottle_miss() -> void:

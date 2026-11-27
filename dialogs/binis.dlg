@@ -326,7 +326,7 @@ HAKEM: Duvardaki erzak bölmesinde size ayrılmış karşılama paketi bulunuyor
 
 === ipucu_pencere
 @olay kamera c_pencere
-> Pencereden aşağıda liman: kuleler, pist, ufukta yanan şehir. Altmış metre aşağıda insanlar karınca kadar.
+> Pencerede şafak göğü. Turuncu, yorgun, dumanlı. Birkaç dakika sonra bu gök geride kalacak.
 @if anit_not == "ada" -> pencere_ada
 -> SON
 
@@ -479,7 +479,7 @@ HAKEM: 412, kemerleriniz bağlı. Teşekkürler, Deniz.
 @olay kamera koltuk
 @bekle 1.0
 HAKEM: Kalkışa altmış saniye.
-> Pencerede son kez liman. Kuleler, pist, yanan şehir. Bir daha hiçbirini görmeyeceksin.
+> Pencerede son kez Dünya'nın göğü. Turuncu bir şafak. Bir daha hiç böyle bir gök görmeyeceksin.
 @sure 8 -> koltuk_sessiz
 * "Ada için." -> koltuk_ada
 * "Özür dilerim, Deniz." -> koltuk_ozur
@@ -538,27 +538,29 @@ PILOT: Üç. İki. Bir.
 @olay tutun
 @bekle 1.2
 > Koltuğun kollarına tutunuyorsun. Ağırlık göğsüne bir taş gibi oturuyor. Nefes al. Nefes ver.
-@olay kamera pencere
-@olay gokyuzu_karar
-@bekle 4.5
-> Pencerede liman küçülüyor, sonra bulutların altında kayboluyor. Gökyüzü maviden laciverte, laciverten siyaha dönüyor.
-@olay dunya_gorun
-@bekle 3.0
-> Ve aşağıda, bütün kıvrımıyla, Dünya.
 ~ kalkis_bayildi = false
--> kalkis_son
+-> yukselis
 
 === kalkis_bayildi
 @olay bayil
 @bekle 2.0
 > Ağırlık seni koltuğa gömüyor. Görüntü kararıyor, kenarlardan içe doğru.
-@olay gokyuzu_hemen
-@olay dunya_gorun
-@olay aydinlat 2
-@olay kamera pencere
-@bekle 3.0
-> Gözlerini açtığında pencerede gökyüzü yoktu. Siyahlık, yıldızlar ve aşağıda, kıvrılan Dünya.
 ~ kalkis_bayildi = true
+-> yukselis
+
+# Yörüngeye tırmanış: ~20 saniyelik, yazısız dış çekim (TWD gibi sahne oynar)
+=== yukselis
+@olay yukselis
+@bekle 20.5
+@olay kamara_yorunge
+@olay kamera pencere
+@bekle 1.6
+@if kalkis_bayildi -> yorunge_bayildi
+> Pencerede Dünya. Mavi, kahverengi, küçücük bir top. Avucunun içine sığacak kadar.
+-> kalkis_son
+
+=== yorunge_bayildi
+> Gözlerini açtığında pencerede gökyüzü yoktu. Siyahlık, yıldızlar ve aşağıda küçücük bir top: Dünya.
 -> kalkis_son
 
 === kalkis_son
