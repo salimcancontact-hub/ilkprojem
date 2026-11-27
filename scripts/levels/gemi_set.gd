@@ -8,6 +8,8 @@ extends RefCounted
 
 const KIT := "res://assets/megakit/%s.gltf"
 const ZONE2 := Vector3(300, 0, 0)
+const ZONE3 := Vector3(600, 0, 0)  # köprü
+const ZONE4 := Vector3(3000, 0, 0)  # dış çekim: limandaki gemi
 
 static var _mats: Dictionary = {}
 static var _kit_cache: Dictionary = {}
@@ -37,6 +39,18 @@ static func mat(key: String) -> Material:
 		"toprak": m.albedo_color = Color(0.25, 0.18, 0.12)
 		"domates": m.albedo_color = Color(0.85, 0.2, 0.12)
 		"kirmizi_serit": m.albedo_color = Color(0.75, 0.12, 0.1)
+		"yer": m.albedo_color = Color(0.24, 0.19, 0.15)
+		"alev":
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			m.albedo_color = Color(0.55, 0.8, 1.0, 0.85)
+		"sehir": m.albedo_color = Color(0.12, 0.1, 0.1)
+		"yangin":
+			m.albedo_color = Color(1.0, 0.45, 0.15)
+			m.emission_enabled = true
+			m.emission = Color(1.0, 0.4, 0.1)
+			m.emission_energy_multiplier = 2.5
 		"isik_sicak":
 			m.albedo_color = Color(1.0, 0.85, 0.65)
 			m.emission_enabled = true
@@ -273,11 +287,18 @@ static func build_zone1(root: Node3D) -> Dictionary:
 				kit(z1, "S_TopAstraStraight", c + Vector3(0, 5, 0), _side_yaw(Vector2i(0, -1)))
 	# Arkadaki uzay asansörü kapısı (gelinen yer)
 	kit(z1, "S_DoorFrameSquareBlocked", Vector3(8, 0, -1.7))
-	label(z1, Vector3(8, 4.3, -1.4), "UZAY ASANSÖRÜ — DÜNYA", 48, Color(0.6, 0.85, 1.0))
+	label(z1, Vector3(8, 4.3, -1.4), "TERMİNAL — LİMAN ÇIKIŞI", 48, Color(0.6, 0.85, 1.0))
 	# Pencere önü korkulukları
 	for z0 in range(-2, 30, 4):
 		kit(z1, "S_PropRail_4", Vector3(-1.1, 0, z0 + 4.0))
 
+	# İç yüzeylere görünmez çarpışma: MegaKit duvarlarının çarpışması görünen yüzün arkasında kalıyor,
+	# kamera görünen yüzü geçip duvarın içine (ve dışarıya) bakmasın.
+	_col(z1, Vector3(-1.82, 5, 14), Vector3(0.1, 10, 32))
+	_col(z1, Vector3(17.5, 2.5, 4), Vector3(0.1, 5, 12))
+	_col(z1, Vector3(17.95, 5, 20), Vector3(0.1, 10, 20))
+	_col(z1, Vector3(8, 2.5, -1.52), Vector3(20, 5, 0.1))
+	_col(z1, Vector3(8, 5, 29.52), Vector3(20, 10, 0.1))
 	_build_gate(z1, refs)
 	_build_terminal_props(z1, refs)
 	_build_atrium(z1, refs)
@@ -294,7 +315,7 @@ static func build_zone1(root: Node3D) -> Dictionary:
 	omni(L, Vector3(8, 8.5, 25.0), Color(1.0, 0.93, 0.82), 1.4, 13.0)
 	omni(L, Vector3(16, 3.6, 17.0), Color(0.9, 1.0, 0.8), 0.9, 6.0)
 	omni(L, Vector3(16, 3.6, 24.0), Color(0.5, 0.8, 1.0), 0.8, 6.0)
-	refs["earth"] = earth(z1, Vector3(-300, -110, 15), 150.0)
+	_build_spaceport(z1, refs)
 	glassify(z1)
 	return refs
 
@@ -506,14 +527,26 @@ static func build_zone2(root: Node3D) -> Dictionary:
 	refs["root"] = z2
 	_build_corridor(z2, refs)
 	_build_cabin(z2, refs)
-	refs["earth"] = earth(z2, Vector3(350, -60, 7), 120.0)
+	# Pencereden görünen dış dünya: 8. güverte yerden ~60 m yukarıda; kalkışta aşağı kayıp gider
+	var out := Node3D.new()
+	out.name = "Disari"
+	z2.add_child(out)
+	refs["outside"] = out
+	_ground(out, Vector3(300, -60, 7), 3000.0)
+	for i in 4:
+		_tower(out, Vector3(170 + i * 70, -60, -120 + i * 80), 70.0 + (i % 2) * 20.0)
+	_skyline(out, Vector3(700, -60, 7), 900.0, 18)
+	# Dünya (kalkıştan sonra görünür)
+	var e := earth(z2, Vector3(350, -388, 7), 400.0)
+	e.visible = false
+	refs["earth"] = e
 	return refs
 
 
 static func _build_corridor(z2: Node3D, refs: Dictionary) -> void:
 	# Koridor x: -1.6..1.6, z: -1..22, tavan 3 m
 	box(z2, Vector3(0, -0.1, 10.5), Vector3(3.2, 0.2, 23), "zemin", true)
-	box(z2, Vector3(0, 3.1, 10.5), Vector3(3.2, 0.2, 23), "beyaz", false)
+	box(z2, Vector3(0, 3.1, 10.5), Vector3(3.6, 0.2, 23.4), "beyaz", true)
 	box(z2, Vector3(0, 2.98, 10.5), Vector3(0.5, 0.03, 22), "isik_sicak", false)
 	for x in [-1.55, 1.55]:
 		box(z2, Vector3(x, 0.03, 10.5), Vector3(0.05, 0.04, 23), "isik_mavi", false)
@@ -570,7 +603,7 @@ static func _build_cabin(z2: Node3D, refs: Dictionary) -> void:
 	z2.add_child(c)
 	refs["cabin"] = c
 	box(c, Vector3(4.6, -0.1, 7), Vector3(6, 0.2, 4), "ahsap", true)
-	box(c, Vector3(4.6, 2.9, 7), Vector3(6, 0.2, 4), "beyaz", false)
+	box(c, Vector3(4.6, 2.9, 7), Vector3(6.4, 0.2, 4.4), "beyaz", true)
 	box(c, Vector3(4.6, 1.4, 4.9), Vector3(6, 2.8, 0.2), "krem", true)
 	box(c, Vector3(4.6, 1.4, 9.1), Vector3(6, 2.8, 0.2), "krem", true)
 	# Pencere duvarı
@@ -602,7 +635,7 @@ static func _build_cabin(z2: Node3D, refs: Dictionary) -> void:
 	box(c, Vector3(2.15, 1.0, 8.24), Vector3(0.02, 1.9, 0.01), "gri", false)
 	# Kalkış saati (yatağın üstünde)
 	box(c, Vector3(4.4, 2.0, 8.98), Vector3(1.0, 0.32, 0.02), "ekran", false)
-	refs["clock"] = label(c, Vector3(4.4, 2.0, 8.96), "KALKIŞ  T-00:40:00", 40, Color(0.5, 1.0, 0.7), PI, 0.0035)
+	refs["clock"] = label(c, Vector3(4.4, 2.0, 8.96), "KALKIŞ  T-00:40:00", 30, Color(0.5, 1.0, 0.7), PI, 0.0028)
 
 	# Masa ve terminal (sağ duvar)
 	box(c, Vector3(5.2, 0.73, 5.35), Vector3(1.6, 0.05, 0.6), "beyaz", true)
@@ -610,7 +643,7 @@ static func _build_cabin(z2: Node3D, refs: Dictionary) -> void:
 	cyl(c, Vector3(5.2, 0.23, 6.05), 0.2, 0.16, 0.46, "lacivert", true)
 	var term := box(c, Vector3(5.2, 1.4, 5.04), Vector3(0.9, 0.55, 0.02), "ekran", false)
 	refs["terminal"] = term
-	refs["terminal_text"] = label(c, Vector3(5.2, 1.42, 5.06), "● KALKIŞ SABAHI DİNLE — D.A.", 30, Color(1.0, 0.75, 0.35), 0.0, 0.0028)
+	refs["terminal_text"] = label(c, Vector3(5.2, 1.42, 5.06), "● KALKIŞ SABAHI DİNLE\n— D.A.", 26, Color(1.0, 0.75, 0.35), 0.0, 0.0028)
 	refs["terminal_point"] = _marker(c, Vector3(5.0, 0.8, 5.5))
 	refs["desk_spot"] = _marker(c, Vector3(4.75, 0.76, 5.4))
 	refs["holo_spot"] = _marker(c, Vector3(5.2, 0.76, 5.45))
@@ -699,3 +732,190 @@ static func _build_cabin(z2: Node3D, refs: Dictionary) -> void:
 	seat.add_child(seat_body)
 	refs["seat_collision"] = scs
 	refs["seat_point"] = _marker(seat, Vector3(-0.02, 0.0, 0))
+
+
+# --- Dış dünya: uzay limanı ------------------------------------------------------
+
+static func _ground(parent: Node3D, pos: Vector3, size: float) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(size, size)
+	mi.mesh = pm
+	mi.material_override = mat("yer")
+	mi.position = pos
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	# Pist çizgileri
+	for i in 6:
+		box(parent, pos + Vector3(-size * 0.1 + i * 60.0, 0.05, 0), Vector3(3, 0.05, size * 0.6), "isik_sicak", false)
+	return mi
+
+
+## Fırlatma kulesi: kafes gövde, kırmızı uyarı ışığı.
+static func _tower(parent: Node3D, base: Vector3, h: float) -> Node3D:
+	var t := Node3D.new()
+	t.position = base
+	parent.add_child(t)
+	box(t, Vector3(0, h / 2.0, 0), Vector3(6, h, 6), "koyu", false)
+	for k in int(h / 12.0):
+		box(t, Vector3(0, 6 + k * 12.0, 0), Vector3(6.6, 0.6, 6.6), "gri", false)
+	box(t, Vector3(0, h + 0.6, 0), Vector3(1.2, 1.2, 1.2), "isik_kirmizi", false)
+	return t
+
+
+## Ufuktaki şehir: kararmış kuleler, yer yer yangın ışığı.
+static func _skyline(parent: Node3D, center: Vector3, radius: float, count: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2526
+	for i in count:
+		var a := rng.randf_range(-0.9, 0.9)
+		var p := center + Vector3(cos(a) * radius * 0.3, 0, sin(a) * radius)
+		var h := rng.randf_range(40.0, 140.0)
+		box(parent, p + Vector3(0, h / 2.0, 0), Vector3(rng.randf_range(20, 50), h, rng.randf_range(20, 50)), "sehir", false)
+		if i % 4 == 0:
+			box(parent, p + Vector3(0, h * 0.3, 0), Vector3(14, 8, 14), "yangin", false)
+
+
+## İskele dışı: terminalin camından EMANET'in dev gövdesi, kuleler, pist.
+static func _build_spaceport(z1: Node3D, refs: Dictionary) -> void:
+	var out := Node3D.new()
+	out.name = "Liman"
+	z1.add_child(out)
+	_ground(out, Vector3(-200, -0.6, 10), 2400.0)
+	# EMANET: pencerenin ötesinde yatan bir kilometrelik gövde
+	var hull := Node3D.new()
+	hull.position = Vector3(-95, 38, -290)
+	out.add_child(hull)
+	var body := cyl(hull, Vector3.ZERO, 34, 34, 560, "beyaz", false, 32)
+	body.rotation = Vector3(PI / 2, 0, 0)
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 52
+	tm.outer_radius = 62
+	tm.rings = 48
+	tm.ring_segments = 12
+	ring.mesh = tm
+	ring.material_override = mat("gri")
+	ring.rotation = Vector3(PI / 2, 0, 0)
+	ring.position = Vector3(0, 0, 60)
+	hull.add_child(ring)
+	for k in 9:
+		box(hull, Vector3(34.5, 0, -240 + k * 60.0), Vector3(1, 3, 18), "isik_mavi", false)
+	label(hull, Vector3(34.8, 8, 120), "EMANET", 420, Color(0.25, 0.3, 0.4), PI / 2, 0.06)
+	# Gövdeyi taşıyan beşik ve kuleler
+	for k in 4:
+		box(out, Vector3(-90, 2, -440 + k * 120.0), Vector3(50, 6, 16), "koyu", false)
+	for i in 4:
+		_tower(out, Vector3(-40 - i * 8, -0.6, -60 - i * 80.0), 90.0)
+	_skyline(out, Vector3(-900, -0.6, 10), 900.0, 20)
+	refs["spaceport"] = out
+
+
+# =============================================================================
+# Bölge 3: Köprü (uçuş ekibi)
+# =============================================================================
+
+static func build_bridge(root: Node3D) -> Dictionary:
+	var refs := {}
+	var b := Node3D.new()
+	b.name = "Kopru"
+	b.position = ZONE3
+	root.add_child(b)
+	refs["root"] = b
+	# Oda: x -5..5, z -4..4, ön cam +Z yönünde
+	box(b, Vector3(0, -0.1, 0), Vector3(10, 0.2, 8), "koyu", true)
+	box(b, Vector3(0, 3.4, 0), Vector3(10, 0.2, 8), "gri", true)
+	box(b, Vector3(-5.1, 1.7, 0), Vector3(0.2, 3.4, 8), "lacivert", true)
+	box(b, Vector3(5.1, 1.7, 0), Vector3(0.2, 3.4, 8), "lacivert", true)
+	box(b, Vector3(0, 1.7, -4.1), Vector3(10, 3.4, 0.2), "lacivert", true)
+	box(b, Vector3(0, 0.45, 4.1), Vector3(10, 0.9, 0.2), "koyu", true)
+	box(b, Vector3(0, 3.15, 4.1), Vector3(10, 0.5, 0.2), "koyu", true)
+	box(b, Vector3(0, 1.9, 4.12), Vector3(10, 2.0, 0.04), "cam", true)
+	box(b, Vector3(0, 3.28, 0), Vector3(6, 0.03, 0.4), "isik_mavi", false)
+	# Konsollar ve ekranlar
+	for x in [-2.6, 0.0, 2.6]:
+		box(b, Vector3(x, 0.5, 2.6), Vector3(1.8, 1.0, 0.7), "gri", true)
+		box(b, Vector3(x, 1.25, 2.85), Vector3(1.6, 0.6, 0.04), "ekran", false, Vector3(-0.35, 0, 0))
+		box(b, Vector3(x, 1.02, 2.45), Vector3(1.6, 0.03, 0.4), "isik_mavi", false)
+	refs["screen_text"] = label(b, Vector3(0, 1.3, 2.82), "FÜZYON ÇEKİRDEĞİ  %100\nKULE BAĞLANTISI  AYRILDI\nYÖRÜNGE  T-00:01:00", 34, Color(0.5, 1.0, 0.7), PI, 0.003)
+	# Koltuklar
+	for x in [-2.6, 2.6]:
+		box(b, Vector3(x, 0.45, 1.75), Vector3(0.6, 0.12, 0.6), "lacivert", false)
+		box(b, Vector3(x, 0.9, 1.45), Vector3(0.6, 0.8, 0.12), "lacivert", false, Vector3(-0.15, 0, 0))
+	omni(b, Vector3(0, 2.8, 0), Color(0.7, 0.85, 1.0), 1.0, 9.0)
+	omni(b, Vector3(0, 1.4, 2.6), Color(0.3, 0.8, 1.0), 0.8, 4.0)
+	# Camdan görünen liman (kalkışta aşağı kayar)
+	var out := Node3D.new()
+	out.name = "Disari"
+	b.add_child(out)
+	refs["outside"] = out
+	_ground(out, Vector3(0, -70, 600), 3000.0)
+	for i in 4:
+		_tower(out, Vector3(-60 + i * 40, -70, 80 + i * 25), 80.0)
+	_skyline(out, Vector3(0, -70, 900), 900.0, 16)
+	return refs
+
+
+# =============================================================================
+# Bölge 4: Dış çekim — limandaki EMANET, ateşleme
+# =============================================================================
+
+static func build_exterior(root: Node3D) -> Dictionary:
+	var refs := {}
+	var x := Node3D.new()
+	x.name = "DisCekim"
+	x.position = ZONE4
+	root.add_child(x)
+	refs["root"] = x
+	_ground(x, Vector3(0, 0, 0), 4000.0)
+	var ship := Node3D.new()
+	ship.position = Vector3(0, 40, 0)
+	x.add_child(ship)
+	refs["ship"] = ship
+	var body := cyl(ship, Vector3.ZERO, 34, 34, 560, "beyaz", false, 32)
+	body.rotation = Vector3(PI / 2, 0, 0)
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 52
+	tm.outer_radius = 62
+	tm.rings = 48
+	tm.ring_segments = 12
+	ring.mesh = tm
+	ring.material_override = mat("gri")
+	ring.rotation = Vector3(PI / 2, 0, 0)
+	ring.position = Vector3(0, 0, 60)
+	ship.add_child(ring)
+	for k in 9:
+		box(ship, Vector3(34.5, 0, -240 + k * 60.0), Vector3(1, 3, 18), "isik_mavi", false)
+	# Alt yüzeydeki füzyon iticileri ve alevler (ateşlemede büyür)
+	var flames: Array[MeshInstance3D] = []
+	for k in 4:
+		var z := -180 + k * 120.0
+		cyl(ship, Vector3(0, -36, z), 10, 14, 8, "koyu")
+		var f := cyl(ship, Vector3(0, -36 - 30, z), 12, 2, 60, "alev", false)
+		f.rotation = Vector3(PI, 0, 0)
+		f.scale = Vector3(0.05, 0.05, 0.05)
+		flames.append(f)
+	refs["flames"] = flames
+	var glow := omni(ship, Vector3(0, -60, 0), Color(0.5, 0.75, 1.0), 0.0, 400.0)
+	refs["flame_light"] = glow
+	# Beşik ve kuleler
+	for k in 4:
+		box(x, Vector3(0, 3, -180 + k * 120.0), Vector3(60, 6, 16), "koyu", false)
+	for i in 5:
+		_tower(x, Vector3(70, 0, -240 + i * 120.0), 110.0)
+	_skyline(x, Vector3(-1200, 0, 0), 1200.0, 22)
+	return refs
+
+
+
+## Görünmez çarpışma kutusu.
+static func _col(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var sh := BoxShape3D.new()
+	sh.size = size
+	cs.shape = sh
+	body.add_child(cs)
+	body.position = pos
+	parent.add_child(body)

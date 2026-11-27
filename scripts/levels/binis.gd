@@ -7,7 +7,10 @@ const Z2 := GemiSet.ZONE2
 
 var _z1: Dictionary
 var _z2: Dictionary
+var _z3: Dictionary  # köprü
+var _z4: Dictionary  # dış çekim
 var _phase: String = "baslangic"
+var _loading: CanvasLayer
 var _npcs: Dictionary = {}
 var _hot: Dictionary = {}
 var _card: Node3D
@@ -23,12 +26,24 @@ var _seat_cam_target: Vector3
 
 
 func _ready() -> void:
+	# Önce siyah ekranda "Yükleniyor" çizilsin (donmuş gri ekran yerine), sonra set kurulsun.
+	_dialog.fade_to(1.0, 0.0)
+	cinematic_hold = true  # yükleme uzun sürerse gözetçi "siyah ekran" sanıp açmasın
+	var loading := _loading_screen()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var t0 := Time.get_ticks_msec()
 	# Set ve karakterler, GameLevel sinyallerini bağlamadan önce kurulur.
 	_z1 = GemiSet.build_zone1(self)
 	_z2 = GemiSet.build_zone2(self)
+	_z3 = GemiSet.build_bridge(self)
+	_z4 = GemiSet.build_exterior(self)
+	var t1 := Time.get_ticks_msec()
 	_spawn_people()
 	_spawn_hotspots()
+	Game.boot_log("gemi seti %d ms, karakterler %d ms" % [t1 - t0, Time.get_ticks_msec() - t1])
 	super()
+	_loading = loading
 	live_world = true  # gemi canlı: konuşurken de insanlar, hologram, kabin hareket eder
 	_player.face_point(Vector3(8, 0, 20))
 	camera_shots = {
@@ -36,8 +51,13 @@ func _ready() -> void:
 		"koltuk": [Z2 + Vector3(6.9, 1.45, 6.1), Z2 + Vector3(5.0, 1.0, 7.05), true],
 		"pencere": [Z2 + Vector3(4.2, 1.55, 7.35), Z2 + Vector3(7.7, 1.35, 6.9), true],
 		"yuz": [Z2 + Vector3(6.0, 1.3, 7.25), Z2 + Vector3(5.0, 1.15, 7.0), true],
+		# Köprü ve dış çekim
+		"kopru": [GemiSet.ZONE3 + Vector3(3.6, 2.5, -3.4), GemiSet.ZONE3 + Vector3(0, 1.3, 2.2), true],
+		"reyes": [GemiSet.ZONE3 + Vector3(0.7, 1.75, 2.0), GemiSet.ZONE3 + Vector3(0.0, 1.6, 0.4), true],
+		"pilot": [GemiSet.ZONE3 + Vector3(-1.45, 1.45, 2.2), GemiSet.ZONE3 + Vector3(-2.6, 1.3, 1.65), true],
+		"dis": [GemiSet.ZONE4 + Vector3(330, 18, 300), GemiSet.ZONE4 + Vector3(0, 80, -60), true],
 		# Bölge 1 incelemeleri
-		"c_dunya": [Vector3(2.2, 1.8, 2.2), Vector3(-3.0, 1.3, 4.8), true],
+		"c_dunya": [Vector3(-0.6, 1.7, 6.5), Vector3(-80.0, 28.0, -90.0), true],
 		"c_ekran": [Vector3(14.2, 2.0, 2.8), Vector3(17.4, 2.2, 4.5), true],
 		"c_hologram": [Vector3(8.0, 2.3, 15.0), Vector3(8.0, 2.4, 20.0), true],
 		"c_bahce": [Vector3(14.6, 1.8, 15.0), Vector3(17.5, 1.1, 17.4), true],
@@ -60,16 +80,27 @@ func _ready() -> void:
 	}
 	_dialog.fade_to(1.0, 0.0)
 	_set_zone(2, true)
+	_set_zone(3, true)
+	_set_zone(4, true)
+	(_z2["earth"] as Node3D).visible = true
 	await get_tree().process_frame
 	await _prewarm()
+	if _loading:
+		_loading.queue_free()  # ilk çizim ve gölgelendirici derlemesi bitti
+	(_z2["earth"] as Node3D).visible = false
 	_set_zone(2, false)
+	_set_zone(3, false)
+	_set_zone(4, false)
 	Story.set_var("bolum", "binis")
+	cinematic_hold = false
 	await play_dialog(DLG, "giris")
 	_phase = "iskele"
 
 
 func _process(delta: float) -> void:
 	super(delta)
+	if _z4.is_empty():
+		return  # set henüz kuruluyor
 	var holo: Node3D = _z1.get("ship_holo")
 	if holo and _z1["root"].visible:
 		holo.rotation.y += delta * 0.35
@@ -113,6 +144,11 @@ func _spawn_people() -> void:
 	_npcs["yolcu"] = _npc("YOLCU", C + "kalabalik/c3_model.tscn", Vector3(2.2, 0, 5.2), -PI / 2, "yolcu")
 	_npcs["kadin"] = _npc("KADIN", C + "kadin_model.tscn", Vector3(-0.35, 0, 19.6), PI / 2, "kadin", "Idle_Rail")
 	_npcs["selim"] = _npc("SELIM", C + "yasli_model.tscn", Vector3(9.9, 0, 26.2), PI, "asansor", "Idle_FoldArms", false)
+	# Köprüde uçuş ekibi (kalkışta görünür)
+	var Z3 := GemiSet.ZONE3
+	_crew("REYES", C + "deniz_model.tscn", Z3 + Vector3(0.0, 0, 0.4), PI, "Idle_FoldArms", false)
+	_crew("PILOT", C + "deniz_k_model.tscn", Z3 + Vector3(-2.6, 0.02, 2.02), PI, "Sitting_Idle", true)
+	_crew("SUBAY", C + "kalabalik/c4_model.tscn", Z3 + Vector3(2.6, 0.02, 2.02), PI, "Sitting_Idle", true)
 	# Arkadaki kuyruk ve meydandaki kalabalık (konuşulmaz, sadece canlı)
 	var extras := [
 		["c1", Vector3(7.6, 0, 0.2), PI, "Idle"], ["c2", Vector3(8.4, 0, -0.8), PI, "Idle_FoldArms"],
@@ -130,8 +166,38 @@ func _spawn_people() -> void:
 			m.add_to_group("detay")
 
 
+var _crew_models: Dictionary = {}
+
+
+func _crew(id: String, path: String, pos: Vector3, yaw: float, anim: String, seated: bool) -> void:
+	var m: CharacterModel = load(path).instantiate()
+	m.start_animation = anim
+	add_child(m)
+	m.position = pos
+	m.rotation.y = yaw
+	if seated:
+		m.process_mode = Node.PROCESS_MODE_ALWAYS
+	_crew_models[id] = m
+
+
+const MARKERS := {
+	"dunya": Vector3(-1.9, 2.2, 3.5), "ekran": Vector3(17.35, 2.9, 4.5), "hologram": Vector3(8, 3.4, 20),
+	"bahce": Vector3(17.3, 2.9, 17.0), "anit": Vector3(17.7, 2.9, 24.2), "asansor": Vector3(5.9, 1.45, 26.5),
+}
+const MARKERS_Z2 := {
+	"tabela": Vector3(-1.5, 2.15, 0.9), "kapi411": Vector3(-1.5, 2.15, 7.0), "kapi412": Vector3(1.48, 1.5, 6.05),
+	"pencere": Vector3(7.55, 1.6, 7.0), "yatak": Vector3(3.75, 0.85, 8.3), "kutu": Vector3(6.4, 0.62, 8.4),
+	"kayit": Vector3(5.2, 1.75, 5.1), "alet": Vector3(6.9, 0.3, 5.45), "erzak": Vector3(2.7, 1.62, 5.35),
+	"koltuk": Vector3(5.0, 1.0, 7.0),
+}
+
+
 func _hotspot(id: String, pos: Vector3, start: String, prompt: String = "İNCELE", focus: float = 1.3, radius: float = 1.2, anim: String = "") -> Npc:
 	var n: Npc = load("res://scenes/npc.tscn").instantiate()
+	if MARKERS.has(id):
+		n.marker_at = MARKERS[id]
+	elif MARKERS_Z2.has(id):
+		n.marker_at = Z2 + MARKERS_Z2[id]
 	n.npc_id = "IPUCU"
 	n.dialog_path = DLG
 	n.start_node = start
@@ -151,7 +217,7 @@ func _hotspot(id: String, pos: Vector3, start: String, prompt: String = "İNCELE
 
 
 func _spawn_hotspots() -> void:
-	_hotspot("dunya", Vector3(-0.5, 0, 3.5), "ipucu_dunya", "BAK", 1.6, 1.4)
+	_hotspot("dunya", Vector3(-0.5, 0, 3.5), "ipucu_liman", "BAK", 1.6, 1.4)
 	_hotspot("ekran", Vector3(16.7, 0, 4.5), "ipucu_ekran", "İNCELE", 2.0, 1.5)
 	_hotspot("hologram", Vector3(8, 0, 17.6), "ipucu_hologram", "İNCELE", 2.4, 1.4)
 	_hotspot("bahce", Vector3(16.6, 0, 17.0), "ipucu_bahce", "İNCELE", 1.2, 1.4)
@@ -191,7 +257,7 @@ func _trigger(pos: Vector3, size: Vector3, cb: Callable) -> void:
 
 
 func _set_zone(zone: int, on: bool) -> void:
-	var r: Node3D = (_z1 if zone == 1 else _z2)["root"]
+	var r: Node3D = [_z1, _z2, _z3, _z4][zone - 1]["root"]
 	r.visible = on
 
 
@@ -253,6 +319,20 @@ func _prewarm() -> void:
 	for k in 4:
 		await get_tree().process_frame
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(0, -0.1, 1)), Z2 + Vector3(0, 1.6, 0))
+	for k in 3:
+		await get_tree().process_frame
+	# Köprü, dış çekim (alevler) ve Dünya
+	for f: MeshInstance3D in _z4["flames"]:
+		f.scale = Vector3.ONE
+	cam.global_transform = Transform3D(Basis.looking_at(Vector3(0, -0.1, 1)), GemiSet.ZONE3 + Vector3(0, 1.8, -3.0))
+	for k in 3:
+		await get_tree().process_frame
+	cam.global_transform = Transform3D(Basis.looking_at(Vector3(-1, -0.1, -0.6)), GemiSet.ZONE4 + Vector3(330, 18, 300))
+	for k in 3:
+		await get_tree().process_frame
+	for f: MeshInstance3D in _z4["flames"]:
+		f.scale = Vector3.ONE * 0.05
+	cam.global_transform = Transform3D(Basis.looking_at(Vector3(1, -0.4, 0)), Z2 + Vector3(5.0, 1.2, 7.0))
 	for k in 3:
 		await get_tree().process_frame
 	cam.global_transform = saved
@@ -472,10 +552,37 @@ func _on_story_event(event_name: String, args: PackedStringArray) -> void:
 		"bayil":
 			shake(0.3, 1.5)
 			await _dialog.fade_to(1.0, 1.6)
-		"dunya_uzaklas":
-			var e: Node3D = _z2["earth"]
+		"kopru":
+			_set_zone(2, false)
+			_set_zone(3, true)
+		"dis_cekim":
+			_set_zone(3, false)
+			_set_zone(4, true)
+		"atesleme":
+			_ignite()
+		"kamara_don":
+			_set_zone(4, false)
+			_set_zone(2, true)
+			shake(0.18, 9.0)
+			var out: Node3D = _z2["outside"]
 			var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-			tw.tween_property(e, "position", Vector3(1600, -260, 7), 9.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.tween_property(out, "position:y", -120.0, 6.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		"gokyuzu_karar":
+			_sky_to_space(6.0)
+			var out2: Node3D = _z2["outside"]
+			var tw2 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw2.tween_property(out2, "position:y", -4000.0, 5.0).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+		"gokyuzu_hemen":
+			_sky_to_space(0.0)
+			(_z2["outside"] as Node3D).visible = false
+		"dunya_gorun":
+			(_z2["outside"] as Node3D).visible = false
+			var e: Node3D = _z2["earth"]
+			e.visible = true
+			var to := e.position
+			e.position = to + Vector3(0, -260, 0)
+			var tw3 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw3.tween_property(e, "position", to, 3.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		"kemer_coz":
 			_player.model.release_all(0.5)
 			_player.model.pose_locked = false
@@ -871,3 +978,52 @@ func _place_frame(at: Vector3, face_down: bool, into_crate: bool = false) -> voi
 	_player.model.release("r", 0.4)
 	target.queue_free()
 	_player.model.play("Idle", 0.3)
+
+
+# --- Kalkış ------------------------------------------------------------------------
+
+## Dış çekim: iticiler ateşlenir, gemi beşiğinden yükselir.
+func _ignite() -> void:
+	var flames: Array = _z4["flames"]
+	for f: MeshInstance3D in flames:
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(f, "scale", Vector3.ONE, 1.2).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	var light: OmniLight3D = _z4["flame_light"]
+	var twl := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	twl.tween_property(light, "light_energy", 6.0, 1.0)
+	shake(0.25, 4.0)
+	var ship: Node3D = _z4["ship"]
+	var tw2 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw2.tween_interval(1.0)
+	tw2.tween_property(ship, "position:y", 420.0, 5.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
+## Gökyüzü şafaktan uzaya döner (space 0 -> 1).
+func _sky_to_space(time: float) -> void:
+	var env: Environment = $WorldEnvironment.environment
+	var m: ShaderMaterial = env.sky.sky_material
+	if time <= 0.0:
+		m.set_shader_parameter("space", 1.0)
+		return
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_method(func(v: float) -> void: m.set_shader_parameter("space", v), 0.0, 1.0, time)
+
+
+
+## Bölüm yüklenirken siyah ekranda ortada küçük bir yazı.
+func _loading_screen() -> CanvasLayer:
+	var layer := CanvasLayer.new()
+	layer.layer = 120
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(bg)
+	var l := Label.new()
+	l.text = "Yükleniyor..."
+	l.add_theme_font_size_override("font_size", 28)
+	l.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75))
+	l.set_anchors_preset(Control.PRESET_CENTER)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layer.add_child(l)
+	add_child(layer)
+	return layer

@@ -28,6 +28,7 @@ const CHARACTERS := {
 	"GOREVLI": {"name": "Biniş Görevlisi", "color": Color(0.7, 0.9, 0.8)},
 	"YOLCU": {"name": "Yolcu", "color": Color(0.8, 0.8, 0.7)},
 	"SELIM": {"name": "Selim Arslan", "color": Color(0.95, 0.85, 0.6)},
+	"PILOT": {"name": "Pilot Irmak", "color": Color(0.75, 0.9, 1.0)},
 	"KAYIT": {"name": "Deniz Arman (kayıt)", "color": Color(1.0, 0.65, 0.3)},
 }
 

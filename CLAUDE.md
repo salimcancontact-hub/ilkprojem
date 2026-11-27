@@ -48,7 +48,8 @@ Yeni nesne/malzeme eklenince sahne başındaki **ön ısıtmaya** (`_prewarm`) e
 1. `python3 tools/lint_dialog.py` → temiz.
 2. Godot başsız açılış: betik hatası yok.
 3. Uçtan uca test (menü → isim → hikâye → menü) ve **kaos testi** (rastgele seçimler, kaybedilen QTE'ler,
-   süre aşımları, gerçek dokunma olayları; takılma dedektörü). Test betikleri `tests_tmp/` altında, APK dışında.
+   süre aşımları, gerçek dokunma olayları; takılma dedektörü). Test betikleri `tests_tmp/` altında, APK dışında,
+   depoda tutulur (silinmez). `human.gd`: insan gibi oynar, yazı kalış sürelerini ölçer. `camwalls.gd`: kamera duvar dışı.
 4. Yeni fiziksel sahneler sanal ekranda (xvfb) görüntülenip gözle kontrol edilir.
 5. APK: **release** dışa aktarım (daha hızlı), sürüm kodu artırılır, kullanıcıya dosya olarak gönderilir.
 

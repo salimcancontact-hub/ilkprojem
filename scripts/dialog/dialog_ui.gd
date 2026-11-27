@@ -29,6 +29,7 @@ var _block_input := 0.0
 ## Yeni bir yazı geldiğinde dokunmanın yok sayıldığı süre.
 const MIN_READ := 0.45
 var _after_qte: bool = false
+var _holding_for_title: bool = false
 var _toast_tween: Tween
 
 var _root: Control
@@ -74,6 +75,10 @@ func start(path: String, node_name: String = "baslangic") -> void:
 	if not nodes.has(node_name):
 		push_error("Diyalog başlatılamadı: %s / %s" % [path, node_name])
 		return
+	if active:
+		# Olmaması gereken durum: eski konuşmanın yazısı okunmadan silinir. Kayda geç.
+		push_warning("ÜST ÜSTE DİYALOG: %s başlarken %s sürüyordu" % [node_name, runner.current_node])
+		Game.boot_log("ÜST ÜSTE DİYALOG: %s / %s" % [node_name, runner.current_node])
 	active = true
 	_block_input = 0.3
 	_root.visible = true
@@ -261,7 +266,7 @@ func _on_tap(event: InputEvent) -> void:
 
 
 func _advance() -> void:
-	if _block_input > 0.0:
+	if _block_input > 0.0 or _holding_for_title:
 		return
 	if _typing:
 		_finish_typing()
@@ -287,6 +292,16 @@ func _on_narration(text: String) -> void:
 
 
 func _show_text(text: String) -> void:
+	# Ortadaki başlık kartı (ör. "DÜNYA, 2526") sönmeden yazı gelmez: üst üste binmesin.
+	if _title_tween and _title_tween.is_running():
+		_panel.visible = false
+		_holding_for_title = true
+		# finished beklemek yerine yokla: tween öldürülürse sinyal hiç gelmez ve akış kilitlenir
+		while _title_tween and _title_tween.is_valid() and _title_tween.is_running():
+			await get_tree().process_frame
+		_holding_for_title = false
+		if not active:
+			return
 	# Her yazı en az bir an okunabilsin (art arda dokunuşlar yazıyı yutmasın)
 	_block_input = maxf(_block_input, MIN_READ)
 	if _after_qte:

@@ -140,6 +140,28 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_water.queue_free()
 				_water = null
 		# --- Kaynak kesicisi ve ölüm
+		"muhafiz_yaklas":
+			# Muhafız kapıdan sana doğru yürür (boğuşmaya ışınlanma yok); kamera ikisini yandan çeker
+			var g_pos := _guard.global_position
+			var p_pos := _player.global_position
+			var dir := p_pos - g_pos
+			dir.y = 0
+			var dist := dir.length()
+			dir = dir.normalized()
+			var stop := p_pos - dir * 0.9
+			stop.y = g_pos.y
+			_guard.face_point(p_pos)
+			_player.face_point(g_pos)
+			_player.model.play("Idle", 0.2)
+			var mid := (stop + p_pos) / 2.0
+			var right := dir.cross(Vector3.UP).normalized()
+			camera_shots["yaklas"] = [mid + right * 2.8 + Vector3(0, 1.6, 0) - dir * 0.6, mid + Vector3(0, 1.1, 0)]
+			_set_camera("yaklas")
+			if dist > 1.0:
+				_guard.model.play("Walk", 0.15)
+				var twg := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+				twg.tween_property(_guard, "global_position", stop, clampf((dist - 0.9) / 1.6, 0.4, 1.2))
+				twg.tween_callback(func() -> void: _guard.model.play("Idle_Shield", 0.2))
 		"cop_kaldir":
 			# Muhafız copu kaldırıp sana savurur, sonra yakana yapışır
 			_guard.model.play_once("Melee_Hook", "Idle_Shield", 0.1)
@@ -616,8 +638,19 @@ func _bottle_miss() -> void:
 	if _bottle_tween:
 		_bottle_tween.kill()
 	var target := _guard.head_position()
+	# İkisini yandan gören açı: şişe oyuncunun yanından geçip muhafızın kaskında patlar
+	var a := _player.global_position
+	var b := _guard.global_position
+	var dir := (b - a)
+	dir.y = 0
+	dir = dir.normalized()
+	var mid := (a + b) / 2.0
+	var right := dir.cross(Vector3.UP).normalized()
+	camera_shots["sise_yan"] = [mid + right * 3.6 + Vector3(0, 1.7, 0), mid + Vector3(0, 1.3, 0)]
+	_set_camera("sise_yan")
+	_bottle.global_position = _player.head_position() + Vector3(0, 0.25, 0) - dir * 0.6
 	var tw := create_tween()
-	tw.tween_property(_bottle, "global_position", target, 0.25)
+	tw.tween_property(_bottle, "global_position", target, 0.5)
 	tw.tween_callback(func() -> void:
 		_shatter(_bottle.global_position)
 		_guard.model.play_once("Hit_Head", "Idle_Shield"))
@@ -750,16 +783,18 @@ func _on_alley_entered(body: Node3D) -> void:
 	_arman.rotation = Vector3.ZERO
 	_arman.position = ALLEY_SPOT
 	_arman.model.play("Idle", 0.2)
-	_player.velocity = Vector3.ZERO
-	var to_arman := (_arman.global_position - _player.global_position)
-	to_arman.y = 0
-	if to_arman.length() > 2.6:
-		_player.global_position = _arman.global_position - to_arman.normalized() * 2.2
+	# Konuşma oyuncu KONUŞ'a basınca başlar (otomatik başlamaz)
+	_arman.face_point(_player.global_position)
 	_arman.start_node = "ara_sokak"
+	_arman.set_interactable(true)
+	_hud.set_objective("Deniz Arman'la konuş")
 	live_world = true  # boğuşma, ragdoll ve sürükleme diyalog sırasında fizikle oynar
-	_start_dialog(_arman)
+	while not (_dialog.active and _talking_to == _arman):
+		await get_tree().process_frame
+	_hud.set_objective("")
 	await _dialog.dialog_finished
-	_arman.model.hold_last_frame("Death01")  # diyalog sonu bekleme duruşunu geri al	_crowd.visible = false
+	_arman.model.hold_last_frame("Death01")  # diyalog sonu bekleme duruşunu geri al
+	_crowd.visible = false
 	_guard.visible = false
 	_card.set_interactable(true)
 	_phase = "kart"
@@ -781,8 +816,16 @@ func _final() -> void:
 	await play_dialog(DLG, "kalkis")
 	_hud.set_gameplay_visible(false)
 	# Bölüm 2: Biniş (arka planda yüklendi)
-	var next := ResourceLoader.load_threaded_get(NEXT_SCENE) as PackedScene
+	# Yükleme bitene kadar kare kare bekle (ana iş parçacığını kilitleyerek beklemek donmaya yol açabiliyor)
+	var tries := 0
+	while ResourceLoader.load_threaded_get_status(NEXT_SCENE) == ResourceLoader.THREAD_LOAD_IN_PROGRESS and tries < 1800:
+		await get_tree().process_frame
+		tries += 1
+	var next: PackedScene = null
+	if ResourceLoader.load_threaded_get_status(NEXT_SCENE) == ResourceLoader.THREAD_LOAD_LOADED:
+		next = ResourceLoader.load_threaded_get(NEXT_SCENE) as PackedScene
 	if next == null:
+		Game.boot_log("bölüm 2 arka planda yüklenemedi, doğrudan yükleniyor")
 		next = load(NEXT_SCENE)
 	Game.save_checkpoint("binis")
 	get_tree().change_scene_to_packed(next)

@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/dialog_ui.tscn" id="4_b"]
 [ext_resource type="PackedScene" path="res://scenes/characters/evren_model.tscn" id="5_b"]
 [ext_resource type="PackedScene" path="res://scenes/characters/evren_k_model.tscn" id="6_b"]
-[ext_resource type="Shader" path="res://shaders/stars.gdshader" id="7_b"]
+[ext_resource type="Shader" path="res://shaders/sky_launch.gdshader" id="7_b"]
 
 [sub_resource type="ShaderMaterial" id="StarsMat"]
 shader = ExtResource("7_b")

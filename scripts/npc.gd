@@ -18,6 +18,8 @@ signal player_nearby(npc: Npc, is_near: bool)
 @export var inspect_anim: String = ""
 ## false ise oyuncu yaklaşsa da etkileşim düğmesi çıkmaz.
 @export var interactable: bool = true
+## İnceleme noktalarında parlayan kürenin dünya konumu (nesnenin üstü). INF ise focus_height kullanılır.
+var marker_at: Vector3 = Vector3.INF
 
 var model: CharacterModel
 var _marker: Node3D
@@ -73,6 +75,8 @@ func _build_marker() -> void:
 		_marker = m
 	_marker.visible = false
 	add_child(_marker)
+	if model == null and marker_at != Vector3.INF:
+		_marker.global_position = marker_at
 
 
 func _process(delta: float) -> void:

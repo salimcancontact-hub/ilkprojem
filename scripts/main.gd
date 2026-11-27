@@ -138,7 +138,12 @@ func _process(delta: float) -> void:
 
 func _start_dialog(npc: Npc) -> void:
 	if _dialog.active:
-		return  # bir konuşma sürerken ikincisi başlamaz (ilki yarıda kalıp ekranı kilitlemesin)
+		# Bir konuşma sürerken yenisi üstüne binmez: sıraya girer, öncekinin yazıları yarıda silinmez.
+		Game.boot_log("sıra: '%s' önceki konuşma (%s) bitince başlayacak" % [npc.start_node, _dialog.runner.current_node])
+		await _dialog.dialog_finished
+		await get_tree().process_frame
+		if _dialog.active:
+			return
 	_talking_to = npc
 	_enter_dialog_mode()
 	if npc.model:
@@ -153,6 +158,10 @@ func _start_dialog(npc: Npc) -> void:
 
 ## Bir karaktere bağlı olmayan diyalog (anlatım, ara sahne). Bitene kadar bekler.
 func play_dialog(path: String, node_name: String) -> void:
+	while _dialog.active:
+		Game.boot_log("sıra: '%s' önceki konuşma (%s) bitince başlayacak" % [node_name, _dialog.runner.current_node])
+		await _dialog.dialog_finished
+		await get_tree().process_frame
 	_talking_to = null
 	_enter_dialog_mode()
 	_dialog.start(path, node_name)

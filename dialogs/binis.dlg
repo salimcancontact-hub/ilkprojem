@@ -7,8 +7,8 @@
 === giris
 @olay baslik BÖLÜM 2 | Biniş
 @bekle 3.2
-> Yörünge İskelesi. Dünya'nın dört yüz kilometre üstü.
-> Gece boyunca uzay asansörüyle yukarı çıktın. Cebinde bir ölünün kartı var.
+> Anadolu Uzay Limanı. Şafak.
+> Gece boyunca kuyrukta bekledin. Cebinde bir ölünün kartı var.
 @olay aydinlat 2
 @olay kamera iskele
 @bekle 2.6
@@ -19,10 +19,10 @@ HAKEM: Lütfen kimlik kartınızı biniş kapısındaki okuyucuya okutun.
 -> SON
 
 # ================================================================ İskele (serbest gezinti)
-=== ipucu_dunya
+=== ipucu_liman
 @olay kamera c_dunya
-> Camın ardında Dünya. Buradan bakınca yanık kıtalar bile güzel görünüyor.
-> Aşağıda bir yerde, bir ara sokakta, sabah olmuş olmalı.
+> Camın ardında EMANET. Bir kilometre boyunda, beşiğinde uyuyan beyaz bir dev.
+> Ufukta şehir hâlâ yanıyor. Orada bir yerde, bir ara sokakta, sabah olmuş olmalı.
 -> SON
 
 === ipucu_ekran
@@ -326,7 +326,7 @@ HAKEM: Duvardaki erzak bölmesinde size ayrılmış karşılama paketi bulunuyor
 
 === ipucu_pencere
 @olay kamera c_pencere
-> Pencerede Dünya. Buradan bakınca kimse aç değil, kimse ölmüyor.
+> Pencereden aşağıda liman: kuleler, pist, ufukta yanan şehir. Altmış metre aşağıda insanlar karınca kadar.
 @if anit_not == "ada" -> pencere_ada
 -> SON
 
@@ -479,7 +479,7 @@ HAKEM: 412, kemerleriniz bağlı. Teşekkürler, Deniz.
 @olay kamera koltuk
 @bekle 1.0
 HAKEM: Kalkışa altmış saniye.
-> Pencerede Dünya. Bir saat önce kıtalar vardı orada. Şimdi sadece mavi bir yara.
+> Pencerede son kez liman. Kuleler, pist, yanan şehir. Bir daha hiçbirini görmeyeceksin.
 @sure 8 -> koltuk_sessiz
 * "Ada için." -> koltuk_ada
 * "Özür dilerim, Deniz." -> koltuk_ozur
@@ -507,24 +507,44 @@ HAKEM: Kalkışa altmış saniye.
 -> kalkis
 
 === kalkis
-HAKEM: On. Dokuz. Sekiz.
-@olay geri_sayim
-@bekle 2.6
-HAKEM: Üç. İki. Bir.
-@olay kalkis_basla
+HAKEM: Köprüye bağlanıyorum.
+@olay kopru
+@olay kamera kopru
 @bekle 1.2
-> Gemi titriyor. Önce hafifçe, sonra bütün gövdesiyle.
+REYES: Tüm güvertelere. Burası Kaptan Reyes.
+REYES: Beş yüz kişiyiz. Arkamızda milyarlarca insan var. Onları utandırmayalım.
+@olay kamera pilot
+PILOT: Füzyon çekirdeği yüzde yüz. Kule bağlantıları ayrıldı. Pist boş.
+@olay kamera reyes
+REYES: Ateşle.
+@olay kamera pilot
+PILOT: Ateşleme. On. Dokuz. Sekiz.
+@olay geri_sayim
+@bekle 1.4
+PILOT: Üç. İki. Bir.
+@olay dis_cekim
+@olay kamera dis
+@bekle 1.0
+@olay atesleme
+@bekle 3.2
+> Limanın ortasında, bir kilometrelik gövdenin altından mavi bir ateş yükseliyor. EMANET beşiğinden kalkıyor.
+@olay kamara_don
 @olay kamera yuz
+@bekle 0.6
+> Kamara titriyor. Önce hafifçe, sonra bütün gövdesiyle. Ağırlık seni koltuğa bastırıyor.
 @qte vur 4.5 10 "TUTUN" -> kalkis_tutundu | kalkis_bayildi
 
 === kalkis_tutundu
 @olay tutun
 @bekle 1.2
 > Koltuğun kollarına tutunuyorsun. Ağırlık göğsüne bir taş gibi oturuyor. Nefes al. Nefes ver.
-@olay dunya_uzaklas
 @olay kamera pencere
-@bekle 3.5
-> Pencerede Dünya küçülüyor. Bir top. Bir bilye. Bir nokta.
+@olay gokyuzu_karar
+@bekle 4.5
+> Pencerede liman küçülüyor, sonra bulutların altında kayboluyor. Gökyüzü maviden laciverte, laciverten siyaha dönüyor.
+@olay dunya_gorun
+@bekle 3.0
+> Ve aşağıda, bütün kıvrımıyla, Dünya.
 ~ kalkis_bayildi = false
 -> kalkis_son
 
@@ -532,11 +552,12 @@ HAKEM: Üç. İki. Bir.
 @olay bayil
 @bekle 2.0
 > Ağırlık seni koltuğa gömüyor. Görüntü kararıyor, kenarlardan içe doğru.
-@olay dunya_uzaklas
+@olay gokyuzu_hemen
+@olay dunya_gorun
 @olay aydinlat 2
 @olay kamera pencere
 @bekle 3.0
-> Gözlerini açtığında pencerede Dünya yoktu. Yalnızca küçük, mavi bir nokta.
+> Gözlerini açtığında pencerede gökyüzü yoktu. Siyahlık, yıldızlar ve aşağıda, kıvrılan Dünya.
 ~ kalkis_bayildi = true
 -> kalkis_son
 
@@ -546,6 +567,7 @@ HAKEM: Yolculuğumuzun ilk günü. Kalan süre: altı yıl, dört ay, on bir gü
 @olay kemer_coz
 @bekle 1.4
 > Kemerler çözülüyor. Ama sen kalkmıyorsun.
+#fiz: sahnede kalıcı durum (oyuncu zaten koltukta oturuyor)
 > 412 numaralı kamarada, ölü bir adamın koltuğunda, Dünya'nın son ışığını izliyorsun.
 @olay kararti 2.5
 @bekle 2.6

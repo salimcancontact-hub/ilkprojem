@@ -16,6 +16,7 @@ var _gender_buttons: Dictionary = {}
 
 
 func _ready() -> void:
+	_clear_shader_cache()
 	var crash := Game.previous_boot_failure()
 	Game.boot_log("açılış ekranı", true)
 	var info := "%s | %s | %s" % [OS.get_model_name(), RenderingServer.get_video_adapter_name(), OS.get_name()]
@@ -191,3 +192,24 @@ func _centered(c: Control) -> CenterContainer:
 	var cc := CenterContainer.new()
 	cc.add_child(c)
 	return cc
+
+
+## Eski sürümlerin diske yazdığı gölgelendirici önbelleğini siler. PowerVR sürücüsü bu kayıtlı
+## ikili gölgelendiricileri sonraki açılışlarda okurken çökebiliyor (önbellek artık kapalı).
+func _clear_shader_cache() -> void:
+	var root := "user://shader_cache"
+	if not DirAccess.dir_exists_absolute(root):
+		return
+	_remove_dir(root)
+	Game.boot_log("eski gölgelendirici önbelleği silindi")
+
+
+func _remove_dir(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	for f in dir.get_files():
+		dir.remove(f)
+	for d in dir.get_directories():
+		_remove_dir(path.path_join(d))
+	DirAccess.remove_absolute(path)

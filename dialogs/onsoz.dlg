@@ -316,19 +316,22 @@ MUHAFIZ: Kordonun arkasına geç. Şimdi.
 === sise_kurtul
 @olay sise_kacti
 @olay anim EVREN Roll
+@bekle 1.3
 > Şişe kulağının dibinden geçip muhafızın kaskında patlıyor.
 -> isyan_cop
 
 === sise_vurdu
 @olay sise_carpti
 @olay anim EVREN Hit_Head
+@olay sarsinti 0.5 0.6
+@bekle 1.1
 > Şişe kafana çarpıp parçalanıyor. Kulakların çınlıyor.
 ~ yarali = true
-@olay sarsinti 0.5 0.6
 -> isyan_cop
 
 === isyan_cop
-@olay kamera muhafiz
+@olay muhafiz_yaklas
+@bekle 1.3
 MUHAFIZ: Geri çekil!
 @olay cop_kaldir
 @bekle 0.7

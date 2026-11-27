@@ -31,7 +31,7 @@ UNIFORMS = {
     "deniz_k": dict(base="Superhero_Female.glb", suit=(38, 46, 60), accent=(222, 120, 40),
                     dark=(22, 24, 28), gloves=True, belt=(55, 58, 62)),
     "arman": dict(base="Superhero_Male.glb", suit=(62, 70, 84), legs=(54, 60, 72), collar=(225, 120, 30), cuffs=(225, 120, 30),
-                  accent=(225, 120, 30), dark=(40, 36, 32), gloves=True, belt=(225, 120, 30), skin=(0.72, 0.6, 0.52)),
+                  accent=(225, 120, 30), dark=(40, 36, 32), gloves=False, belt=(225, 120, 30), skin=(0.72, 0.6, 0.52)),
     "muhafiz": dict(base="Superhero_Male.glb", suit=(30, 32, 37), collar=(215, 175, 40), cuffs=(215, 175, 40),
                     accent=(215, 175, 40), dark=(16, 16, 19), gloves=True, belt=(65, 65, 68)),
     "kalabalik_e1": dict(base="Superhero_Male.glb", suit=(50, 60, 46), legs=(62, 56, 50), cuffs=None,

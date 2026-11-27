@@ -129,9 +129,10 @@ Yukarıda (bölüm 5).
 
 ### Bölüm 2: "Biniş" (ilk günler) — 1. kısım ✅ oynanabilir
 Ada ile buluşma bu bölümde **yok**; kardeşler farklı güvertelerde, buluşma ileride.
-Her yolcunun **kendi kamarası** var. Gemi 2526 teknolojisinde: uzay asansörü, yörünge iskelesi, dönen yaşam halkası,
-holografik ekranlar, kol ekranı (kimlik + kamara anahtarı), kamarada duvardan açılan kalkış koltuğu.
-1. **Yörünge İskelesi:** Gece uzay asansörüyle yukarı çıkılmış. Pencerede Dünya. Biniş kuyruğu, yolcu sohbeti, biniş ekranı.
+Her yolcunun **kendi kamarası** var. Gemi 2526 teknolojisinde: füzyon iticili dikey kalkış, dönen yaşam halkası,
+holografik ekranlar, kol ekranı (kimlik + kamara anahtarı), kamarada yerden yükselen kalkış koltuğu.
+**Kalkış yerden yapılır:** EMANET Anadolu Uzay Limanı'nda beşiğinde yatıyor; yörüngeye kendi iticileriyle çıkıyor.
+1. **Uzay limanı terminali (şafak):** Camdan EMANET'in bir kilometrelik gövdesi, kuleler, ufukta yanan şehir. Biniş kuyruğu, yolcu sohbeti, biniş ekranı.
 2. **Biniş kapısı:** Kart okutulur, önce **kırmızı**. Görevli yüzüne bakar ("Ellerin neden titriyor?"). İkinci okutmada yeşil:
    "Deniz Arman, Kamara 412, Güverte 8". Görevli **kol ekranını** verir (`gorevli_supheli`).
 3. **Halka Meydanı:** Dört kat yüksekliğinde salon, askılı bahçe, dönen gemi hologramı, **anı duvarı** (not yaz: `anit_not`),
@@ -141,8 +142,10 @@ holografik ekranlar, kol ekranı (kimlik + kamara anahtarı), kamarada duvardan 
 6. **Kamara 412:** Kol ekranıyla kapı açılır. Deniz'in eşya kutusu (annesiyle fotoğrafı: masaya koy / kapat / kutuya: `cerceve`),
    alet çantası (kesicinin boş yuvası, `kesici_yuvada`), terminalde Deniz'in **kendine bıraktığı kayıt** (dinle / sil: `deniz_kaydi`),
    duvardaki **erzak bölmesi** (haftalık tahsisat: su paketi, besin paketi → ihtiyaç sistemi).
-7. **Anons ve kalkış:** HAKEM "kalkışa on dakika". Duvardan kalkış koltuğu açılır, oyuncu oturur, kemerler iner.
-   Son düşünce seçimi (`kalkis_dusunce`). Kalkış: QTE **TUTUN** (başaramazsan bayılırsın: `kalkis_bayildi`). Pencerede Dünya küçülür.
+7. **Anons ve kalkış:** HAKEM "kalkışa on dakika". Zeminden kalkış koltuğu yükselir, oyuncu oturur, kemerler iner.
+   Son düşünce seçimi (`kalkis_dusunce`). **Köprü:** Kaptan Reyes ve Pilot Irmak geri sayım, "Ateşle."
+   **Dış çekim:** gövdenin altından mavi füzyon ateşi, gemi beşiğinden kalkar. **Kamara:** sarsıntı, QTE **TUTUN**
+   (başaramazsan bayılırsın: `kalkis_bayildi`). Pencerede liman küçülür, gökyüzü maviden siyaha döner, sonra Dünya'nın kıvrımı.
 
 **Sonraki kısımlar (yazılacak):**
 1. **Baran (411):** Gerçek Deniz Arman'ı ustalar loncasından tanıyordu. *"Sen Deniz değilsin."* İtiraf / yalan / tehdit (`baran_dostluk`).

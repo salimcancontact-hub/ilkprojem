@@ -40,6 +40,9 @@ var _invuln_timer: float = 0.0
 @onready var _attack_area: Area3D = $Visual/AttackArea
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
+## Omuz üstü kayma (kamera kolunun yana kayması). Duvar dibinde kısalır.
+var _shoulder: float = 0.45
+const ARM_LENGTH := 3.6
 
 
 func _ready() -> void:
@@ -60,6 +63,7 @@ func _ready() -> void:
 	_camera_pivot.rotation.x = deg_to_rad(-15.0)
 	_camera_pivot.rotation.y = deg_to_rad(camera_yaw_deg)
 	_spring_arm.add_excluded_object(get_rid())
+	_shoulder = _spring_arm.position.x
 
 
 func _physics_process(delta: float) -> void:
@@ -203,3 +207,32 @@ func _die() -> void:
 	model.play("Death01", 0.15)
 	health_changed.emit(health, max_health)
 	died.emit()
+
+
+
+## Kamera kolu omuzdan başlar; karakter duvara yaslanınca bu başlangıç noktası duvarın arkasında
+## kalırsa kol duvarı göremez ve kamera dışarı (uzaya/gökyüzüne) kaçar. Her karede pivottan omuza
+## doğru bakılır, arada duvar varsa omuz kayması duvarın önünde kalacak kadar kısaltılır.
+func _process(_delta: float) -> void:
+	var space := get_world_3d().direct_space_state
+	var from := _camera_pivot.global_position
+	var side := _camera_pivot.global_basis.x.normalized()
+	var want := _shoulder
+	var q := PhysicsRayQueryParameters3D.create(from, from + side * (_shoulder + 0.35), 1)
+	q.exclude = [get_rid()]
+	var hit := space.intersect_ray(q)
+	if not hit.is_empty():
+		want = maxf(from.distance_to(hit["position"]) - 0.35, 0.0)
+	_spring_arm.position.x = want
+	# Kolun kendi çarpışma denetimi, başlangıcı duvara değince duvarı göremiyor. Bu yüzden
+	# karakterin ortasından (her zaman odanın içinde) kameranın gideceği yere ışın atılır.
+	var arm_origin := _spring_arm.global_position
+	var end := arm_origin + _spring_arm.global_basis.z.normalized() * ARM_LENGTH
+	var q2 := PhysicsRayQueryParameters3D.create(from, end, 1)
+	q2.exclude = [get_rid()]
+	var hit2 := space.intersect_ray(q2)
+	var length := ARM_LENGTH
+	if not hit2.is_empty():
+		var d := from.distance_to(hit2["position"]) / from.distance_to(end)
+		length = clampf(ARM_LENGTH * d - 0.4, 0.25, ARM_LENGTH)
+	_spring_arm.spring_length = length
