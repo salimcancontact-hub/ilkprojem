@@ -53,7 +53,7 @@ func _run():
 				if not lose and i % 3 == 0: d._qte._hit()
 			elif d._qte._left < d._qte._time * 0.6: d._qte._end(true)
 			continue
-		if node.begins_with("bogma_") and i % 8 == 0 and shots < 40:
+		if (node.begins_with("bogma_") or node == "olum" or node == "karar_kesici") and i % 5 == 0 and shots < 60:
 			get_viewport().get_texture().get_image().save_png(out + "/km_%s_%02d.png" % [OS.get_environment("LOSE"), shots]); print("foto ", node); shots += 1
 		if (node.begins_with("karar") or node == "olum" or node.contains("bogma")) and d._panel.visible and not d._typing and i % 20 == 0 and shots < 40:
 			await t(0.3)

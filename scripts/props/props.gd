@@ -206,3 +206,95 @@ static func wrist_screen() -> Node3D:
 	mi.material_override = _mat(Color(0.4, 0.8, 1.0), Color(0.4, 0.85, 1.0), 5.0)
 	root.add_child(mi)
 	return root
+
+
+# --- Kan (çizgi roman tarzı) ------------------------------------------------------
+
+static var _blood_mat: StandardMaterial3D
+static var _pool_mat: StandardMaterial3D
+
+
+static func _blood_material() -> StandardMaterial3D:
+	if _blood_mat == null:
+		_blood_mat = StandardMaterial3D.new()
+		_blood_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_blood_mat.albedo_color = Color(0.85, 0.04, 0.04)  # gece sahnesinde de seçilsin (ışıksız, parlak)
+		_blood_mat.vertex_color_use_as_albedo = false
+	return _blood_mat
+
+
+## Darbe anında sıçrayan kan damlaları (tek seferlik, kendini siler). dir: sıçrama yönü.
+static func blood_burst(parent: Node, at: Vector3, dir: Vector3 = Vector3.UP, amount: int = 26) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	var drop := SphereMesh.new()
+	drop.radius = 0.028
+	drop.height = 0.056
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = _blood_material()
+	p.mesh = drop
+	p.amount = amount
+	p.one_shot = true
+	p.explosiveness = 0.92
+	p.lifetime = 0.9
+	p.direction = dir.normalized() if dir.length() > 0.01 else Vector3.UP
+	p.spread = 38.0
+	p.initial_velocity_min = 1.4
+	p.initial_velocity_max = 3.2
+	p.gravity = Vector3(0, -9.8, 0)
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.5
+	p.local_coords = false
+	parent.add_child(p)
+	p.global_position = at
+	p.emitting = true
+	p.finished.connect(p.queue_free)
+	return p
+
+
+## Yerde yavaşça büyüyen kan gölü (koyu, hafif parlak).
+static func blood_pool(parent: Node, at: Vector3, radius: float = 0.45, grow_time: float = 6.0) -> MeshInstance3D:
+	if _pool_mat == null:
+		_pool_mat = StandardMaterial3D.new()
+		_pool_mat.albedo_color = Color(0.42, 0.01, 0.01)
+		_pool_mat.emission_enabled = true
+		_pool_mat.emission = Color(0.12, 0.0, 0.0)
+		_pool_mat.roughness = 0.15
+		_pool_mat.metallic = 0.2
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 1.0
+	cm.bottom_radius = 1.0
+	cm.height = 0.004
+	cm.radial_segments = 20
+	cm.rings = 1
+	mi.mesh = cm
+	mi.material_override = _pool_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	mi.global_position = Vector3(at.x, at.y, at.z)
+	mi.scale = Vector3(0.05, 1, 0.05)
+	var tw := mi.create_tween()
+	tw.tween_property(mi, "scale", Vector3(radius, 1, radius * 0.8), grow_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	return mi
+
+
+
+## Yere sıçramış kan lekeleri (darbe anında, damlaların düştüğü yerde).
+static func blood_splatter(parent: Node, at: Vector3, count: int = 5, spread: float = 0.35) -> void:
+	for i in count:
+		var mi := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = 1.0
+		cm.bottom_radius = 1.0
+		cm.height = 0.003
+		cm.radial_segments = 10
+		cm.rings = 1
+		mi.mesh = cm
+		mi.material_override = _blood_material()
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(mi)
+		var r := randf_range(0.03, 0.09)
+		mi.scale = Vector3(r, 1, r * randf_range(0.5, 1.0))
+		mi.rotation.y = randf() * TAU
+		mi.global_position = at + Vector3(randf_range(-spread, spread), 0.002 + i * 0.0004, randf_range(-spread, spread))

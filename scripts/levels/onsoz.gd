@@ -403,12 +403,17 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				# Kesici sağ elde boynuna, sol el göğsüne bastırır
 				_player.model.reach("r", neck, 0.6)
 				_player.model.reach("l", _arman.model.body_point("spine_03"), 0.6)
+				_blood_after(0.7, neck, 30)
 			else:
 				# Avuçlar ağzına
 				_player.model.reach("r", head, 0.6)
 				_player.model.reach("l", head, 0.6)
 		"arman_oldu":
 			_player.model.release_all(0.3)
+			# Başın altında yavaşça büyüyen kan gölü
+			if _arman.model.ragdoll and _arman.model.ragdoll.bone("Head"):
+				var hp: Vector3 = _arman.model.ragdoll.bone("Head").global_position
+				Props.blood_pool(self, Vector3(hp.x, -0.146, hp.z), 0.5, 7.0)
 			_player.model.unlock_pose()
 			var tw_up := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			tw_up.tween_property(_player.get_node("Visual"), "rotation:x", 0.0, 0.8)
@@ -494,6 +499,8 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_bottle_hit()
 		"muhafiz_dustu":
 			_guard.model.play("Hit_Knockback", 0.05)
+			var gh := _guard.head_position()
+			Props.blood_burst(self, gh, (_guard.global_position - _player.global_position) + Vector3(0, 0.8, 0), 12)
 			var push := (_guard.global_position - _player.global_position)
 			push.y = 0
 			_guard.get_node("CollisionShape3D").disabled = true
@@ -699,6 +706,8 @@ func _prewarm() -> void:
 	holder.add_child(fire)
 	var bottle := _make_bottle()
 	holder.add_child(bottle)
+	Props.blood_burst(holder, holder.global_position, Vector3.UP, 6)
+	Props.blood_pool(holder, holder.global_position + Vector3(0, -0.5, 0), 0.3, 0.1)
 	bottle.position = Vector3(-0.3, 0.3, 0)
 	_dialog._qte.prewarm()
 	fire.position = Vector3(0, -1.2, -1.0)
@@ -881,6 +890,9 @@ func _bottle_hit() -> void:
 	if _bottle_tween:
 		_bottle_tween.kill()
 	_shatter(_player.head_position())
+	Props.blood_burst(self, _player.head_position(), Vector3(0.3, 0.6, 0.3), 20)
+	var ph := _player.global_position
+	Props.blood_splatter(self, Vector3(ph.x, -0.147, ph.z), 4, 0.5)
 
 
 ## Cam kırıkları
@@ -976,6 +988,16 @@ func _on_qte_fill(fill: float) -> void:
 		_lift_point.global_position = p
 
 
+## Gecikmeli kan sıçraması (ör. kesici boyna değdiği an)
+func _blood_after(delay: float, at: Node3D, amount: int) -> void:
+	await get_tree().create_timer(delay, true, false, true).timeout
+	if is_instance_valid(at):
+		Props.blood_burst(self, at.global_position, Vector3(0, 1, 0), amount)
+		var g := at.global_position
+		Props.blood_splatter(self, Vector3(g.x, -0.147, g.z), 8, 0.5)
+		shake(0.15, 0.25)
+
+
 var _smother: bool = false
 var _mount_hold: Node3D
 
@@ -1022,6 +1044,9 @@ func _punch_face(count: int) -> void:
 		tw.tween_property(fist, "global_position", head.global_position + Vector3(0, 0.05, 0), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		await tw.finished
 		head.apply_central_impulse(Vector3(0, -2.5, 0) + _player.get_node("Visual").global_basis.x * randf_range(-1.5, 1.5))
+		Props.blood_burst(self, head.global_position + Vector3(0, 0.05, 0), Vector3(randf_range(-0.6, 0.6), 1.0, randf_range(-0.6, 0.6)), 30)
+		var hp0 := head.global_position
+		Props.blood_splatter(self, Vector3(hp0.x, -0.147, hp0.z), 6, 0.4)
 		shake(0.25, 0.2)
 		await get_tree().create_timer(0.25, true, false, true).timeout
 	_player.model.release("r", 0.3)
