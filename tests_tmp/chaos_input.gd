@@ -110,24 +110,24 @@ func _process(_d):
 	# --- ilerle
 	match stage:
 		"giris":
-			if level._phase == "sokak" and not d.active: stage = "gez"; wait = f
+			if level._phase == "sokak" and not engaged(): stage = "gez"; wait = f
 		"gez":
 			if f == wait + 5:
 				var spots = ["Su", "Araba", "Grafiti", "Liste", "Terminal"]
 				spots.shuffle()
 				p.global_position = level.get_node("Hotspots/" + spots[0]).global_position + Vector3(0.8, 0.1, 0)
 			if f == wait + 15 and level._nearby_npc: level._start_dialog(level._nearby_npc)
-			if f > wait + 20 and not d.active: stage = "arman"; wait = f
+			if f > wait + 20 and not engaged(): stage = "arman"; wait = f
 		"arman":
 			if f == wait + 3: p.global_position = Vector3(2.2, 0.1, 30.2)
 			if f == wait + 15: level._start_dialog(level._arman)
-			if f > wait + 20 and not d.active:
+			if f > wait + 20 and not engaged():
 				if Story.has_item("su_sisesi") and rng.randf() < 0.5: level.use_item("su_sisesi")
 				stage = "muhafiz"; wait = f
 		"muhafiz":
 			if f == wait + 60: p.global_position = Vector3(0.2, 0.1, 56.9)
 			if f == wait + 75: level._start_dialog(level._guard)
-			if f > wait + 80 and not d.active: stage = "kacis"; wait = f
+			if f > wait + 80 and not engaged(): stage = "kacis"; wait = f
 		"kacis":
 			# Yarısında gerçekten yürü, yarısında ışınlan
 			if rng.randf() < 0.002 or f > wait + 600:
@@ -151,3 +151,8 @@ func _process(_d):
 				if level._nearby_npc == level._card: level._start_dialog(level._card)
 				else: report("kart incelenemiyor (yakın=" + str(level._nearby_npc) + ", etkileşim=" + str(level._card.interactable) + ")")
 	if f > 9000: report("zaman aşımı")
+
+
+## Diyalog sürüyor ya da oyuncu sahne işaretine yürüyor (TWD sahneleme) mu?
+func engaged() -> bool:
+	return level._dialog.active or level.busy > 0 or not level._player.input_enabled
