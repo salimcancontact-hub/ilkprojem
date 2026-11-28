@@ -20,6 +20,10 @@ signal player_nearby(npc: Npc, is_near: bool)
 @export var interactable: bool = true
 ## İnceleme noktalarında parlayan kürenin dünya konumu (nesnenin üstü). INF ise focus_height kullanılır.
 var marker_at: Vector3 = Vector3.INF
+## TWD sahneleme: oyuncunun bu kişiyle/noktayla sahneye girerken durduğu sabit işaret (dünya konumu).
+## INF ise seviye açılışında bir kez, kişinin kendi baktığı yöne / noktanın açık tarafına göre hesaplanır
+## (oyuncunun nereden geldiğine bağlı DEĞİLDİR: sahne her seferinde aynı kurulur).
+var stand_mark: Vector3 = Vector3.INF
 
 var model: CharacterModel
 var _marker: Node3D

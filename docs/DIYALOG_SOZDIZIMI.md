@@ -59,6 +59,7 @@ Telltale tarzı gerilim anları. Başarıya ve başarısızlığa göre farklı 
 | Olay | Anlamı |
 |---|---|
 | `@olay kamera ad` | Seviyede tanımlı kamera açısına geç (`oyuncu`: oyuncu kamerası, `otomatik`: konuşana göre). İnceleme düğümleri yakın çekimle başlar (mobilde yazı okunsun) |
+| `@olay cizgi id` / `@olay cizgi_bitti [sn]` | Çizgi roman paneli göster (`kuraklik`, `liste`, `soru`, `gunluk`) / panelleri söndür. Başlık kartı bitince gelir |
 | `@olay sarsinti 0.4 0.6` | Kamera sarsıntısı (güç, süre) |
 | `@olay siyah` / `kararti 2` / `aydinlat 2` | Ekranı anında/yavaşça karart veya aç |
 | `@olay baslik Metin \| Alt yazı` | Ortada sinematik başlık kartı |

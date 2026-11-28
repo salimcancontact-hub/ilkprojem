@@ -60,6 +60,7 @@ func _ready() -> void:
 	add_child(_dialog_cam)
 	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
 		npc.player_nearby.connect(_on_npc_nearby)
+	_precompute_marks.call_deferred()
 	_dialog.speaker_changed.connect(_on_speaker_changed)
 	_dialog.event_fired.connect(_on_dialog_event)
 	_dialog.dialog_finished.connect(_on_dialog_finished)
@@ -138,6 +139,25 @@ func _process(delta: float) -> void:
 			and Input.is_action_just_pressed("interact"):
 		_start_dialog(_nearby_npc)
 	_update_shake(delta)
+	_hide_extras_near_camera()
+
+
+## TWD: ara sahnede figüranlar kameranın dibinden geçip ekranı kapatmaz (yakına gelen gizlenir).
+var _hidden_extras: Array[Node3D] = []
+func _hide_extras_near_camera() -> void:
+	var cam := get_viewport().get_camera_3d()
+	var on := cam != null and cam == _dialog_cam
+	for n: Node3D in _hidden_extras:
+		if is_instance_valid(n):
+			n.visible = true
+	_hidden_extras.clear()
+	if not on:
+		return
+	var cp := cam.global_position
+	for n: Node3D in get_tree().get_nodes_in_group("extras"):
+		if n.visible and n.is_inside_tree() and (n.global_position + Vector3(0, 1.0, 0)).distance_to(cp) < 1.7:
+			n.visible = false
+			_hidden_extras.append(n)
 
 
 # --- Diyalog ---------------------------------------------------------------
@@ -151,13 +171,14 @@ func _start_dialog(npc: Npc) -> void:
 		if _dialog.active:
 			return
 	_talking_to = npc
-	# TWD: konuşma/inceleme öncesi sabit işarete yürü (uzaksa)
-	var stand := 1.15 if npc.model else 0.85
-	var d := Vector2(npc.global_position.x - _player.global_position.x, npc.global_position.z - _player.global_position.z).length()
-	if d > stand + 0.35 and not live_world:
+	# TWD: sahne her zaman aynı işaretten başlar. Oyuncu nereden/ne kadar uzaktan gelirse gelsin
+	# o işarete yürür ve kişiye döner; böylece kamera açıları ve sahne hep aynı kurulur.
+	var mark := mark_for(npc)
+	var d := Vector2(mark.x - _player.global_position.x, mark.z - _player.global_position.z).length()
+	if d > 0.08:
 		_player.input_enabled = false
 		_hud.set_gameplay_visible(false)
-		await walk_beside(npc.global_position, stand)
+		await walk_to(mark, npc.global_position)
 		_player.input_enabled = true
 		if _dialog.active:
 			return
@@ -170,6 +191,76 @@ func _start_dialog(npc: Npc) -> void:
 		_player.model.play_once(npc.inspect_anim, "Idle")
 	_dialog_cam.make_current()
 	_dialog.start(npc.dialog_path, npc.start_node)
+
+
+## Kişinin/noktanın sahne işareti (bkz. Npc.stand_mark). Yoksa bir kez hesaplanıp saklanır:
+## kişi için baktığı yön (boşsa), nokta için en açık taraf; hep aynı sırayla aranır (deterministik).
+func mark_for(npc: Npc) -> Vector3:
+	# Kişi/nokta sahne gereği başka yere taşındıysa işaret yeni yerine göre bir kez yeniden kurulur
+	var origin: Vector3 = npc.get_meta("mark_origin", Vector3.INF)
+	if npc.stand_mark == Vector3.INF or (origin != Vector3.INF and origin.distance_to(npc.global_position) > 0.5):
+		set_mark(npc, _auto_mark(npc))
+	var m := npc.stand_mark
+	m.y = _player.global_position.y
+	return m
+
+
+## Seviye kurulduktan sonra (fizik hazır) tüm sahne işaretleri bir kez hesaplanır: kişiler daha sonra
+## oyuncuya dönse bile işaretleri değişmez.
+func _precompute_marks() -> void:
+	for k in 3:
+		await get_tree().physics_frame
+	for npc: Npc in get_tree().get_nodes_in_group("npcs"):
+		if npc.stand_mark == Vector3.INF:
+			set_mark(npc, _auto_mark(npc))
+
+
+## Bir sahnenin işaretini elle koyar (seviye betikleri için).
+func set_mark(npc: Npc, at: Vector3) -> void:
+	npc.stand_mark = at
+	npc.set_meta("mark_origin", npc.global_position)
+
+
+func _auto_mark(npc: Npc) -> Vector3:
+	var dist := 1.15 if npc.model else 0.85
+	var c := npc.global_position
+	var fwd := -(npc.get_node("Visual") as Node3D).global_basis.z
+	fwd.y = 0
+	fwd = fwd.normalized() if fwd.length() > 0.01 else Vector3.BACK
+	var space := get_world_3d().direct_space_state
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.32
+	cap.height = 1.5
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = cap
+	sq.collision_mask = 1
+	sq.exclude = [npc.get_rid(), _player.get_rid()]
+	var best := c + fwd * dist
+	var best_score := -1e9
+	for k in 16:
+		var ang := k * TAU / 16.0
+		var dir := fwd.rotated(Vector3.UP, ang)
+		var cand := c + dir * dist
+		cand.y = c.y
+		sq.transform = Transform3D(Basis(), cand + Vector3(0, 0.95, 0))
+		if not space.intersect_shape(sq, 1).is_empty():
+			continue
+		var q := PhysicsRayQueryParameters3D.create(c + Vector3(0, 1.0, 0), cand + Vector3(0, 1.0, 0), 1)
+		q.exclude = [npc.get_rid(), _player.get_rid()]
+		if not space.intersect_ray(q).is_empty():
+			continue
+		# Arkası ne kadar açık (kamera oyuncunun omzundan bakabilsin)
+		var back := 3.0
+		var q2 := PhysicsRayQueryParameters3D.create(cand + Vector3(0, 1.4, 0), cand + dir * 3.0 + Vector3(0, 1.4, 0), 1)
+		q2.exclude = [npc.get_rid(), _player.get_rid()]
+		var hit := space.intersect_ray(q2)
+		if not hit.is_empty():
+			back = (hit["position"] as Vector3).distance_to(cand + Vector3(0, 1.4, 0))
+		var score := minf(back, 2.5) * 2.0 - minf(ang, TAU - ang) * (1.2 if npc.model else 0.3)
+		if score > best_score:
+			best_score = score
+			best = cand
+	return best
 
 
 ## Bir karaktere bağlı olmayan diyalog (anlatım, ara sahne). Bitene kadar bekler.
@@ -586,6 +677,12 @@ func _set_camera(shot: String) -> void:
 				var sh: Array = camera_shots[shot]
 				if sh.size() > 2 and sh[2]:
 					_place_cam_exact(sh[0], sh[1])
+					# Güvenlik ağı: kesin açı bir duvarın/nesnenin içine düştüyse önü açık açıya geç
+					_dialog_cam.make_current()
+					var pr := camera_problems(_dialog_cam)
+					if pr.contains("içeride") or pr.contains("yüzey dolu"):
+						Game.boot_log("kamera '%s' düzeltildi: %s" % [shot, pr])
+						_place_cam(sh[0], sh[1])
 				else:
 					_place_cam(sh[0], sh[1])
 				_dialog_cam.make_current()
@@ -653,6 +750,160 @@ func _clear_view(from: Vector3, target: Vector3) -> Vector3:
 					continue
 				return cand
 	return _unblocked(target, from)
+
+
+## Görsel engeller: çarpışması olmayan dekor (bariyer, varil, tabela...) dahil, sahnedeki sabit
+## meshlerin dünya kutuları. Karakterler, zemin ve dev parçalar hariç. Seviye başına bir kez toplanır.
+var _blockers: Array[AABB] = []
+var _blockers_ready: bool = false
+func visual_blockers() -> Array[AABB]:
+	if _blockers_ready:
+		return _blockers
+	_blockers_ready = true
+	for mi: MeshInstance3D in find_children("*", "MeshInstance3D", true, false):
+		if not mi.is_visible_in_tree() or mi.mesh == null:
+			continue
+		var skip := false
+		var n: Node = mi.get_parent()
+		while n and n != self:
+			if n is CharacterModel or n is Npc or n is Player or n is Camera3D or n.is_in_group("extras"):
+				skip = true
+				break
+			n = n.get_parent()
+		if skip:
+			continue
+		var box := mi.global_transform * mi.get_aabb()
+		if box.size.y < 0.25 or box.size.x > 10.0 or box.size.z > 10.0 or box.size.y > 8.0:
+			continue
+		_blockers.append(box.grow(-0.04))
+	return _blockers
+
+
+## İki nokta arasında görsel bir engel var mı (çarpışan ya da çarpışmasız dekor)?
+func sight_blocked(from: Vector3, to: Vector3, exclude: Array[RID] = []) -> String:
+	var q := PhysicsRayQueryParameters3D.create(from, to, 1)
+	var ex: Array[RID] = exclude.duplicate()
+	ex.append(_player.get_rid())
+	q.exclude = ex
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty():
+		return (hit["collider"] as Node).name
+	for box: AABB in visual_blockers():
+		if box.has_point(to):
+			continue
+		if box.intersects_segment(from, to):
+			return "dekor"
+	return ""
+
+
+## TWD iki kişilik yan çekim: a ve b'yi birlikte, yandan ve göz hizasına yakın gösteren açıyı seçer.
+## Adaylar hep aynı tercih sırasıyla denenir (deterministik): tam yan, sonra hafif çapraz, sonra karşı yan.
+## Kamera bir nesnenin içinde olamaz, iki kişiye de görüşü açık olmalı.
+func two_shot(a: Vector3, b: Vector3, dist: float = 3.2, height: float = 1.5, look_h: float = 0.7, exclude: Array[RID] = [], head_a: float = 1.75, head_b: float = 1.75) -> Array:
+	var mid := (a + b) / 2.0
+	var axis := b - a
+	axis.y = 0
+	axis = axis.normalized() if axis.length() > 0.01 else Vector3.RIGHT
+	var side := axis.cross(Vector3.UP).normalized()
+	var space := get_world_3d().direct_space_state
+	var ex: Array[RID] = exclude.duplicate()
+	ex.append(_player.get_rid())
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.3
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = sphere
+	sq.collision_mask = 1
+	sq.exclude = ex
+	var floor_y := minf(a.y, b.y)
+	for sgn in [1.0, -1.0]:
+		for yaw in [0.0, 20.0, -20.0, 40.0, -40.0, 60.0, -60.0]:
+			for sc in [1.0, 1.2, 0.85, 1.45]:
+				var dir: Vector3 = (side * sgn).rotated(Vector3.UP, deg_to_rad(yaw))
+				var cand: Vector3 = mid + dir * dist * sc
+				cand.y = floor_y + height
+				sq.transform = Transform3D(Basis(), cand)
+				if not space.intersect_shape(sq, 1).is_empty():
+					continue
+				var ok := true
+				for box: AABB in visual_blockers():
+					if box.grow(0.25).has_point(cand):
+						ok = false
+						break
+				# Yerde yatan biri de olabilir: iki kişiye hem bel hem yer hizasından görüş açık olmalı
+				for target: Vector3 in [Vector3(a.x, floor_y + 0.9, a.z), Vector3(b.x, floor_y + 0.9, b.z), Vector3(a.x, floor_y + 0.3, a.z), Vector3(b.x, floor_y + 0.3, b.z), Vector3(mid.x, floor_y + 1.2, mid.z)]:
+					if not ok or sight_blocked(cand, target, ex) != "":
+						ok = false
+						break
+				if ok:
+					# İkisi de (ayaktakinin başı dahil) kadraja sığmalı: yazı kutusu altta olduğundan alt pay geniş
+					var look := Vector3(mid.x, floor_y + look_h, mid.z)
+					var bs := Basis.looking_at(look - cand)
+					var fov_v := deg_to_rad(_dialog_cam.fov) / 2.0
+					var fov_h := atan(tan(fov_v) * 1.6)
+					for p: Vector3 in [Vector3(a.x, a.y + head_a, a.z), Vector3(b.x, b.y + head_b, b.z), Vector3(a.x, floor_y + 0.1, a.z), Vector3(b.x, floor_y + 0.05, b.z)]:
+						var l: Vector3 = bs.inverse() * (p - cand)
+						if l.z >= -0.1:
+							ok = false
+							break
+						var vy := atan2(l.y, -l.z)
+						var vx := atan2(l.x, -l.z)
+						if vy > fov_v * 0.85 or vy < -fov_v * 0.45 or absf(vx) > fov_h * 0.9:
+							ok = false
+							break
+				if ok:
+					return [cand, Vector3(mid.x, floor_y + look_h, mid.z), true]
+	return [mid + side * dist + Vector3(0, height, 0), mid + Vector3(0, look_h, 0)]
+
+
+## Kamera denetimi (testler ve güvenlik ağı). Boş dize = sorun yok.
+## Kamera bir çarpışanın içinde mi, ekranın çoğunu yakın bir yüzey mi kaplıyor,
+## oyuncu ve konuşulan kişi görünüyor mu (arada duvar var mı)?
+func camera_problems(cam: Camera3D = null) -> String:
+	if cam == null:
+		cam = get_viewport().get_camera_3d()
+	if cam == null:
+		return "kamera yok"
+	var out: PackedStringArray = []
+	var space := get_world_3d().direct_space_state
+	var pos := cam.global_position
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.12
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = sphere
+	sq.collision_mask = 1
+	sq.transform = Transform3D(Basis(), pos)
+	if not space.intersect_shape(sq, 1).is_empty():
+		out.append("içeride")
+	else:
+		for box: AABB in visual_blockers():
+			if box.has_point(pos):
+				out.append("içeride (dekor)")
+				break
+	# Ekranın ortasındaki 9 ışından kaçı 0.9 m'den yakın bir yüzeye çarpıyor?
+	var vp := get_viewport().get_visible_rect().size
+	var near_hits := 0
+	for gx in 3:
+		for gy in 3:
+			var sp := Vector2(vp.x * (0.25 + gx * 0.25), vp.y * (0.25 + gy * 0.25))
+			var to := cam.project_ray_origin(sp) + cam.project_ray_normal(sp) * 0.9
+			var q := PhysicsRayQueryParameters3D.create(pos, to, 1)
+			q.exclude = [_player.get_rid()]
+			if not space.intersect_ray(q).is_empty():
+				near_hits += 1
+	if near_hits >= 4:
+		out.append("yüzey dolu %d/9" % near_hits)
+	var subjects: Array = [[_player, "oyuncu"]]
+	if _talking_to and _talking_to.model and _talking_to.visible:
+		subjects.append([_talking_to, "konuşulan"])
+	for sj: Array in subjects:
+		var n: Node3D = sj[0]
+		var head: Vector3 = n.head_position()
+		if cam.is_position_behind(head):
+			continue
+		var bl := sight_blocked(pos, head, [(n as CollisionObject3D).get_rid()])
+		if bl != "":
+			out.append("%s örtülü (%s)" % [sj[1], bl])
+	return ", ".join(out)
 
 
 ## Hedef ile kamera arasında çarpışan bir şey varsa kamerayı onun önüne alır.

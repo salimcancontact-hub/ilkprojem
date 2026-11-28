@@ -47,6 +47,7 @@ var _grid: GridContainer
 var _toast: PanelContainer
 var _toast_label: Label
 var _fade: ColorRect
+var _comic: ComicPanels
 var _title: Label
 var _subtitle: Label
 var _fade_tween: Tween
@@ -216,6 +217,13 @@ func _on_runner_event(event_name: String, args: PackedStringArray) -> void:
 			fade_to(1.0, t)
 		"aydinlat":
 			fade_to(0.0, t)
+		"cizgi":
+			# Başlık kartı ekrandayken panel üstüne binmesin: başlık sönünce gelir
+			if _title_tween and _title_tween.is_running():
+				await _title_tween.finished
+			_comic.show_panel(args[0] if args.size() > 0 else "")
+		"cizgi_bitti":
+			_comic.hide_panels(t)
 		"baslik":
 			var parts := " ".join(args).split("|")
 			show_title(parts[0].strip_edges(), parts[1].strip_edges() if parts.size() > 1 else "")
@@ -436,6 +444,10 @@ func _build_ui() -> void:
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fade)
+	# Giriş anlatımının çizgi roman panelleri: kararmanın üstünde, yazıların altında
+	_comic = ComicPanels.new()
+	_comic.visible = false
+	add_child(_comic)
 	var title_box := VBoxContainer.new()
 	title_box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Ekranın üst bölümünde: diyalog kutusu ve seçeneklerle çakışmaz

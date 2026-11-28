@@ -40,6 +40,12 @@ Kız kardeşi Ada gemidedir. Ayrıntılı hikâye: `docs/HIKAYE.md`.
   `scripts/levels/gemi_set.gd` (MegaKit + kod mobilya; bölge 1 iskele/meydan, bölge 2 güverte 8/kamara 412).
   Dünya: `tools/make_earth.py` → `assets/textures/earth.png` + `shaders/earth.gdshader`; uzay: `shaders/stars.gdshader`.
 - Kamera: `camera_shots` içinde `[konum, hedef, true]` = kesin yakın çekim (engel denetimi yok). İncelemelerde TWD gibi elle kurulmuş açı.
+- **TWD sahneleme (tek kural):** her konuşma/inceleme sabit bir işaretten başlar (`Npc.stand_mark`, `GameLevel.mark_for/set_mark`);
+  oyuncu nereden gelirse gelsin oraya yürür. Sahne içi açılar oyuncunun o anki yerinden değil bu sabit kurulumdan çıkar.
+  İki kişilik çekim: `two_shot()` (yandan, göz hizası, duvar/dekor içinde değil, ikisi de kadrajda). Figüranlar (`extras` grubu)
+  kameranın dibinde gizlenir; kalabalık hareketi tohumlu (her oynayışta aynı). Denetim: `camera_problems()`;
+  test: `tests_tmp/camaudit.gd` (ANG=0..315 ile 8 yönden aynı sahne, başlangıç noktaları aynı olmalı, sorun 0).
+- Giriş anlatımı çizgi roman panelleri: `scripts/ui/comic_panels.gd` (`@olay cizgi <id>`, `@olay cizgi_bitti`); test `tests_tmp/comic.gd`.
 - Kayıt noktası: `Game.save_checkpoint("binis")`, menüde DEVAM ET.
 - Seviye kurucular: `tools/build_onsoz.gd`, `tools/build_hangar.gd` (MegaKit). Varlık dönüştürme: `tools/convert_megakit.py`.
 

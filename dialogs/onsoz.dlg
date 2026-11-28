@@ -7,10 +7,16 @@
 === giris
 @olay siyah
 @olay baslik Dünya, 2526 | Seçim Gecesi
+@olay cizgi kuraklik
 > "Kuraklığın on birinci yılı. Nehirler artık yalnızca haritalarda akıyor."
+@olay cizgi liste
 > "Komite bu gece son listeyi açıklıyor. Beş yüz isim. Sekiz milyar insan."
+@olay cizgi soru
 > "Herkes aynı soruyu soruyor: Neden onlar? Neden ben değil?"
+@olay cizgi gunluk
 > — Selim Arslan'ın günlüğünden
+@olay cizgi_bitti 1.2
+@bekle 1.0
 @olay aydinlat 3
 -> SON
 

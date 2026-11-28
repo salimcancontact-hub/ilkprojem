@@ -63,6 +63,8 @@ func _ready() -> void:
 	_card.visible = false
 	_card.interactable = false
 	_alley.monitoring = false
+	for person: Node3D in _crowd.get_children():
+		person.add_to_group("extras")
 	_alley.body_entered.connect(_on_alley_entered)
 	for l: Light3D in _alarm.get_children():
 		l.light_energy = 0.0
@@ -93,45 +95,18 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_arman.get_node("Visual").rotation = Vector3.ZERO
 			_arman.model.hold_last_frame("Death01")
 			_arman.model.reach("r", _arman.model.bone_marker("spine_03"), 0.4)
-			# Oyuncu ile yerdeki Arman'ı birlikte gösteren yan açı
-			var a := _arman.global_position
+			# Oyuncu ile yerdeki Arman'ı birlikte gösteren yan açı (Arman'ın yatan bedeninin ortasına göre)
+			# (bekleme yok: hemen ardından gelen "@olay kamera arman" bu açıyı kullanır)
+			var a := _arman.model.bone_position("spine_02")
+			a.y = _arman.global_position.y
 			var pp := _player.global_position
 			var dir := pp - a
 			dir.y = 0
 			dir = dir.normalized()
 			var right := dir.cross(Vector3.UP).normalized()
 			var mid := (a + pp) / 2.0
-			# Yüksekten, engelsiz ve kalabalıktan uzak açıyı seç (barikat/tabela önüne geçmesin)
-			var space := get_world_3d().direct_space_state
-			var best := mid + Vector3(0, 4.5, 0) - dir * 2.5
-			var best_d := -1e9
-			for ang in range(0, 360, 30):
-				var off := Vector3(sin(deg_to_rad(ang)), 0, cos(deg_to_rad(ang)))
-				var cand: Vector3 = mid + off * 3.8 + Vector3(0, 3.0, 0)
-				var q := PhysicsRayQueryParameters3D.create(cand, mid + Vector3(0, 0.4, 0), 0xFFFFFFFF)
-				q.exclude = [_arman.get_rid(), _player.get_rid()]
-				var score := 0.0
-				if not space.intersect_ray(q).is_empty():
-					score -= 100.0
-				var nearest := 99.0
-				for person: Node3D in _crowd.get_children():
-					if person.visible:
-						for k in 5:
-							var qp: Vector3 = cand.lerp(mid, k / 5.0)
-							nearest = minf(nearest, Vector2(person.global_position.x - qp.x, person.global_position.z - qp.z).length())
-				score += minf(nearest, 3.0)
-				# yan açı tercih: oyuncu-Arman doğrusuna dik olan
-				score += absf(off.dot(right)) * 1.5
-				for lbl: Node3D in $Clues.get_children():
-					if lbl is Label3D:
-						for k in 5:
-							var ql: Vector3 = cand.lerp(mid, k / 5.0)
-							if ql.distance_to(lbl.global_position) < 3.5:
-								score -= 20.0
-				if score > best_d:
-					best_d = score
-					best = cand
-			camera_shots["arman"] = [best, a.lerp(pp, 0.2) - Vector3(0, 0.35, 0), true]
+			# TWD yan çekim: yerdeki Arman ve ayaktaki oyuncu birlikte, göz hizasına yakın (tepeden değil)
+			camera_shots["arman"] = two_shot(a, pp, 3.8, 1.9, 0.55, [_arman.get_rid(), _guard.get_rid()], 0.35, 1.8)
 		"arman_kos":
 			_arman_waits_to_run = false
 		"arman_kalkti":
@@ -449,6 +424,9 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			# Kartı ölü adamın parmaklarının arasından alır
 			var target: Node3D = _arman_card if _arman_card else _card
 			await walk_beside(target.global_position, 0.6)
+			# Yandan alçak çekim: çömelen oyuncu ve parmaklarındaki kart birlikte görünür
+			camera_shots["kart_al"] = two_shot(target.global_position, _player.global_position, 2.7, 1.4, 0.35, [_arman.get_rid()], 0.15, 1.2)
+			_set_camera("kart_al")
 			_player.model.play("Crouch_Idle", 0.25)
 			_player.model.reach("r", target, 0.6)
 			await get_tree().create_timer(0.8, true, false, true).timeout
@@ -949,6 +927,9 @@ func _shatter(at: Vector3) -> void:
 # --- İsyan -----------------------------------------------------------------
 
 func _start_riot() -> void:
+	# Kalabalığın kaçışı her oynayışta aynı (TWD: sahne hep aynı kurulur; kamera önüne biri girmez)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2526
 	if _phase != "sokak":
 		return
 	_phase = "isyan"
@@ -969,16 +950,16 @@ func _start_riot() -> void:
 	# Kalabalık dağılır
 	var i := 0
 	for person: Node3D in _crowd.get_children():
-		var away := Vector3(randf_range(-7.0, 7.0), -0.15, person.position.z - randf_range(18.0, 30.0))
+		var away := Vector3(rng.randf_range(-7.0, 7.0), -0.15, person.position.z - rng.randf_range(18.0, 30.0))
 		if i % 3 == 0:
-			away = Vector3(randf_range(-7.0, 7.0), -0.15, person.position.z + randf_range(4.0, 8.0))
-		_run_to(person as CharacterModel, person, [away], randf_range(5.0, 7.0), "Sprint" if i % 2 == 0 else "Jog_Fwd", i % 3 != 0)
+			away = Vector3(rng.randf_range(-7.0, 7.0), -0.15, person.position.z + rng.randf_range(4.0, 8.0))
+		_run_to(person as CharacterModel, person, [away], rng.randf_range(5.0, 7.0), "Sprint" if i % 2 == 0 else "Jog_Fwd", i % 3 != 0)
 		i += 1
 	for npc: Npc in [$Npcs/Yasli, $Npcs/Kadin]:
-		_run_to(npc.model, npc, [npc.position + Vector3(randf_range(-3, 3), 0, -25)], 6.0, "Jog_Fwd", true)
+		_run_to(npc.model, npc, [npc.position + Vector3(rng.randf_range(-3, 3), 0, -25)], 6.0, "Jog_Fwd", true)
 	_alley.monitoring = true
 	for k in 3:
-		await get_tree().create_timer(randf_range(1.0, 2.0)).timeout
+		await get_tree().create_timer(rng.randf_range(1.0, 2.0)).timeout
 		if _phase != "isyan":
 			return
 		shake(0.35, 0.5)
@@ -1216,7 +1197,7 @@ func _run_to(model: CharacterModel, mover: Node3D, points: Array, duration: floa
 		tw.tween_callback(func() -> void: mover.visible = false)
 	else:
 		# Hedefe varınca durur (yerinde koşmaya devam etmesin), korkuyla etrafa bakar
-		tw.tween_callback(func() -> void: model.play("Idle_FoldArms" if randf() < 0.5 else "Idle", 0.3))
+		tw.tween_callback(func() -> void: model.play("Idle_FoldArms" if (model.get_instance_id() % 2) == 0 else "Idle", 0.3))
 
 
 # --- Ara sokak: yüzleşme -----------------------------------------------------
@@ -1245,7 +1226,9 @@ func _on_alley_entered(body: Node3D) -> void:
 	_arman.position = ALLEY_SPOT
 	_arman.model.play("Idle", 0.2)
 	# Konuşma oyuncu KONUŞ'a basınca başlar (otomatik başlamaz)
-	_arman.face_point(_player.global_position)
+	# Sahne işareti sabit: oyuncu Arman'ın geldiği yönde, sokağın ağzına dönük durur
+	set_mark(_arman, ALLEY_SPOT + Vector3(-1.15, 0, 0))
+	_arman.face_point(_arman.stand_mark)
 	_arman.start_node = "ara_sokak"
 	_arman.set_interactable(true)
 	_hud.set_objective("Deniz Arman'la konuş")
