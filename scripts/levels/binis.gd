@@ -30,7 +30,7 @@ func _ready() -> void:
 	# Önce siyah ekranda "Yükleniyor" çizilsin (donmuş gri ekran yerine), sonra set kurulsun.
 	_dialog.fade_to(1.0, 0.0)
 	cinematic_hold = true  # yükleme uzun sürerse gözetçi "siyah ekran" sanıp açmasın
-	var loading := _loading_screen()
+	var loading := LoadingOverlay.show_on(self, "Gemiye biniliyor")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var t0 := Time.get_ticks_msec()
@@ -85,7 +85,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await _prewarm()
 	if _loading:
-		_loading.queue_free()  # ilk çizim ve gölgelendirici derlemesi bitti
+		(_loading as LoadingOverlay).finish(0.6)  # ilk çizim ve gölgelendirici derlemesi bitti
 	(_z2["earth"] as Node3D).visible = false
 	_set_zone(2, false)
 	_set_zone(3, false)
@@ -883,7 +883,8 @@ func _sit() -> void:
 	var side := f.cross(Vector3.UP).normalized()
 	# Sırtlık oturan başı kapatmasın: kamera sırtlığın üstünden, omzun arkasından aşağı pencereye bakar
 	# Yandan, sırtlığın önünden: oyuncunun yüzü (profil) ve pencere birlikte
-	camera_shots["pencere"] = [head - f * 0.35 + side * 1.25 + Vector3(0, 0.28, 0), head + f * 1.2 - side * 0.2 + Vector3(0, 0.1, 0), true]
+	# Pencere kadrajın çoğunu kaplar; oyuncunun omzu/başı altta, yanda (TWD: karakter + manzara)
+	camera_shots["pencere"] = [head + f * 0.25 + side * 0.55 + Vector3(0, 0.33, 0), Z2 + Vector3(7.7, 1.42, 7.0) - side * 0.15, true]
 	_seat_cam_target = _player.head_position()
 
 
@@ -976,6 +977,8 @@ func _place_frame(at: Vector3, face_down: bool, into_crate: bool = false) -> voi
 		_player.model.play("Idle", 0.2)
 	var target := _point(at + Vector3(0, 0.05, 0))
 	_player.face_point(at)
+	if into_crate:
+		_player.model.play("Crouch_Idle", 0.25)  # kutuya eğilir
 	_player.model.reach("r", target, 0.5)
 	await _wait(0.6)
 	_player.model.detach(_frame)
@@ -987,7 +990,12 @@ func _place_frame(at: Vector3, face_down: bool, into_crate: bool = false) -> voi
 		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		tw.tween_property(pic, "transparency", 1.0, 1.0)
 	elif into_crate:
+		# Tulumların arasına, kutunun İÇİNE bırakılır; kapak kapanınca görünmez
 		_frame.rotation = Vector3(-PI / 2, 0, 0)
+		var tw2 := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw2.tween_property(_frame, "global_position", at - Vector3(0, 0.2, 0), 0.35)
+		tw2.tween_interval(0.8)
+		tw2.tween_callback(_frame.hide)
 	else:
 		_frame.rotation = Vector3(-0.25, PI / 2 + 0.4, 0)  # masada odaya dönük durur
 	_player.model.release("r", 0.4)

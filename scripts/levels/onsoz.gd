@@ -358,12 +358,16 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			var to_pl := _player.global_position - hp
 			if perp.dot(to_pl) < 0:
 				perp = -perp
-			var kneel := hp + perp * 0.55 - along * 0.05
+			var kneel := hp + perp * 0.5 - along * 0.05
 			kneel.y = _player.global_position.y
 			_player.global_position = kneel
 			_player.face_point(hp)
 			camera_shots["oldurme_yakin"] = [hp - perp * 1.6 + along * 0.7 + Vector3(0, 1.15, 0), hp + perp * 0.25 + Vector3(0, 0.3, 0), true]
-			_player.model.play("Crouch_Idle", 0.3)
+			# Dizlerinin üstüne çöker ve öne eğilir: omuzlar yere yakın, eller yerdeki başa yetişir
+			_player.model.play("Fixing_Kneeling", 0.3)
+			var vis: Node3D = _player.get_node("Visual")
+			var twl := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			twl.tween_property(vis, "rotation:x", -0.3, 0.5).set_trans(Tween.TRANS_SINE)
 			if _cutter and _cutter.get_parent() is BoneAttachment3D:
 				# Kesici sağ elde boynuna, sol el göğsüne bastırır
 				_player.model.reach("r", neck, 0.6)
@@ -374,6 +378,8 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_player.model.reach("l", head, 0.6)
 		"arman_oldu":
 			_player.model.release_all(0.3)
+			var tw_up := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tw_up.tween_property(_player.get_node("Visual"), "rotation:x", 0.0, 0.8)
 			if _arman.model.ragdoll == null:
 				_arman.get_node("CollisionShape3D").disabled = true
 				_arman.model.go_ragdoll()
@@ -984,6 +990,9 @@ func _run_to(model: CharacterModel, mover: Node3D, points: Array, duration: floa
 		prev = p
 	if hide_at_end:
 		tw.tween_callback(func() -> void: mover.visible = false)
+	else:
+		# Hedefe varınca durur (yerinde koşmaya devam etmesin), korkuyla etrafa bakar
+		tw.tween_callback(func() -> void: model.play("Idle_FoldArms" if randf() < 0.5 else "Idle", 0.3))
 
 
 # --- Ara sokak: yüzleşme -----------------------------------------------------
@@ -1043,6 +1052,7 @@ func _final() -> void:
 	await _dialog.fade_to(1.0, 2.0)
 	await play_dialog(DLG, "kalkis")
 	_hud.set_gameplay_visible(false)
+	LoadingOverlay.show_on(self, "Gemiye biniliyor")
 	# Bölüm 2: Biniş (arka planda yüklendi)
 	# Yükleme bitene kadar kare kare bekle (ana iş parçacığını kilitleyerek beklemek donmaya yol açabiliyor)
 	var tries := 0

@@ -132,6 +132,7 @@ func _start() -> void:
 	Game.boot_log("yükleniyor: oyun")
 	_bar.visible = true
 	_status.text = "Yükleniyor..."
+	LoadingOverlay.show_on(self, "Hikâye yükleniyor")
 	ResourceLoader.load_threaded_request(_loading)
 
 
@@ -147,6 +148,7 @@ func _continue() -> void:
 	Game.boot_log("yükleniyor: kayıt " + scene)
 	_bar.visible = true
 	_status.text = "Yükleniyor..."
+	LoadingOverlay.show_on(self, "Hikâye yükleniyor")
 	ResourceLoader.load_threaded_request(_loading)
 
 

@@ -44,5 +44,14 @@ func _run():
 			else: d._finish_typing(); d._advance()
 		if node.begins_with("karar_") and node != "karar_ani" and i % 12 == 0 and shots < 12:
 			get_viewport().get_texture().get_image().save_png(out + "/kl_%d_%02d.png" % [pick, shots]); print("foto ", node); shots += 1
+		if node in ["karar_bogma", "karar_zaman", "karar_yalvar", "yalvar_son"] and i % 15 == 0:
+			var pm = level._player.model
+			var rd = level._arman.model.ragdoll
+			if rd:
+				var hr: Vector3 = pm.bone_position("hand_r")
+				var hl: Vector3 = pm.bone_position("hand_l")
+				var hd: Vector3 = rd.bone("Head").global_position
+				var foot: Vector3 = level._arman.model.skeleton.global_transform * level._arman.model.skeleton.get_bone_global_pose(level._arman.model.skeleton.find_bone("foot_l")).origin
+				print("ÖLÇÜM %s el_sağ-baş=%.2f el_sol-baş=%.2f el_sağ-ayak=%.2f baş=%s" % [node, hr.distance_to(hd), hl.distance_to(hd), hr.distance_to(foot), hd])
 		if level._phase == "kart": break
 	get_tree().quit()
