@@ -341,11 +341,29 @@ MUHAFIZ: Geri çekil!
 
 === cop_kurtul
 @olay bogusma_bitti
+@olay muhafiz_sendele
+@bekle 0.6
+> Muhafızı geri itiyorsun. Sendeliyor. Yüzü açıkta.
+@qte bas 1.8 "VUR" -> cop_yumruk | cop_kacirdi
+
+=== cop_yumruk
+@olay muhafiza_atil
+@bekle 0.25
 @olay anim EVREN Punch_Cross
 @olay muhafiz_dustu
 @bekle 1.2
-> Muhafızı itip suratına bir yumruk indiriyorsun. Barikatın üstüne devriliyor.
+> Yumruğun suratına iniyor. Barikatın üstüne devriliyor.
 ~ muhafizi_itti = true
+-> isyan_arman
+
+=== cop_kacirdi
+@olay anim EVREN Punch_Jab
+@bekle 0.5
+@olay anim EVREN Hit_Chest
+@olay sarsinti 0.5 0.5
+@bekle 0.6
+> Yumruğun boşa gidiyor. Muhafızın copu omzuna iniyor. Sonra kalabalık aranıza giriyor.
+~ yarali = true
 -> isyan_arman
 
 === cop_vurdu
@@ -539,11 +557,28 @@ ARMAN: Buraya! Bu {adam/kadın} bir—
 -> olum
 
 === karar_bogma
-@olay oldur_cok
+@olay ustune_cik
 @olay kamera oldurme_yakin
+@bekle 1.0
+> Üstüne çöküyorsun. Avucunu ağzına bastırıyorsun. Altında çırpınıyor.
+@qte vur 5 12 "BASTIR" -> bogma_ok | bogma_isirdi
+
+=== bogma_ok
 @olay cirpinma
 @bekle 1.6
-> Avucunu ağzına bastırıyorsun. Çırpınıyor. Sonra daha az. Sonra hiç.
+> Çırpınıyor. Sonra daha az. Sonra hiç.
+-> olum
+
+=== bogma_isirdi
+@olay isirdi
+@bekle 0.5
+> Avucunu ısırıyor. Elini çekiyorsun. Bağırmak için nefes alıyor.
+@qte bas 1.8 "VUR" -> bogma_yumruk | bogma_yumruk
+
+=== bogma_yumruk
+@olay yumruk_yuze
+@bekle 1.6
+> Yumruğun yüzüne iniyor. Bir kez. Bir kez daha. Sonra sessizlik.
 -> olum
 
 === karar_kesici

@@ -536,7 +536,6 @@ static func build_zone2(root: Node3D) -> Dictionary:
 	out.name = "Disari"
 	z2.add_child(out)
 	refs["outside"] = out
-	clouds(out, Vector3(500, -60, 7), Vector3(300, 60, 500), 14, 160.0, 7)
 	# Kalkışta camın önünden aşağı akan bulut katmanları
 	var asc: Array[Node3D] = []
 	for i in 3:
@@ -612,9 +611,9 @@ static func _build_cabin(z2: Node3D, refs: Dictionary) -> void:
 	z2.add_child(c)
 	refs["cabin"] = c
 	box(c, Vector3(4.6, -0.1, 7), Vector3(6, 0.2, 4), "ahsap", true)
-	box(c, Vector3(4.6, 2.9, 7), Vector3(6.4, 0.2, 4.4), "beyaz", true)
-	box(c, Vector3(4.6, 1.4, 4.9), Vector3(6, 2.8, 0.2), "krem", true)
-	box(c, Vector3(4.6, 1.4, 9.1), Vector3(6, 2.8, 0.2), "krem", true)
+	box(c, Vector3(4.75, 2.9, 7), Vector3(6.1, 0.2, 4.4), "beyaz", true)
+	box(c, Vector3(4.72, 1.4, 4.9), Vector3(5.76, 2.8, 0.2), "krem", true)
+	box(c, Vector3(4.72, 1.4, 9.1), Vector3(5.76, 2.8, 0.2), "krem", true)
 	# Pencere duvarı
 	box(c, Vector3(7.7, 0.4, 7), Vector3(0.2, 0.8, 4), "krem", true)
 	box(c, Vector3(7.7, 2.6, 7), Vector3(0.2, 0.4, 4), "krem", true)

@@ -327,6 +327,11 @@ func _prewarm() -> void:
 	cam.global_transform = Transform3D(Basis.looking_at(Vector3(1, -0.4, 0)), Z2 + Vector3(5.0, 1.2, 7.0))
 	for k in 3:
 		await get_tree().process_frame
+	# Ön ısıtma bitti: kalkış bulutları ve Dünya gizlenir (gemi yerdeyken pencerede yok)
+	for c: Node3D in _z2["ascent_clouds"]:
+		c.visible = false
+	for k in 3:
+		await get_tree().process_frame
 	cam.global_transform = saved
 	holder.queue_free()
 
@@ -788,6 +793,14 @@ func _on_cabin() -> void:
 		return
 	_phase = "kamara"
 	_cabin_time = 0.0
+	# İçeri girince kapı arkasından kapanır
+	var door: Node3D = _z2["cabin_door"]
+	var twd := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	twd.tween_interval(0.8)
+	twd.tween_property(door, "position:z", 7.0, 0.9).set_trans(Tween.TRANS_SINE)
+	twd.tween_callback(func() -> void:
+		for b in door.find_children("*", "StaticBody3D", true, false):
+			(b as StaticBody3D).collision_layer = 1)
 	for id in ["pencere", "yatak", "kutu", "kayit", "alet", "erzak"]:
 		_hot[id].interactable = true
 	# Işıklar teker teker yanar

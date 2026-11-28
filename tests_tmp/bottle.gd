@@ -28,17 +28,19 @@ func _run():
 	var last := 0
 	for i in 2400:
 		await get_tree().process_frame
-		if d.runner.current_node == "isyan_cop" and d._in_qte: break
+		if d.runner.current_node == "isyan_arman": break
 		var txt: String = d._text_label.text
 		if txt.begins_with("Kalabalık bir dalga"): shooting = true
 		if shooting and i - last >= 6:
 			last = i; snap("")
 		if d._in_qte and d._qte.active:
-			if d._qte._left < d._qte._time * 0.5: d._qte._end(true)
+			if d._qte._kind == "vur":
+				if i % 3 == 0: d._qte._hit()
+			elif d._qte._left < d._qte._time * 0.5: d._qte._end(true)
 			continue
 		if d.active and not d._waiting and i % 20 == 0:
 			d._block_input = 0
 			if d._choosing: d._pick(0)
 			else: d._finish_typing(); d._advance()
-		if n > 40: break
+		if n > 70: break
 	get_tree().quit()

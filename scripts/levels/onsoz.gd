@@ -296,6 +296,37 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_radio_reach = true
 		"cirpinma":
 			_struggle_twitch()
+		"muhafiz_sendele":
+			# İtilen muhafız iki adım geri sendeler, yüzü açıkta
+			var back := _guard.global_position - _player.global_position
+			back.y = 0
+			_guard.model.play_once("Hit_Chest", "Idle_Shield", 0.1)
+			var tws := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			tws.tween_property(_guard, "global_position", _guard.global_position + back.normalized() * 0.5, 0.4)
+		"muhafiza_atil":
+			# Yumruk mesafesine atılır
+			var gp := _guard.global_position
+			var to := gp - _player.global_position
+			to.y = 0
+			var stand := gp - to.normalized() * 0.75
+			stand.y = _player.global_position.y
+			_player.face_point(gp)
+			_guard.face_point(_player.global_position)
+			var twa := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			twa.tween_property(_player, "global_position", stand, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		"ustune_cik":
+			await _mount_arman()
+		"isirdi":
+			_smother = false
+			_player.model.release_all(0.15)
+			shake(0.2, 0.3)
+			var rd := _arman.model.ragdoll
+			if rd and rd.bone("Head"):
+				rd.bone("Head").apply_central_impulse(Vector3(randf_range(-1, 1), 1.5, randf_range(-1, 1)))
+			var twb := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			twb.tween_property(_player.get_node("Visual"), "rotation:x", 0.0, 0.25)
+		"yumruk_yuze":
+			await _punch_face(2)
 		"eller_titrer":
 			_trembling_hands()
 		"eller_birak":
@@ -364,7 +395,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_player.face_point(hp)
 			camera_shots["oldurme_yakin"] = [hp - perp * 1.6 + along * 0.7 + Vector3(0, 1.15, 0), hp + perp * 0.25 + Vector3(0, 0.3, 0), true]
 			# Dizlerinin üstüne çöker ve öne eğilir: omuzlar yere yakın, eller yerdeki başa yetişir
-			_player.model.play("Fixing_Kneeling", 0.3)
+			_player.model.hold_pose("Fixing_Kneeling", 0.45)
 			var vis: Node3D = _player.get_node("Visual")
 			var twl := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			twl.tween_property(vis, "rotation:x", -0.3, 0.5).set_trans(Tween.TRANS_SINE)
@@ -378,6 +409,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				_player.model.reach("l", head, 0.6)
 		"arman_oldu":
 			_player.model.release_all(0.3)
+			_player.model.unlock_pose()
 			var tw_up := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			tw_up.tween_property(_player.get_node("Visual"), "rotation:x", 0.0, 0.8)
 			if _arman.model.ragdoll == null:
@@ -944,7 +976,71 @@ func _on_qte_fill(fill: float) -> void:
 		_lift_point.global_position = p
 
 
+var _smother: bool = false
+var _mount_hold: Node3D
+
+
+## Yerdeki Arman'ın göğsüne çöker (iki dizi iki yanında), avuçlarını ağzına bastırır.
+func _mount_arman() -> void:
+	var rd := _arman.model.ragdoll
+	if rd == null:
+		return
+	var hp: Vector3 = rd.bone("Head").global_position
+	var chest: Vector3 = rd.bone("spine_02").global_position if rd.bone("spine_02") else rd.bone("spine_03").global_position
+	var along := hp - chest
+	along.y = 0
+	along = along.normalized()
+	var spot := chest - along * 0.15
+	spot.y = _player.global_position.y
+	_player.global_position = spot
+	_player.face_point(hp)
+	_player.model.hold_pose("Fixing_Kneeling", 0.45)
+	var vis: Node3D = _player.get_node("Visual")
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(vis, "rotation:x", -0.35, 0.4).set_trans(Tween.TRANS_SINE)
+	_mount_hold = rd.bone("Head")
+	_player.model.reach("r", _mount_hold, 0.4)
+	_player.model.reach("l", _mount_hold, 0.45)
+	var side := along.cross(Vector3.UP).normalized()
+	camera_shots["oldurme_yakin"] = [hp + side * 1.7 - along * 0.6 + Vector3(0, 1.0, 0), hp.lerp(spot, 0.45) + Vector3(0, 0.35, 0), true]
+	_smother = true
+
+
+## Yüzüne yumruk: sağ el yukarı kalkar, başa iner (count kez); her darbede baş yere çarpar.
+func _punch_face(count: int) -> void:
+	var rd := _arman.model.ragdoll
+	if rd == null:
+		return
+	var head: Node3D = rd.bone("Head")
+	var fist := _point(head.global_position + Vector3(0, 0.6, 0))
+	_player.model.hold_pose("Fixing_Kneeling", 0.45)
+	for i in count:
+		fist.global_position = head.global_position + Vector3(0, 0.6, 0) + _player.get_node("Visual").global_basis.z * 0.15
+		_player.model.reach("r", fist, 0.15)
+		await get_tree().create_timer(0.3, true, false, true).timeout
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(fist, "global_position", head.global_position + Vector3(0, 0.05, 0), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		await tw.finished
+		head.apply_central_impulse(Vector3(0, -2.5, 0) + _player.get_node("Visual").global_basis.x * randf_range(-1.5, 1.5))
+		shake(0.25, 0.2)
+		await get_tree().create_timer(0.25, true, false, true).timeout
+	_player.model.release("r", 0.3)
+	fist.queue_free()
+
+
+func _qte_end(_step: Dictionary, _ok: bool) -> void:
+	_smother = false
+
+
 func _on_qte_tap() -> void:
+	if _smother:
+		# Altında çırpınır; her bastırışta ekran sarsılır
+		shake(0.07, 0.12)
+		var rd := _arman.model.ragdoll
+		if rd:
+			for b in ["calf_l", "calf_r", "hand_l", "hand_r", "lowerarm_l"]:
+				if randf() < 0.5 and rd.bone(b):
+					rd.bone(b).apply_central_impulse(Vector3(randf_range(-1, 1), randf_range(0.4, 1.0), randf_range(-1, 1)) * 2.0)
 	if _wrist_fight:
 		shake(0.05, 0.1)
 	if _lifting:

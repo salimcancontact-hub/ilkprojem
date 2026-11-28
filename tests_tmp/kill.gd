@@ -30,19 +30,39 @@ func _run():
 		await get_tree().process_frame
 		if not d.active: break
 		var node: String = d.runner.current_node
+		var lose := OS.get_environment("LOSE") == "1" and node == "karar_bogma"
 		if d._in_qte and d._qte.active:
+			if node == "karar_bogma" or node.begins_with("bogma"):
+				if false:
+					set_meta("wide", true)
+					var c2 := Camera3D.new(); level.add_child(c2)
+					var pp: Vector3 = level._player.global_position
+					c2.global_position = pp + Vector3(2.5, 1.2, 2.5); c2.look_at(pp + Vector3(0, 0.5, 0)); c2.make_current()
+					await get_tree().process_frame
+					await get_tree().process_frame
+					get_viewport().get_texture().get_image().save_png(out + "/wide.png")
+					var sk: Skeleton3D = level._player.model.skeleton
+					print("pelvis_y=", level._player.model.bone_position("pelvis").y, " head_y=", level._player.model.bone_position("Head").y, " player_y=", pp.y, " el_sağ-baş=", level._player.model.bone_position("hand_r").distance_to(level._arman.model.ragdoll.bone("Head").global_position), " ik=", level._player.model._iks.keys(), " ik_r_aktif=", level._player.model._iks["r"].is_running() if level._player.model._iks.has("r") else "-", " interp=", level._player.model._iks["r"].interpolation if level._player.model._iks.has("r") else -1)
+					level._dialog_cam.make_current(); c2.queue_free()
+				if i % 30 == 0:
+					var pm = level._player.model
+					print("POZ anim=", pm._current, " kilit=", pm.pose_locked, " oynuyor=", pm.animation_player.is_playing(), " konum=", pm.animation_player.current_animation_position, " vis_x=", level._player.get_node("Visual").rotation.x, " phys=", level._player.is_physics_processing(), " y=", level._player.global_position.y)
+				if i % 6 == 0:
+					get_viewport().get_texture().get_image().save_png(out + "/km_%s_%02d.png" % [OS.get_environment("LOSE"), shots]); print("qte foto ", node); shots += 1
 			if d._qte._kind == "vur":
-				if i % 3 == 0: d._qte._hit()
+				if not lose and i % 3 == 0: d._qte._hit()
 			elif d._qte._left < d._qte._time * 0.6: d._qte._end(true)
 			continue
-		if (node.begins_with("karar") or node == "olum" or node.contains("bogma")) and d._panel.visible and not d._typing and i % 20 == 0 and shots < 8:
+		if node.begins_with("bogma_") and i % 8 == 0 and shots < 40:
+			get_viewport().get_texture().get_image().save_png(out + "/km_%s_%02d.png" % [OS.get_environment("LOSE"), shots]); print("foto ", node); shots += 1
+		if (node.begins_with("karar") or node == "olum" or node.contains("bogma")) and d._panel.visible and not d._typing and i % 20 == 0 and shots < 40:
 			await t(0.3)
 			get_viewport().get_texture().get_image().save_png(out + "/kl_%d_%02d.png" % [pick, shots]); print("foto ", node); shots += 1
 		if not d._waiting and i % 25 == 0:
 			d._block_input = 0
 			if d._choosing: d._pick(pick if node == "karar_ani" else 0)
 			else: d._finish_typing(); d._advance()
-		if node.begins_with("karar_") and node != "karar_ani" and i % 12 == 0 and shots < 12:
+		if node.begins_with("karar_") and node != "karar_ani" and i % 12 == 0 and shots < 40:
 			get_viewport().get_texture().get_image().save_png(out + "/kl_%d_%02d.png" % [pick, shots]); print("foto ", node); shots += 1
 		if node in ["karar_bogma", "karar_zaman", "karar_yalvar", "yalvar_son"] and i % 15 == 0:
 			var pm = level._player.model

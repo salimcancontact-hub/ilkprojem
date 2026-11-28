@@ -99,6 +99,23 @@ func hold_last_frame(anim_name: String, lock: bool = true) -> void:
 	animation_player.pause()
 
 
+## Animasyonun belirli bir oranında (0..1) donar (ör. diz çökük kare); döngüsüz animasyon bitip
+## karakteri ayağa kaldırmasın.
+func hold_pose(anim_name: String, at: float, blend: float = 0.25) -> void:
+	var full := resolve(anim_name)
+	if full.is_empty():
+		return
+	pose_locked = true  # konuşma satırları duruşu bozmasın (unlock_pose ile çözülür)
+	_current = full
+	animation_player.play(full, blend)
+	animation_player.seek(animation_player.get_animation(full).length * at, true)
+	# Geçiş (blend) bitmeden durdurulursa beden önceki duruşta asılı kalır: önce geçiş tamamlansın
+	animation_player.speed_scale = 1.0
+	await get_tree().create_timer(blend + 0.05, true, false, true).timeout
+	if _current == full:
+		animation_player.pause()
+
+
 var ragdoll: Ragdoll
 
 

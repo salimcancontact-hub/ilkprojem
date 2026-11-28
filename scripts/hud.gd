@@ -23,6 +23,7 @@ var _gameplay_visible: bool = true
 var _bag_btn: Button
 var _bag_panel: PanelContainer
 var _bag_list: VBoxContainer
+var _bag_scroll: ScrollContainer
 var _needs_box: VBoxContainer
 var _need_bars: Dictionary = {}
 var _overlay: ColorRect
@@ -76,9 +77,15 @@ func _ready() -> void:
 	_bag_panel.add_theme_stylebox_override("panel", ps)
 	_bag_panel.visible = false
 	add_child(_bag_panel)
+	# Eşyalar çoğalınca parmakla aşağı kaydırılabilsin
+	_bag_scroll = ScrollContainer.new()
+	_bag_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_bag_scroll.custom_minimum_size = Vector2(560, 0)
+	_bag_panel.add_child(_bag_scroll)
 	_bag_list = VBoxContainer.new()
 	_bag_list.add_theme_constant_override("separation", 14)
-	_bag_panel.add_child(_bag_list)
+	_bag_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_bag_scroll.add_child(_bag_list)
 
 	# İhtiyaç çubukları (sol üst)
 	_needs_box = VBoxContainer.new()
@@ -301,6 +308,10 @@ func _layout() -> void:
 	_jump_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 40)
 	_talk_btn.position = off + Vector2(vp.x - 110 - 50, vp.y - 110 - 200)
 	_bag_btn.position = off + Vector2(vp.x - 130 - 24, 96)
+	# Panel ekrana sığar; içerik uzunsa kaydırılır
+	var h := clampf(_bag_list.get_combined_minimum_size().y, 120.0, vp.y - 160.0 - 30.0)
+	_bag_scroll.custom_minimum_size.y = h
+	_bag_panel.size = Vector2.ZERO
 	_bag_panel.position = off + Vector2(vp.x - _bag_panel.get_combined_minimum_size().x - 24, 160)
 	_objective.size = Vector2(vp.x * 0.6, 0)
 	_objective.position = off + Vector2(vp.x * 0.2, 22)

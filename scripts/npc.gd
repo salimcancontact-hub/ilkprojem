@@ -56,22 +56,20 @@ func _build_marker() -> void:
 		l.position = Vector3(0, 2.15, 0)
 		_marker = l
 	else:
+		# TWD: küçük, sakin beyaz nokta + ince halka (ışık saçmaz, parlama lekesi yapmaz)
 		var m := MeshInstance3D.new()
-		var s := SphereMesh.new()
-		s.radius = 0.07
-		s.height = 0.14
-		m.mesh = s
+		var sp := SphereMesh.new()
+		sp.radius = 0.028
+		sp.height = 0.056
+		sp.radial_segments = 12
+		sp.rings = 6
+		m.mesh = sp
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(1.0, 0.85, 0.45)
+		mat.albedo_color = Color(1.0, 0.97, 0.9)
 		mat.no_depth_test = true
 		m.material_override = mat
 		m.position = Vector3(0, focus_height, 0)
-		var halo := OmniLight3D.new()
-		halo.light_color = Color(1.0, 0.8, 0.45)
-		halo.light_energy = 0.6
-		halo.omni_range = 1.2
-		m.add_child(halo)
 		_marker = m
 	_marker.visible = false
 	add_child(_marker)
@@ -85,7 +83,7 @@ func _process(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_player_ref = get_tree().get_first_node_in_group("player")
 		return
-	var near := global_position.distance_to(_player_ref.global_position) < 12.0
+	var near := global_position.distance_to(_player_ref.global_position) < (12.0 if model else 4.5)
 	var lvl := get_tree().get_first_node_in_group("level")
 	var in_dialog: bool = lvl != null and lvl.get("_dialog") != null and lvl._dialog.active
 	_marker.visible = interactable and near and visible and not in_dialog
