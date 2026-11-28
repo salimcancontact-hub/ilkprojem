@@ -118,8 +118,9 @@ ADA: Biliyordum.
 ~ araba_arandi = true
 @olay kamera otomatik
 > Kapısı açık. Torpidoda ezilmiş bir enerji barı duruyor.
-@olay anim EVREN PickUp_Table
-@bekle 1.0
+@olay torpido_al
+@bekle 0.3
+> Uzanıp barı alıyorsun. Ambalajı ezik ama sağlam. Çantana atıyorsun.
 @olay esya_al enerji_bari
 ! Çantadaki eşyaları ÇANTA düğmesinden kullanabilirsin.
 -> SON
@@ -492,8 +493,7 @@ ARMAN: ...Neden öyle bakıyorsun?
 @bekle 1.0
 > Deniz alet kemerinden bir kaynak kesicisi çekiyor. Mavi alevi titriyor.
 ARMAN: Geri çekil!
-@olay anim ARMAN Melee_Hook
-@bekle 0.4
+@olay kesici_savur
 @qte kaydir sag 1.5 "KAÇIN" -> bogus1_ok | bogus1_fail
 
 === bogus1_ok

@@ -151,6 +151,16 @@ func _start_dialog(npc: Npc) -> void:
 		if _dialog.active:
 			return
 	_talking_to = npc
+	# TWD: konuşma/inceleme öncesi sabit işarete yürü (uzaksa)
+	var stand := 1.15 if npc.model else 0.85
+	var d := Vector2(npc.global_position.x - _player.global_position.x, npc.global_position.z - _player.global_position.z).length()
+	if d > stand + 0.35 and not live_world:
+		_player.input_enabled = false
+		_hud.set_gameplay_visible(false)
+		await walk_beside(npc.global_position, stand)
+		_player.input_enabled = true
+		if _dialog.active:
+			return
 	_enter_dialog_mode()
 	if npc.model:
 		npc.model.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -363,9 +373,8 @@ func use_item(id: String) -> void:
 			bottle.queue_free()
 		"yeme":
 			var bar := Props.energy_bar()
-			_player.model.attach(bar, "hand_r", Vector3(0, 0.06, 0.04), Vector3(0, 0, PI / 2))
-			_player.model.play_once("Consume", "Idle", 0.2)
-			await get_tree().create_timer(2.6, true, false, true).timeout
+			_player.model.attach(bar, "hand_r", Vector3(0, 0.07, 0.04), Vector3(0, 0, PI / 2))
+			await eat_sequence(bar)
 			_player.model.detach(bar)
 			bar.queue_free()
 	var effects: Dictionary = item["use"]
@@ -375,6 +384,34 @@ func use_item(id: String) -> void:
 	_dialog.show_notification("%s kullanıldı." % item["name"])
 	_player.input_enabled = true
 	_using_item = false
+
+
+## Elindeki yiyeceği (hand_r'ye takılı) yeme: el ağza gider, üç ısırık; her ısırıkta yiyecek kısalır.
+func eat_sequence(food: Node3D) -> void:
+	var vis: Node3D = _player.get_node("Visual")
+	var hand_to := Node3D.new()
+	vis.add_child(hand_to)
+	hand_to.position = Vector3(0.12, 1.2, -0.28)
+	var elbow := Node3D.new()
+	vis.add_child(elbow)
+	elbow.position = Vector3(0.38, 1.15, -0.05)
+	_player.model.play("Idle", 0.2)
+	_player.model.reach("r", hand_to, 0.45, elbow)
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	for bite in 3:
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(hand_to, "position", Vector3(0.04, 1.5, -0.17), 0.3).set_trans(Tween.TRANS_SINE)
+		tw.tween_interval(0.15)
+		tw.tween_callback(func() -> void:
+			if is_instance_valid(food):
+				food.scale.x = maxf(food.scale.x - 0.3, 0.1)
+				food.position.x += 0.02)
+		tw.tween_property(hand_to, "position", Vector3(0.1, 1.3, -0.25), 0.3).set_trans(Tween.TRANS_SINE)
+		await tw.finished
+	_player.model.release("r", 0.45)
+	await get_tree().create_timer(0.45, true, false, true).timeout
+	hand_to.queue_free()
+	elbow.queue_free()
 
 
 ## Elindeki şişeden (hand_r'ye takılı) içme: el ağza gider, dirsek yana bükülür, şişe yavaşça yatar.
@@ -493,6 +530,40 @@ func _on_qte_fill(_fill: float) -> void:
 
 func _on_qte_tap() -> void:
 	pass
+
+
+# --- TWD sahnelemesi: işarete yürü ---------------------------------------------------
+
+## Süren fiziksel eylem sayısı (yürüme vb.). Diyalog @bekle sonrası bunlar bitene kadar bekler.
+var busy: int = 0
+
+
+## Karakteri bir noktaya YÜRÜTEREK götürür (kaydırma/ışınlama yok), sonra bakması gereken yere döndürür.
+## TWD'deki gibi: kim oynarsa oynasın etkileşim hep aynı işarette ve aynı hareketle olur.
+func walk_to(to: Vector3, look_at_point: Vector3 = Vector3.INF, speed: float = 1.5) -> void:
+	to.y = _player.global_position.y
+	var dist := Vector2(to.x - _player.global_position.x, to.z - _player.global_position.z).length()
+	busy += 1
+	if dist > 0.08:
+		_player.velocity = Vector3.ZERO
+		_player.face_point(to)
+		_player.model.play("Walk", 0.15)
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(_player, "global_position", to, maxf(dist / speed, 0.25))
+		await tw.finished
+		_player.model.play("Idle", 0.2)
+	if look_at_point != Vector3.INF:
+		_player.face_point(look_at_point)
+	busy -= 1
+
+
+## Bir noktanın önüne (distance kadar) yürür ve ona döner.
+func walk_beside(point: Vector3, distance: float) -> void:
+	var dir := _player.global_position - point
+	dir.y = 0
+	if dir.length() < 0.05:
+		dir = Vector3(0, 0, 1)
+	await walk_to(point + dir.normalized() * distance, point)
 
 
 ## Alt sınıfların hikâye olaylarını işlediği yer.

@@ -64,10 +64,18 @@ static func energy_bar() -> Node3D:
 	root.name = "EnerjiBari"
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(0.12, 0.018, 0.04)
+	box.size = Vector3(0.14, 0.028, 0.05)
 	mi.mesh = box
-	mi.material_override = _mat(Color(0.85, 0.3, 0.15))
+	mi.material_override = _mat(Color(0.95, 0.45, 0.12), Color(0.5, 0.18, 0.04), 0.6)
 	root.add_child(mi)
+	# Ambalaj şeridi: elde seçilsin
+	var band := MeshInstance3D.new()
+	var bb := BoxMesh.new()
+	bb.size = Vector3(0.04, 0.03, 0.052)
+	band.mesh = bb
+	band.material_override = _mat(Color(0.95, 0.92, 0.85))
+	band.position = Vector3(0.03, 0, 0)
+	root.add_child(band)
 	return root
 
 
@@ -298,3 +306,37 @@ static func blood_splatter(parent: Node, at: Vector3, count: int = 5, spread: fl
 		mi.scale = Vector3(r, 1, r * randf_range(0.5, 1.0))
 		mi.rotation.y = randf() * TAU
 		mi.global_position = at + Vector3(randf_range(-spread, spread), 0.002 + i * 0.0004, randf_range(-spread, spread))
+
+
+static var _smear_mats: Array[StandardMaterial3D] = []
+
+
+## Yerde sürtünme izi / ellerdeki kan için koyu, parlak kırmızı.
+static func smear_material(shade: int = 0) -> StandardMaterial3D:
+	if _smear_mats.is_empty():
+		for c in [Color(0.46, 0.02, 0.02), Color(0.36, 0.015, 0.015), Color(0.55, 0.04, 0.03)]:
+			var m := StandardMaterial3D.new()
+			m.albedo_color = c
+			m.roughness = 0.15
+			m.metallic_specular = 0.8
+			_smear_mats.append(m)
+	return _smear_mats[shade % _smear_mats.size()]
+
+
+## Avuca/eklemlere bulaşmış kan (ele takılır).
+static func hand_blood() -> Node3D:
+	var root := Node3D.new()
+	root.name = "ElKani"
+	for i in 4:
+		var mi := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 1.0
+		sm.height = 2.0
+		sm.radial_segments = 8
+		sm.rings = 4
+		mi.mesh = sm
+		mi.material_override = smear_material()
+		mi.scale = Vector3(0.028, 0.012, 0.035) * randf_range(0.8, 1.3)
+		mi.position = Vector3(randf_range(-0.02, 0.02), 0.05 + i * 0.022, randf_range(0.0, 0.03))
+		root.add_child(mi)
+	return root

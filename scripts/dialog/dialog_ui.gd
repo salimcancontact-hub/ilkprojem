@@ -129,6 +129,12 @@ func _on_wait(seconds: float) -> void:
 	_waiting = true
 	_panel.visible = false
 	await get_tree().create_timer(seconds, true, false, true).timeout
+	# Karakter eylemini (yürüme, uzanma) bitirmeden sonraki satıra geçme (en fazla 5 sn)
+	var lvl := get_tree().get_first_node_in_group("level")
+	var guard := 0.0
+	while lvl and lvl.get("busy") and int(lvl.busy) > 0 and guard < 5.0:
+		await get_tree().process_frame
+		guard += get_process_delta_time()
 	_waiting = false
 	# Ara sahnede ekrana dokunmaya devam eden oyuncu sonraki yazıyı kaçırmasın
 	_block_input = maxf(_block_input, 0.7)

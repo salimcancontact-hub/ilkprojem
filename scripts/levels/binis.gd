@@ -14,6 +14,7 @@ var _phase: String = "baslangic"
 var _loading: CanvasLayer
 var _npcs: Dictionary = {}
 var _hot: Dictionary = {}
+var _card_hold: Node3D
 var _card: Node3D
 var _wrist: Node3D
 var _frame: Node3D
@@ -342,10 +343,22 @@ func _on_story_event(event_name: String, args: PackedStringArray) -> void:
 	match event_name:
 		# İskele: kart okutma
 		"kart_cikar":
+			# Okuyucunun önündeki işarete yürür, sonra kartı cebinden çıkarır
+			var rp: Vector3 = _z1["reader_point"].global_position
+			busy += 1
+			await walk_to(Vector3(rp.x + 0.1, 0, rp.z - 0.5), rp)
 			_card = Props.card()
 			_player.model.attach(_card, "hand_r", Vector3(0, 0.08, 0.03), Vector3(0.3, 0, 0))
-			_player.face_point(_z1["reader_point"].global_position)
-			_beside(_z1["reader_point"].global_position, 0.62)
+			# Kartı göğüs hizasına kaldırıp bakar (ekranda görünsün)
+			if _card_hold == null:
+				_card_hold = Node3D.new()
+				add_child(_card_hold)
+			var fwd := (rp - _player.global_position)
+			fwd.y = 0
+			_card_hold.global_position = _player.global_position + Vector3(0, 1.2, 0) + fwd.normalized() * 0.3
+			_player.model.reach("r", _card_hold, 0.45)
+			await get_tree().create_timer(0.5, true, false, true).timeout
+			busy -= 1
 		"kart_okut":
 			_player.model.reach("r", _z1["reader_point"], 0.5)
 			_beep(_z1["reader_light"], Color(0.35, 0.8, 1.0))

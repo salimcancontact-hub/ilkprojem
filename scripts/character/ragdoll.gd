@@ -61,6 +61,7 @@ func _init(sk: Skeleton3D) -> void:
 		pb.angular_damp = 2.5
 		pb.collision_layer = LAYER
 		pb.collision_mask = 1
+		simulator.add_child(pb)  # ofsetler ağaçtayken verilir (yoksa global dönüşüm hatası)
 		# Gövde kemiğin ortasında, ekseni kemik boyunca (-Z)
 		var body := Transform3D(Basis.looking_at(dir, Vector3.FORWARD if absf(dir.y) > 0.9 else Vector3.UP), dir * half)
 		pb.body_offset = body
@@ -88,7 +89,6 @@ func _init(sk: Skeleton3D) -> void:
 		shape.shape = cap
 		shape.rotation = Vector3(PI / 2.0, 0, 0)  # kapsülü Z eksenine yatır
 		pb.add_child(shape)
-		simulator.add_child(pb)
 		bones[bone_name] = pb
 
 

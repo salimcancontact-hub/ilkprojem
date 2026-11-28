@@ -303,6 +303,13 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 			_guard.model.play_once("Hit_Chest", "Idle_Shield", 0.1)
 			var tws := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			tws.tween_property(_guard, "global_position", _guard.global_position + back.normalized() * 0.5, 0.4)
+		"kesici_savur":
+			# Kesiciyi kaldırıp savurur: QTE aynı anda ağır çekimde başlar (yazı yok)
+			_arman.face_point(_player.global_position)
+			_arman.model.play_once("Melee_Hook", "Idle", 0.05)
+			shake(0.08, 0.3)
+		"torpido_al":
+			await _glovebox_pickup()
 		"muhafiza_atil":
 			# Yumruk mesafesine atılır
 			var gp := _guard.global_position
@@ -328,6 +335,11 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 		"yumruk_yuze":
 			await _punch_face(2)
 		"eller_titrer":
+			# Ellerinde onun kanı
+			if not _hands_bloody:
+				_hands_bloody = true
+				_player.model.attach(Props.hand_blood(), "hand_r", Vector3(0, 0, 0.0))
+				_player.model.attach(Props.hand_blood(), "hand_l", Vector3(0, 0, 0.0))
 			_trembling_hands()
 		"eller_birak":
 			_trembling = false
@@ -369,7 +381,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				tw.tween_property(_cutter, "rotation", Vector3(PI / 2, 1.2, 0), 0.45)
 		"kesici_al":
 			if _cutter:
-				_beside(_cutter.global_position, 0.6)
+				await walk_beside(_cutter.global_position, 0.6)
 				_player.model.play("Crouch_Idle", 0.25)
 				_player.model.reach("r", _cutter, 0.5)
 				await get_tree().create_timer(0.7, true, false, true).timeout
@@ -391,8 +403,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 				perp = -perp
 			var kneel := hp + perp * 0.5 - along * 0.05
 			kneel.y = _player.global_position.y
-			_player.global_position = kneel
-			_player.face_point(hp)
+			await walk_to(kneel, hp, 1.8)
 			camera_shots["oldurme_yakin"] = [hp - perp * 1.6 + along * 0.7 + Vector3(0, 1.15, 0), hp + perp * 0.25 + Vector3(0, 0.3, 0), true]
 			# Dizlerinin üstüne çöker ve öne eğilir: omuzlar yere yakın, eller yerdeki başa yetişir
 			_player.model.hold_pose("Fixing_Kneeling", 0.45)
@@ -437,7 +448,7 @@ func _on_story_event(event_name: String, _args: PackedStringArray) -> void:
 		"kart_al":
 			# Kartı ölü adamın parmaklarının arasından alır
 			var target: Node3D = _arman_card if _arman_card else _card
-			_beside(target.global_position, 0.6)
+			await walk_beside(target.global_position, 0.6)
 			_player.model.play("Crouch_Idle", 0.25)
 			_player.model.reach("r", target, 0.6)
 			await get_tree().create_timer(0.8, true, false, true).timeout
@@ -570,8 +581,7 @@ func _drag_body() -> void:
 	# Oyuncu ellerin önünde, cesede dönük
 	var start := hands + dir * 0.55
 	start.y = _player.global_position.y
-	_player.global_position = start
-	_player.face_point(hands)
+	await walk_to(start, hands, 1.6)
 	var grip_l := Node3D.new()
 	var grip_r := Node3D.new()
 	_player.get_node("Visual").add_child(grip_l)
@@ -589,6 +599,7 @@ func _drag_body() -> void:
 	travel.y = 0
 	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.tween_property(_player, "global_position", _player.global_position + travel, 4.2)
+	_blood_trail(rd, 4.2)
 	await tw.finished
 	_drag_grips = []
 	_drag_cam_offset = Vector3.ZERO
@@ -708,6 +719,15 @@ func _prewarm() -> void:
 	holder.add_child(bottle)
 	Props.blood_burst(holder, holder.global_position, Vector3.UP, 6)
 	Props.blood_pool(holder, holder.global_position + Vector3(0, -0.5, 0), 0.3, 0.1)
+	for k in 3:
+		var sm := MeshInstance3D.new()
+		sm.mesh = BoxMesh.new()
+		sm.material_override = Props.smear_material(k)
+		holder.add_child(sm)
+		sm.position = Vector3(0.2 * k, -0.4, 0.2)
+		sm.scale = Vector3.ONE * 0.1
+	var hb := Props.hand_blood()
+	holder.add_child(hb)
 	bottle.position = Vector3(-0.3, 0.3, 0)
 	_dialog._qte.prewarm()
 	fire.position = Vector3(0, -1.2, -1.0)
@@ -988,6 +1008,52 @@ func _on_qte_fill(fill: float) -> void:
 		_lift_point.global_position = p
 
 
+## Sürüklenen bedenin başı/gövdesi yerde kan izi bırakır (sürüklenen yol boyunca uzun lekeler).
+func _blood_trail(rd: Ragdoll, duration: float) -> void:
+	# Yalnızca yaralı baştan: kesik kesik, giderek incelen koyu leke izi
+	var t := 0.0
+	var last := Vector3.INF
+	while t < duration and rd:
+		var b: PhysicalBone3D = rd.bone("Head")
+		if b:
+			var p: Vector3 = b.global_position
+			p.y = -0.147
+			if last == Vector3.INF or p.distance_to(last) > 0.09:
+				var dir: Vector3 = Vector3.FORWARD if last == Vector3.INF else (p - last).normalized()
+				var fade := 1.0 - 0.55 * (t / duration)
+				if randf() > 0.15:
+					_smear(p + dir.cross(Vector3.UP) * randf_range(-0.03, 0.03), dir, fade)
+				if randf() < 0.3:
+					_smear(p + Vector3(randf_range(-0.12, 0.12), 0, randf_range(-0.12, 0.12)), Vector3.ZERO, 0.35)
+				last = p
+		await get_tree().create_timer(0.08, true, false, true).timeout
+		t += 0.08
+
+
+func _smear(at: Vector3, dir: Vector3, amount: float = 1.0) -> void:
+	var mi := MeshInstance3D.new()
+	var bm := CylinderMesh.new()
+	bm.top_radius = 0.5
+	bm.bottom_radius = 0.5
+	bm.height = 0.003
+	bm.radial_segments = 10
+	bm.rings = 1
+	mi.mesh = bm
+	mi.material_override = Props.smear_material(randi() % 3)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	mi.global_position = at + Vector3(0, randf() * 0.0008, 0)
+	var w := randf_range(0.1, 0.16) * amount
+	var l := randf_range(0.14, 0.24) * amount if dir.length() > 0.01 else w
+	mi.scale = Vector3(w, 1.0, l)
+	if dir.length() > 0.01:
+		mi.rotation.y = atan2(dir.x, dir.z)
+	_trail.append(mi)
+
+
+var _trail: Array = []
+
+
 ## Gecikmeli kan sıçraması (ör. kesici boyna değdiği an)
 func _blood_after(delay: float, at: Node3D, amount: int) -> void:
 	await get_tree().create_timer(delay, true, false, true).timeout
@@ -998,7 +1064,45 @@ func _blood_after(delay: float, at: Node3D, amount: int) -> void:
 		shake(0.15, 0.25)
 
 
+## Kamyonet (sokaktaki S_VehiclePickup): yerel +Z ön, -X sol (sürücü) kapı.
+const TRUCK := Transform3D(Basis(Vector3.UP, 0.35), Vector3(4.6, 0.0, 9.0))
+
+
+## TWD sabit sahnesi: kapıya yürür, içeri uzanır, barı torpidodan alır, göğsüne getirip çantaya koyar.
+func _glovebox_pickup() -> void:
+	busy += 1
+	var door := TRUCK * Vector3(-1.75, 0, 0.9)
+	var glove := TRUCK * Vector3(-0.55, 1.05, 1.35)
+	camera_shots["torpido"] = [TRUCK * Vector3(-2.6, 1.85, -0.2), TRUCK * Vector3(-0.9, 1.0, 1.2), true]
+	_set_camera("torpido")
+	await walk_to(door, glove)
+	var bar := Props.energy_bar()
+	add_child(bar)
+	bar.global_position = glove
+	var grab := _point(glove)
+	_player.model.reach("r", grab, 0.5)
+	await get_tree().create_timer(0.6, true, false, true).timeout
+	_player.model.attach(bar, "hand_r", Vector3(0, 0.08, 0.04), Vector3(0, 0, PI / 2))
+	# Göğsüne getirip bakar
+	var chest := _point(_player.global_position + Vector3(0, 1.25, 0) + (glove - door).normalized() * 0.35)
+	_player.model.reach("r", chest, 0.5)
+	await get_tree().create_timer(0.8, true, false, true).timeout
+	# Sırttaki çantaya
+	var bag := Node3D.new()
+	_player.get_node("Visual").add_child(bag)
+	bag.position = Vector3(0.22, 1.15, 0.22)
+	_player.model.reach("r", bag, 0.45)
+	await get_tree().create_timer(0.55, true, false, true).timeout
+	_player.model.detach(bar)
+	bar.queue_free()
+	_player.model.release("r", 0.4)
+	for n in [grab, chest, bag]:
+		n.queue_free()
+	busy -= 1
+
+
 var _smother: bool = false
+var _hands_bloody: bool = false
 var _mount_hold: Node3D
 
 
@@ -1014,8 +1118,7 @@ func _mount_arman() -> void:
 	along = along.normalized()
 	var spot := chest - along * 0.15
 	spot.y = _player.global_position.y
-	_player.global_position = spot
-	_player.face_point(hp)
+	await walk_to(spot, hp, 1.8)
 	_player.model.hold_pose("Fixing_Kneeling", 0.45)
 	var vis: Node3D = _player.get_node("Visual")
 	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
